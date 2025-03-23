@@ -21,7 +21,11 @@ else
     "posix_terminal_shell": "bash"
 }
 EOF
+
+    ## Allow default user to run bspm without a password
     chown -R "${DEFAULT_USER}:${DEFAULT_USER}" "/home/${DEFAULT_USER}"
+    usermod -aG staff ${DEFAULT_USER} 
+    echo "${DEFAULT_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 fi
 
 # If shiny server installed, make the user part of the shiny group

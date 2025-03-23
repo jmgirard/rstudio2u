@@ -15,7 +15,8 @@ RUN sed -i '/suppressMessages(bspm::enable())/i options(bspm.sudo = TRUE)' /etc/
 
 # Install RStudio Server
 COPY scripts /rocker_scripts
-RUN chmod -R +x /rocker_scripts && /rocker_scripts/install_rstudio.sh
+RUN chmod -R +x /rocker_scripts
+RUN /rocker_scripts/install_rstudio.sh
 
 # Start RStudio Server
 EXPOSE 8787

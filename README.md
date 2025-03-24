@@ -36,3 +36,8 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
 5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
 6. When done, open Docker Desktop and end the container
 7. Next time, you don't need to run `git clone...` again
+
+## Derivative Images
+
+- [jmgirard/rocker-bayes](https://github.com/jmgirard/rocker-bayes) - Adds CmdStan and R packages for Bayesian data analysis
+- 

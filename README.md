@@ -4,6 +4,12 @@ Adds RStudio Server, pandoc, and Quarto to [r2u](https://github.com/rocker-org/r
 
 Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/package=bspm) for faster installs and smaller image size
 
+| Tag         | Compressed | On Disk |
+| ----------- | ---------- | ------- |
+| noble-amd64 | 656.4 MB   | 2.13 GB |
+| noble-arm64 | 654.7 MB  | ???     |
+
+
 ## Use Examples
 
 ### Option 1: Pull and run from Dockerhub

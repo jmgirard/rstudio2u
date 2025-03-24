@@ -18,6 +18,8 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
 
 3. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
 4. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
+5. When done, open Docker Desktop and end the container
+6. Next time, you don't need to run `docker pull...` again
 
 ### Option 2: Clone, build, and compose
 
@@ -32,3 +34,5 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
     ```
 4. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
 5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
+6. When done, open Docker Desktop and end the container
+7. Next time, you don't need to run `git clone...` again

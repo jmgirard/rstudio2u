@@ -40,4 +40,3 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
 ## Derivative Images
 
 - [jmgirard/rocker-bayes](https://github.com/jmgirard/rocker-bayes) - Adds CmdStan and R packages for Bayesian data analysis
-- 

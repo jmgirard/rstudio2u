@@ -1,8 +1,8 @@
 # rstudio2u
 
-Adds RStudio Server, pandoc, and Quarto to [r2u](https://github.com/rocker-org/r2u)
+Adds RStudio Server, pandoc, and Quarto to [r2u](https://github.com/rocker-org/r2u), works on AMD64 and ARM64 (Mac Silicon)
 
-Binary R package installation on Ubuntu for AMD64 and ARM64 via [bspm](https://cloud.r-project.org/package=bspm)
+Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/package=bspm)
 
 ## Use Examples
 

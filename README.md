@@ -4,8 +4,6 @@ Adds RStudio Server, pandoc, and Quarto to [r2u](https://github.com/rocker-org/r
 
 Binary R package installation on Ubuntu for AMD64 and ARM64 via [bspm](https://cloud.r-project.org/package=bspm)
 
-(Just use `install.packages()` and `update.packages()`)
-
 ## Use Examples
 
 ### Option 1: Pull and run from Dockerhub
@@ -19,6 +17,7 @@ Binary R package installation on Ubuntu for AMD64 and ARM64 via [bspm](https://c
     ```
 
 3. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
+4. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
 
 ### Option 2: Clone, build, and compose
 
@@ -32,3 +31,4 @@ Binary R package installation on Ubuntu for AMD64 and ARM64 via [bspm](https://c
     docker-compose up --build
     ```
 4. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
+5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm

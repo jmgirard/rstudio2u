@@ -8,7 +8,7 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
 
 ### Option 1: Pull and run from Dockerhub
 
-1. Install and open Docker Desktop
+1. Install and open [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 2. Enter the following command in your terminal
 
     ```
@@ -23,8 +23,8 @@ Binary R package installation on Ubuntu via [bspm](https://cloud.r-project.org/p
 
 ### Option 2: Clone, build, and compose
 
-1. Install and open Docker Desktop
-2. Install Git
+1. Install and open [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. Install [Git](https://git-scm.com/downloads)
 3. Enter the following command in your terminal
 
     ```

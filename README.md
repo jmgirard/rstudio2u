@@ -6,8 +6,8 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
 
 | Tag         | Compressed | On Disk | R version |
 | ----------- | ---------- | ------- | --------- |
-| noble-amd64 | 656.4 MB   | 2.13 GB | 4.5.0     |
-| noble-arm64 | 654.7 MB   | 2.94 GB | 4.5.0     |
+| noble-amd64 | 646.91 MB  | 2.13 GB | 4.5.0     |
+| noble-arm64 | 645.06 MB  | 2.89 GB | 4.5.0     |
 
 
 ## Use Examples

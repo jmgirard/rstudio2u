@@ -1,6 +1,6 @@
 services:
   rstudio2u:
-    image: jmgirard/rstudio2u:noble-amd64
+    image: jmgirard/rstudio2u:latest
     ports:
       - "${RS_PORT}:8787"
     environment:

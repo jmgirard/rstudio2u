@@ -1,6 +1,6 @@
 services:
-  bayes:
-    image: jmgirard/rstudio2u:latest
+  rstudio2u:
+    image: jmgirard/rstudio2u:noble-amd64
     ports:
       - "${RS_PORT}:8787"
     environment:

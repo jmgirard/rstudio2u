@@ -7,7 +7,7 @@ LABEL org.label-schema.license="MIT" \
 
 ENV LANG=en_US.UTF-8
 ENV S6_VERSION="v2.1.0.2"
-ENV RSTUDIO_VERSION="2025.05.1+513"
+ENV RSTUDIO_VERSION="2025.09.0-387"
 ENV DEFAULT_USER="rstudio"
 
 # Enable D-Bus Service for BSPM

@@ -22,7 +22,7 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
     docker run --rm -p 8787:8787 -e PASSWORD=pass -t jmgirard/rstudio2u
     ```
 
-3. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
+3. Navigate to <https://localhost:8787> and enter username `rstudio` and password `pass`
 4. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
 5. When done, open Docker Desktop and end the container
 6. Next time, you don't need to run `docker pull...` again
@@ -36,9 +36,9 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
     ```
     git clone https://github.com/jmgirard/rstudio2u
     cd rstudio2u
-    docker-compose up --build
+    docker-compose up --build -d
     ```
-4. Navigate to <https://localhost:8787> and enter user `rstudio` and password `pass`
+4. Navigate to <https://localhost:8787> (no username or password needed)
 5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
 6. When done, open Docker Desktop and end the container
 7. Next time, you don't need to run `git clone...` again

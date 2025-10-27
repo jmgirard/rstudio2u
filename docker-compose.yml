@@ -2,7 +2,8 @@ services:
   rstudio2u:
     image: jmgirard/rstudio2u:latest
     ports:
-      - "${RS_PORT}:8787"
+      - "127.0.0.1:8787:8787"
+      - "127.0.0.1:2222:22"
     environment:
       - DISABLE_AUTH=true
 

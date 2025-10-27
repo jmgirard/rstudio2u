@@ -4,5 +4,5 @@ services:
     ports:
       - "${RS_PORT}:8787"
     environment:
-      - PASSWORD=${RS_PASS}
+      - DISABLE_AUTH=true
 

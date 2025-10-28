@@ -2,8 +2,9 @@ services:
   rstudio2u:
     image: jmgirard/rstudio2u:latest
     ports:
-      - "127.0.0.1:8787:8787"
-      - "127.0.0.1:2222:22"
+      - "127.0.0.1:${RS_PORT:-8787}:8787"
+      - "127.0.0.1:${SSH_PORT:-2222}:22"
     environment:
+      - PASSWORD=${SUDO_PASS:-rstudio}
+      - ROOT=true
       - DISABLE_AUTH=true
-

@@ -8,7 +8,7 @@ LABEL org.label-schema.license="MIT" \
 # Set up environmental variables
 ENV LANG=en_US.UTF-8
 ENV S6_VERSION="v2.1.0.2"
-ENV RSTUDIO_VERSION="2025.09.1-401"
+ENV RSTUDIO_VERSION="2025.09.2-418"
 ENV DEFAULT_USER="rstudio"
 
 # Install RStudio Server

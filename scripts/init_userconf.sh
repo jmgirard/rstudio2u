@@ -170,7 +170,7 @@ echo "$USER:$PASSWORD" | chpasswd
 if [ "${RUNROOTLESS}" = "true" ]; then
     echo "No sudoers changes needed when running rootless"
 elif [[ ${ROOT,,} == "true" ]]; then
-    adduser "$USER" sudo && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
+    usermod -aG sudo "$USER" && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
     echo "$USER added to sudoers"
 fi
 

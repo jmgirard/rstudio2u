@@ -4,10 +4,10 @@ Adds RStudio Server, pandoc, and Quarto to [r2u](https://github.com/rocker-org/r
 
 Binary package installation from within R via [bspm](https://cloud.r-project.org/package=bspm) for faster installs and smaller image size
 
-| Tag         | Compressed | On Disk | R version | RStudio version |
-| ----------- | ---------- | ------- | --------- | --------------- |
-| noble-amd64 | 688.51 MB  | 2.20 GB | 4.5.2     | 2026.01.1-403   |
-| noble-arm64 | 687.16 MB  | 3.01 GB | 4.5.2     | 2026.01.1-403   |
+| Tag      | Architectures | R version | RStudio version |
+| -------- | ------------- | --------- | --------------- |
+| `latest` | amd64, arm64  | 4.5.2     | 2026.01.1-403   |
+| `noble`  | amd64, arm64  | 4.5.2     | 2026.01.1-403   |
 
 
 ## Use Examples

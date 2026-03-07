@@ -36,7 +36,7 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
     ```
     git clone https://github.com/jmgirard/rstudio2u
     cd rstudio2u
-    docker-compose up --build -d
+    docker compose up --build -d
     ```
 4. Navigate to <https://localhost:8787> (no username or password needed)
 5. Whenever you use `install.packages()` or `update.packages()`, it will use bspm
@@ -46,4 +46,4 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
 ## Derivative Images
 
 - [jmgirard/rocker-bayes](https://github.com/jmgirard/rocker-bayes) - Adds CmdStan and R packages for Bayesian data analysis
-- [jmgirard/wsl-whisper](https://github.com/jmgirard/wsl-whisper) - Adds CUDA Toolkit and R packages for AI speech recognition
+- [jmgirard/audio-whisper](https://github.com/jmgirard/audio-whisper) - Adds CUDA Toolkit and R packages for AI speech recognition

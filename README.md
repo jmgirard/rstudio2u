@@ -46,4 +46,3 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
 ## Derivative Images
 
 - [jmgirard/rocker-bayes](https://github.com/jmgirard/rocker-bayes) - Adds CmdStan and R packages for Bayesian data analysis
-- [jmgirard/audio-whisper](https://github.com/jmgirard/audio-whisper) - Adds CUDA Toolkit and R packages for AI speech recognition

@@ -6,8 +6,8 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
 
 | Tag      | Architectures | R version | RStudio version |
 | -------- | ------------- | --------- | --------------- |
-| `latest` | amd64, arm64  | 4.5.2     | 2026.01.1-403   |
-| `noble`  | amd64, arm64  | 4.5.2     | 2026.01.1-403   |
+| `latest` | amd64, arm64  | 4.5.3     | 2026.01.2-418   |
+| `noble`  | amd64, arm64  | 4.5.3     | 2026.01.2-418   |
 
 
 ## Use Examples

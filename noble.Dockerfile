@@ -18,7 +18,10 @@ RUN /rocker_scripts/install_rstudio.sh
 
 # Set up bspm and permissions
 RUN sed -i '/suppressMessages(bspm::enable())/i options(bspm.sudo = TRUE)' /etc/R/Rprofile.site
-RUN chown -R rstudio:rstudio /usr/local/lib/R/site-library/bspm
+
+# Grant the 'staff' group write access to the system package libraries
+RUN chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
+    && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
 # Start RStudio Server
 EXPOSE 8787

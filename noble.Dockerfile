@@ -19,6 +19,9 @@ RUN /rocker_scripts/install_rstudio.sh
 # Set up bspm and permissions
 RUN sed -i '/suppressMessages(bspm::enable())/i options(bspm.sudo = TRUE)' /etc/R/Rprofile.site
 
+# Add apt hook to automatically fix R library permissions after bspm/apt installs
+RUN echo 'DPkg::Post-Invoke {"chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library || true"; "chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library || true";};' > /etc/apt/apt.conf.d/99fix-r-lib-perms
+
 # Grant the 'staff' group write access to the system package libraries
 RUN chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
     && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library

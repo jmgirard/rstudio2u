@@ -47,6 +47,10 @@ if [ "$RSTUDIO_VERSION" = "latest" ]; then
     RSTUDIO_VERSION="stable"
 fi
 
+if [ "$UBUNTU_CODENAME" = "resolute" ]; then
+    UBUNTU_CODENAME="noble"
+fi
+
 if [ "$UBUNTU_CODENAME" = "focal" ]; then
     UBUNTU_CODENAME="bionic"
 fi

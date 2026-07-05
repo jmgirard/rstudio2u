@@ -13,7 +13,7 @@ LABEL org.label-schema.license="MIT" \
 
 # Set up environmental variables
 ENV LANG=en_US.UTF-8
-ENV S6_VERSION="v2.1.0.2"
+ENV S6_VERSION="v3.2.3.0"
 ENV DEFAULT_USER="rstudio"
 
 # RStudio Server version. "stable" installs the newest released version at

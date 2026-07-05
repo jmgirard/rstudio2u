@@ -43,8 +43,18 @@ ARCH=$(dpkg --print-architecture)
 ## Download RStudio Server for Ubuntu 18+
 DOWNLOAD_FILE=rstudio-server.deb
 
-if [ "$RSTUDIO_VERSION" = "latest" ]; then
-    RSTUDIO_VERSION="stable"
+# Resolve "latest"/"stable" to a concrete version number. RStudio's
+# /download/latest/ endpoint only publishes amd64 builds, so to keep arm64
+# working we look up the current stable version and fall through to the
+# versioned download URLs below (which have an arm64 S3 fallback).
+if [ "$RSTUDIO_VERSION" = "latest" ] || [ "$RSTUDIO_VERSION" = "stable" ]; then
+    RSTUDIO_VERSION=$(wget -qO- "https://www.rstudio.org/links/check_for_update?version=1.0.0" |
+        grep -oP '(?<=update-version=)[^&]+' | sed 's/%2B/+/g')
+    if [ -z "$RSTUDIO_VERSION" ]; then
+        echo "Failed to resolve the latest stable RStudio Server version" >&2
+        exit 1
+    fi
+    echo "Resolved latest stable RStudio Server version: ${RSTUDIO_VERSION}"
 fi
 
 if [ "$UBUNTU_CODENAME" = "resolute" ]; then
@@ -110,6 +120,9 @@ cat <<EOF >/etc/services.d/rstudio/finish
 /usr/lib/rstudio-server/bin/rstudio-server stop
 EOF
 
+## s6-overlay v3's s6-supervise requires the service scripts to be executable
+chmod +x /etc/services.d/rstudio/run /etc/services.d/rstudio/finish
+
 # If CUDA enabled, make sure RStudio knows (config_cuda_R.sh handles this anyway)
 if [ -n "$CUDA_HOME" ]; then
     sed -i '/^rsession-ld-library-path/d' /etc/rstudio/rserver.conf
@@ -127,6 +140,8 @@ EOF
 /rocker_scripts/default_user.sh "${DEFAULT_USER}"
 
 # install user config initiation script
+# (s6-overlay v3 does not pre-create the legacy cont-init.d directory)
+mkdir -p /etc/cont-init.d
 cp /rocker_scripts/init_set_env.sh /etc/cont-init.d/01_set_env
 cp /rocker_scripts/init_userconf.sh /etc/cont-init.d/02_userconf
 cp /rocker_scripts/pam-helper.sh /usr/lib/rstudio-server/bin/pam-helper

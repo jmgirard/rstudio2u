@@ -35,6 +35,10 @@ elif [ -f "/usr/lib/rstudio-server/bin/quarto/bin/pandoc" ]; then
     BUNDLED_PANDOC="/usr/lib/rstudio-server/bin/quarto/bin/pandoc"
 elif [ -f "/usr/lib/rstudio-server/bin/quarto/bin/tools/pandoc" ]; then
     BUNDLED_PANDOC="/usr/lib/rstudio-server/bin/quarto/bin/tools/pandoc"
+elif [ -n "$(ls /usr/lib/rstudio-server/bin/quarto/bin/tools/*/pandoc 2>/dev/null | head -n1)" ]; then
+    # Newer Quarto nests pandoc under an architecture subdirectory
+    # (e.g. .../tools/aarch64/pandoc or .../tools/x86_64/pandoc)
+    BUNDLED_PANDOC="$(ls /usr/lib/rstudio-server/bin/quarto/bin/tools/*/pandoc 2>/dev/null | head -n1)"
 fi
 
 if [ -n "$BUNDLED_PANDOC" ]; then

@@ -33,6 +33,11 @@ The easiest way to run the server, good for classrooms and non-technical users.
 The launchers just wrap the Docker Compose commands below, so Docker Desktop must
 be installed and running.
 
+> **Your work is saved.** The Compose setup stores the home directory (your
+> files, settings, and installed R packages) in a Docker named volume, so it
+> survives stopping, restarting, and even updating to a newer image. To wipe it
+> and start completely fresh, run `docker compose down -v`.
+
 ### Option 1: Pull and run from Dockerhub
 
 1. Install and open [Docker Desktop](https://www.docker.com/products/docker-desktop/)

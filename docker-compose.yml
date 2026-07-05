@@ -11,3 +11,11 @@ services:
       - PASSWORD=${SUDO_PASS:-rstudio}
       - ROOT=true
       - DISABLE_AUTH=true
+    volumes:
+      # Persist the user's home directory (files, settings, installed R
+      # packages) so work survives `docker compose down`, image updates, and
+      # pruning. The named volume is pre-populated from the image on first run.
+      - rstudio_home:/home/rstudio
+
+volumes:
+  rstudio_home:

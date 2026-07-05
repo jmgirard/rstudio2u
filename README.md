@@ -69,6 +69,21 @@ be installed and running.
 6. When done, open Docker Desktop and end the container
 7. Next time, you don't need to run `git clone...` again
 
+### Getting files in and out
+
+Because the home directory lives in a Docker volume (not an ordinary host
+folder), move files through RStudio or Docker:
+
+- **In RStudio (easiest):** use the **Upload** button in the Files pane to bring
+  files in, and select a file then **More → Export** to download it out.
+- **From a terminal:** with the server running,
+  `docker compose cp ./data.csv rstudio2u:/home/rstudio/` copies a file in, and
+  `docker compose cp rstudio2u:/home/rstudio/results.csv ./` copies one out.
+
+If you would rather work directly in a folder on your own computer, replace the
+`rstudio_home` volume in `docker-compose.yml` with a bind mount, e.g.
+`- ./workspace:/home/rstudio/workspace`, and keep your work in that folder.
+
 ## Security
 
 This image is intentionally **root-capable**: the RStudio user has passwordless

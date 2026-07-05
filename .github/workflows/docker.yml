@@ -58,5 +58,11 @@ jobs:
           tags: ${{ matrix.tags }}
           push: true
           provenance: false
+          # Always re-pull the r2u base so builds pick up a newer R
+          pull: true
+          # Scheduled/manual runs rebuild from scratch so they actually pull in
+          # new RStudio/Pandoc/Quarto releases instead of reusing cached layers.
+          # Push-triggered (code change) builds use the cache for speed.
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}

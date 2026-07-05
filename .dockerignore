@@ -10,4 +10,5 @@ Dockerfile
 docker-compose.yml
 LICENSE
 README.md
+CITATION.cff
 .DS_Store

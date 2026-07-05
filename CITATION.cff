@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "rstudio2u: RStudio Server, Pandoc, and Quarto on r2u"
+abstract: >-
+  A Docker image combining r2u (fast binary R package installation via bspm)
+  with RStudio Server, Pandoc, and Quarto, for AMD64 and ARM64.
+type: software
+authors:
+  - family-names: Girard
+    given-names: Jeffrey M.
+    orcid: "https://orcid.org/0000-0002-7359-3746"
+repository-code: "https://github.com/jmgirard/rstudio2u"
+url: "https://github.com/jmgirard/rstudio2u"
+license: MIT
+keywords:
+  - R
+  - RStudio
+  - Docker
+  - reproducibility
+  - bspm
+  - r2u

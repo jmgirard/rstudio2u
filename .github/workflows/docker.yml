@@ -83,19 +83,3 @@ jobs:
           no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
-
-  # Keep the Docker Hub overview in sync with the repository README
-  dockerhub-description:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Update Docker Hub description
-        uses: peter-evans/dockerhub-description@v4
-        continue-on-error: true
-        with:
-          username: jmgirard
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: jmgirard/rstudio2u

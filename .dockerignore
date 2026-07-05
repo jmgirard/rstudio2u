@@ -1,4 +1,6 @@
 # Only the scripts/ directory is needed in the build context.
+start_*
+stop_*
 .git
 .github
 .gitattributes

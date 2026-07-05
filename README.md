@@ -13,6 +13,26 @@ The R version is whatever the underlying [r2u](https://github.com/rocker-org/r2u
 
 ## Use Examples
 
+### Quick start (recommended): double-click launcher
+
+The easiest way to run the server, good for classrooms and non-technical users.
+
+1. Install and open [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. Download this repository (green **Code** button → **Download ZIP**, then unzip)
+   or `git clone https://github.com/jmgirard/rstudio2u`
+3. Double-click the launcher for your system:
+   - **macOS:** `start_mac.command` — the first time, right-click it and choose
+     **Open** to get past Gatekeeper (double-click works every time after that)
+   - **Windows:** `start_windows.bat`
+   - **Linux:** `start_linux.sh`
+4. It downloads the latest image, starts the server, waits until it is ready,
+   and opens <http://localhost:8787> in your browser (no username or password)
+5. When you are done, double-click the matching `stop_...` file. Your session is
+   preserved; run the start file again to resume.
+
+The launchers just wrap the Docker Compose commands below, so Docker Desktop must
+be installed and running.
+
 ### Option 1: Pull and run from Dockerhub
 
 1. Install and open [Docker Desktop](https://www.docker.com/products/docker-desktop/)

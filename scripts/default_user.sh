@@ -22,10 +22,12 @@ else
 }
 EOF
 
-    ## Allow default user to run bspm without a password
+    ## Allow the staff group to run bspm/apt without a password. Granting the
+    ## group (rather than the specific default user) means a custom-UID user
+    ## created at runtime -- which init_userconf.sh also adds to staff -- keeps
+    ## working with bspm instead of silently losing sudo.
     chown -R "${DEFAULT_USER}:${DEFAULT_USER}" "/home/${DEFAULT_USER}"
-    usermod -aG staff ${DEFAULT_USER} 
-    echo "${DEFAULT_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo '%staff ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 fi
 
 # If shiny server installed, make the user part of the shiny group

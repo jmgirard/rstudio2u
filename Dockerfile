@@ -1,4 +1,10 @@
-FROM rocker/r2u:26.04
+# syntax=docker/dockerfile:1
+
+# Ubuntu release of the r2u base image to build on. Override to build the
+# different tags, e.g. build the "resolute" tag with:
+#   docker build --build-arg UBUNTU_VERSION=26.04 .
+ARG UBUNTU_VERSION=24.04
+FROM rocker/r2u:${UBUNTU_VERSION}
 
 LABEL org.label-schema.license="MIT" \
       org.label-schema.vcs-url="https://github.com/jmgirard/rstudio2u" \
@@ -8,13 +14,20 @@ LABEL org.label-schema.license="MIT" \
 # Set up environmental variables
 ENV LANG=en_US.UTF-8
 ENV S6_VERSION="v2.1.0.2"
-ENV RSTUDIO_VERSION="2026.06.0-242"
 ENV DEFAULT_USER="rstudio"
 
-# Install RStudio Server
+# RStudio Server version. "stable" installs the newest released version at
+# build time; pin a specific version to override, e.g.:
+#   docker build --build-arg RSTUDIO_VERSION=2026.06.0-242 .
+ARG RSTUDIO_VERSION="stable"
+ENV RSTUDIO_VERSION=${RSTUDIO_VERSION}
+
+# Install RStudio Server, Pandoc, and Quarto
 COPY scripts /rocker_scripts
-RUN chmod -R +x /rocker_scripts
-RUN /rocker_scripts/install_rstudio.sh
+RUN chmod -R +x /rocker_scripts \
+    && /rocker_scripts/install_rstudio.sh \
+    && /rocker_scripts/install_pandoc.sh \
+    && /rocker_scripts/install_quarto.sh
 
 # Set up bspm and permissions
 RUN sed -i '/suppressMessages(bspm::enable())/i options(bspm.sudo = TRUE)' /etc/R/Rprofile.site
@@ -26,9 +39,10 @@ RUN echo 'DPkg::Post-Invoke {"chown -R root:staff /usr/local/lib/R/site-library 
 RUN chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
     && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
+# Report container health by checking that RStudio Server is serving HTTP
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD wget -q -O /dev/null http://localhost:8787/ || exit 1
+
 # Start RStudio Server
 EXPOSE 8787
 CMD ["/init"]
-
-# Install Pandoc and Quarto
-RUN /rocker_scripts/install_pandoc.sh && /rocker_scripts/install_quarto.sh

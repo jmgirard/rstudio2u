@@ -1,9 +1,12 @@
 services:
   rstudio2u:
     image: jmgirard/rstudio2u:latest
+    build:
+      context: .
+      args:
+        UBUNTU_VERSION: "24.04"
     ports:
       - "127.0.0.1:${RS_PORT:-8787}:8787"
-      - "127.0.0.1:${SSH_PORT:-2222}:22"
     environment:
       - PASSWORD=${SUDO_PASS:-rstudio}
       - ROOT=true

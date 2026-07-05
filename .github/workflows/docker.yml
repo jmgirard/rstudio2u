@@ -25,13 +25,10 @@ jobs:
         include:
           - variant: noble
             ubuntu_version: "24.04"
-            tags: |
-              jmgirard/rstudio2u:latest
-              jmgirard/rstudio2u:noble
+            mutable: latest noble
           - variant: resolute
             ubuntu_version: "26.04"
-            tags: |
-              jmgirard/rstudio2u:resolute
+            mutable: resolute
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +45,25 @@ jobs:
           username: jmgirard
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Resolve the current stable RStudio version and build the tag list:
+      # mutable tags (latest/noble/resolute) plus immutable tags that pin the
+      # date and the RStudio version, so a course can pin a reproducible image.
+      - name: Compute tags and RStudio version
+        id: meta
+        run: |
+          set -e
+          DATE=$(date -u +%Y-%m-%d)
+          RSVER=$(wget -qO- "https://www.rstudio.org/links/check_for_update?version=1.0.0" \
+            | grep -oP '(?<=update-version=)[^&]+' | sed 's/%2B/-/g')
+          echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
+          {
+            echo "tags<<EOF"
+            for t in ${{ matrix.mutable }}; do echo "$IMAGE:$t"; done
+            echo "$IMAGE:${{ matrix.variant }}-$DATE"
+            echo "$IMAGE:${{ matrix.variant }}-$RSVER"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push ${{ matrix.variant }}
         uses: docker/build-push-action@v6
         with:
@@ -55,7 +71,8 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           build-args: |
             UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-          tags: ${{ matrix.tags }}
+            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+          tags: ${{ steps.meta.outputs.tags }}
           push: true
           provenance: false
           # Always re-pull the r2u base so builds pick up a newer R
@@ -66,3 +83,19 @@ jobs:
           no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+
+  # Keep the Docker Hub overview in sync with the repository README
+  dockerhub-description:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        continue-on-error: true
+        with:
+          username: jmgirard
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: jmgirard/rstudio2u

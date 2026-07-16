@@ -3,17 +3,17 @@ set -e
 
 ### Sets up the s6-overlay (v3) init system.
 
-S6_VERSION=${1:-${S6_VERSION:-"v3.2.3.0"}}
+S6_VERSION=${1:-${S6_VERSION:-"v3.2.3.2"}}
 
 # Known-good SHA256 checksums for the tarballs of pinned releases. When
 # S6_VERSION matches a key here, the download is verified against these
 # values; otherwise the checksum published alongside the release is fetched
 # and used (still protects against corrupted/partial downloads).
 declare -A S6_SHA256=(
-    ["v3.2.3.0/s6-overlay-noarch.tar.xz"]="b720f9d9340efc8bb07528b9743813c836e4b02f8693d90241f047998b4c53cf"
-    ["v3.2.3.0/s6-overlay-symlinks-noarch.tar.xz"]="a60dc5235de3ecbcf874b9c1f18d73263ab99b289b9329aa950e8729c4789f0e"
-    ["v3.2.3.0/s6-overlay-x86_64.tar.xz"]="a93f02882c6ed46b21e7adb5c0add86154f01236c93cd82c7d682722e8840563"
-    ["v3.2.3.0/s6-overlay-aarch64.tar.xz"]="0952056ff913482163cc30e35b2e944b507ba1025d78f5becbb89367bf344581"
+    ["v3.2.3.2/s6-overlay-noarch.tar.xz"]="5379750ed30a84bbd2e2dd74847ba6b5bd29cd0b2e3ea2ec58049b57eb2eda12"
+    ["v3.2.3.2/s6-overlay-symlinks-noarch.tar.xz"]="a215675c375aca9efecde3065df22b19fb8dcdc1362566931c6b5e778099a0fb"
+    ["v3.2.3.2/s6-overlay-x86_64.tar.xz"]="e6befcc96a437a3831386ecfc51808c5d3e939dc5fe3c02ae9284599e8aa2408"
+    ["v3.2.3.2/s6-overlay-aarch64.tar.xz"]="b17f17a82e7a515c682a91edaf2ffdabb73f891981b6c1fd712115693a2f8b4c"
 )
 
 # a function to install apt packages only if they are not installed

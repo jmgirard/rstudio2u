@@ -18,7 +18,7 @@ LABEL org.label-schema.license="MIT" \
 # Build configuration
 # ---------------------------------------------------------------------------
 ENV LANG=en_US.UTF-8 \
-    S6_VERSION="v3.2.3.0" \
+    S6_VERSION="v3.2.3.2" \
     DEFAULT_USER="rstudio"
 
 # RStudio Server version. "stable" installs the newest released version at

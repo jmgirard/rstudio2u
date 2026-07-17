@@ -3,11 +3,11 @@
      Per-section owners are tagged below. -->
 # M01: CI smoke test before publishing moving tags
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
-- **Branch/PR:** —
+- **Branch/PR:** m01-ci-smoke-test
 
 ## Goal
 

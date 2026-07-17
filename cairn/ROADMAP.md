@@ -12,3 +12,4 @@ _Last hygiene check: 2026-07-17_
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
+- CI smoke test before push: run the built image and wait for the healthcheck so moving tags can't publish a server that won't start — added 2026-07-17 — GP7

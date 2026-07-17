@@ -59,24 +59,42 @@ reproducibility.
 
 ## Design Principles
 
-<!-- IP<n> = Inviolable first, then GP<n> = Guiding. Numbers never reused.
-     Phase 2 of /design-interview pending — candidates banked below. -->
+<!-- IP<n> = Inviolable (hard constraint; changing one takes a D-entry) first,
+     then GP<n> = Guiding (tradeable with stated justification). Numbers are
+     never reused or renumbered. Adopted in the 2026-07-17 design interview. -->
 
-### Banked candidates (interview 2026-07-17, Phase 2 pending)
-
-1. Infrastructure-only boundary — no preinstalled R packages (candidate IP).
-2. Root-capable is the permanent identity; no locked-down mode ships here;
-   no-auth defaults only ever behind a localhost bind (candidate IP).
-3. Frozen runtime interface (port/user/volume/env/entrypoint) (candidate IP).
-4. Classroom-first tiebreaker — double-click simplicity outranks
-   flexibility (candidate GP).
-5. amd64+arm64 parity; all three launchers supported (candidate GP or IP).
-6. Always-fresh moving tags; every moving tag has an immutable escape hatch
-   (candidate GP; escape-hatch half derived from the tag scheme).
-7. Owned-fork scripts posture — simplify freely, hand-pick upstream fixes
-   (candidate GP).
-8. Resolute is preview tier; Docker Hub is the sole registry (likely
-   conventions, not principles — classify or skip in Phase 2).
+- **IP1 — Infrastructure only.** The image ships nothing bspm/apt can cheaply
+  deliver at runtime; no preinstalled R packages, ever. The
+  runtime-deliverability test decides edge cases.
+- **IP2 — Root-capable is the identity.** No locked-down mode ships from this
+  repo (rocker/rstudio exists for that), and no default — compose, launcher,
+  or doc example — ever pairs disabled auth with a bind beyond `127.0.0.1`.
+- **IP3 — The runtime interface is frozen.** Port 8787, user `rstudio`,
+  `/home/rstudio` volume, `PASSWORD`/`ROOT`/`DISABLE_AUTH`/`USERID`, s6
+  `/init` keep working against moving tags; changes require a deprecation
+  period and README notice — never a silent break.
+- **IP4 — Student work is sacrosanct.** Stopping, restarting, and updating
+  never destroy the home volume; no launcher or documented flow wipes data
+  implicitly — only an explicit, warned command may.
+- **GP1 — Classroom first.** When audience needs conflict, the simplicity of
+  the double-click path wins.
+- **GP2 — Always fresh, always an escape hatch.** Moving tags track newest
+  stable automatically; every build also publishes immutable date/version
+  tags, and the README keeps teaching courses to pin. Freshness may never
+  shed its escape hatch.
+- **GP3 — Both architectures, all three launchers.** amd64/arm64 parity and
+  macOS/Windows/Linux launcher coverage are supported surfaces; a break is a
+  ship-blocking or hotfix-tier bug (documented temporary asymmetry allowed
+  when an upstream forces it).
+- **GP4 — Owned fork.** `scripts/` is this repo's code: simplify freely;
+  upstream rocker fixes are hand-picked, not synced.
+- **GP5 — Lean image.** Size is a feature; additions justify their megabytes,
+  and periodic slimming is licensed work.
+- **GP6 — One Dockerfile.** All variants build from a single Dockerfile via
+  build args, never per-variant forks.
+- **GP7 — Never knowingly ship a broken moving tag.** An unattended rebuild
+  must not publish an image whose server fails to come up (see the ROADMAP
+  candidate for a CI smoke test closing the current gap).
 
 ## Architecture
 

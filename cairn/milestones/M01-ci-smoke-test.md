@@ -63,7 +63,7 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 
 ## Tasks
 
-- [ ] T1: Write `.github/smoke-test.sh` — argument: local image tag (timeout
+- [x] T1: Write `.github/smoke-test.sh` — argument: local image tag (timeout
       overridable via env). `docker run -d -p 127.0.0.1:8787:8787` the image,
       poll `docker inspect --format '{{.State.Health.Status}}'` (the Dockerfile
       already defines the `:8787` HEALTHCHECK) until `healthy` or timeout, always
@@ -87,6 +87,9 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 
 - 2026-07-17: created by /milestone-plan. Promotes the "CI smoke test before
   push" ROADMAP candidate (added 2026-07-17, GP7).
+- 2026-07-17: T1 — wrote `.github/smoke-test.sh` (docker-inspect health poll,
+  container-exit + unhealthy + timeout fail paths, always-teardown, port-probe
+  fallback for no-healthcheck images). bash -n + shellcheck (via container) clean.
 
 ## Decisions
 

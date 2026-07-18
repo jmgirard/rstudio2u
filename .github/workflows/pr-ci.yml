@@ -23,8 +23,10 @@ jobs:
       # Fast, offline unit test of the RStudio version resolver. docker.yml's
       # version scrape never runs on PRs (it is push/schedule/dispatch only), so
       # this is where the guard against a mis-named tag is exercised pre-merge.
-      - name: Resolver unit test
-        run: bash ./scripts/tests/test_resolve_rstudio_version.sh
+      - name: Resolver unit tests
+        run: |
+          bash ./scripts/tests/test_resolve_rstudio_version.sh
+          bash ./scripts/tests/test_resolve_download_url.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0

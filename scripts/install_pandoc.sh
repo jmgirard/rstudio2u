@@ -65,7 +65,10 @@ if [ "$PANDOC_VERSION" != "$INSTALLED_PANDOC_VERSION" ]; then
         fi
 
         if [ "$PANDOC_VERSION" = "latest" ]; then
-            PANDOC_DL_URL=$(wget -qO- https://api.github.com/repos/jgm/pandoc/releases/latest | grep -oP "(?<=\"browser_download_url\":\s\")https.*${ARCH}\.deb")
+            # Resolve + validate the release .deb URL; a format-changed or
+            # arch-missing scrape fails loudly here instead of feeding wget an
+            # empty/wrong URL (see resolve-download-url.sh).
+            PANDOC_DL_URL=$(/rocker_scripts/resolve-download-url.sh https://api.github.com/repos/jgm/pandoc/releases/latest browser_download_url "${ARCH}")
         else
             PANDOC_DL_URL="https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-${ARCH}.deb"
         fi

@@ -55,9 +55,12 @@ if [ "$QUARTO_VERSION" != "$INSTALLED_QUARTO_VERSION" ]; then
         ln -fs "$BUNDLED_QUARTO" /usr/local/bin
     else
         if [ "$QUARTO_VERSION" = "latest" ] || [ "$QUARTO_VERSION" = "release" ]; then
-            QUARTO_DL_URL=$(wget -qO- https://quarto.org/docs/download/_download.json | grep -oP "(?<=\"download_url\":\s\")https.*${ARCH}\.deb")
+            # Resolve + validate the release .deb URL; a format-changed or
+            # arch-missing scrape fails loudly here instead of feeding wget an
+            # empty/wrong URL (see resolve-download-url.sh).
+            QUARTO_DL_URL=$(/rocker_scripts/resolve-download-url.sh https://quarto.org/docs/download/_download.json download_url "${ARCH}")
         elif [ "$QUARTO_VERSION" = "prerelease" ]; then
-            QUARTO_DL_URL=$(wget -qO- https://quarto.org/docs/download/_prerelease.json | grep -oP "(?<=\"download_url\":\s\")https.*${ARCH}\.deb")
+            QUARTO_DL_URL=$(/rocker_scripts/resolve-download-url.sh https://quarto.org/docs/download/_prerelease.json download_url "${ARCH}")
         else
             QUARTO_DL_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-${ARCH}.deb"
         fi

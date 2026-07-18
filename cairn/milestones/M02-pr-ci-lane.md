@@ -3,11 +3,11 @@
      Per-section owners are tagged below. -->
 # M02: Pre-merge PR CI lane
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
-- **Branch/PR:** —
+- **Branch/PR:** m02-pr-ci-lane
 
 ## Goal
 

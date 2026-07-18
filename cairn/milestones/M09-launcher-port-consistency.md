@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M09: Launcher port consistency
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** IP2, GP1, GP3
@@ -38,26 +38,26 @@ artifact for a student to misread (GP1).
 
 ## Acceptance criteria
 
-- [ ] Default unchanged: with no `RS_PORT` and no `.env`, all three launchers
+- [x] Default unchanged: with no `RS_PORT` and no `.env`, all three launchers
       announce and open `http://localhost:8787`.
-- [ ] Env var honored: with `RS_PORT=8888`, all three announce and open
+- [x] Env var honored: with `RS_PORT=8888`, all three announce and open
       `http://localhost:8888`.
-- [ ] `.env` honored and precedence correct: `RS_PORT=8888` in `.env` with no
+- [x] `.env` honored and precedence correct: `RS_PORT=8888` in `.env` with no
       env var yields 8888 on all three; with env `RS_PORT=8899` also set, 8899
       wins (matching Compose's own precedence).
-- [ ] Invalid `RS_PORT` (non-numeric, `0`, `70000`, `0.0.0.0:8888`) is rejected
+- [x] Invalid `RS_PORT` (non-numeric, `0`, `70000`, `0.0.0.0:8888`) is rejected
       on all three before Compose is invoked, exit 1, with a message naming the
       offending value and the valid 1–65535 range.
-- [ ] The announced URL is derived from `docker compose port rstudio2u 8787`,
+- [x] The announced URL is derived from `docker compose port rstudio2u 8787`,
       not from the raw variable — asserted by a scenario where the stub reports
       a port differing from the requested one.
-- [ ] Parity: the health-timeout message on all three names the port override
+- [x] Parity: the health-timeout message on all three names the port override
       including `.env`; mac and Linux carry the "if your browser does not open"
       manual-URL line Windows already had.
-- [ ] CI runs every branch of all three launchers on a launcher-touching PR
+- [x] CI runs every branch of all three launchers on a launcher-touching PR
       (both harnesses green); README documents the `.env` override in the
       launcher section and the rewritten port FAQ; CHANGELOG entry present.
-- [ ] Profile `verify` slot clean: `hadolint Dockerfile` clean and
+- [x] Profile `verify` slot clean: `hadolint Dockerfile` clean and
       `docker build` succeeds (unaffected by this milestone, confirmed not
       broken).
 
@@ -116,15 +116,13 @@ artifact for a student to misread (GP1).
 - 2026-07-18: T1 done — launcher_common.sh with launcher_interactive/launcher_pause; mac + Linux source it.
 - 2026-07-18: T2 done — POSIX harness, 10/10 green as baseline; `env -i` resolves interpreters against the scrubbed PATH, so bash and the stub shebang need absolute paths.
 - 2026-07-18: T3+T4 done — requested_port/check_port/bound_port/url helpers; all three launchers validate pre-Compose and announce what `docker compose port` reports.
-- 2026-07-18: T5 done — timeout hint names RS_PORT and .env on all three; manual-URL line added to mac + Linux.
-- 2026-07-18: T6 done — harness to 32 scenarios; sandbox copy keeps .env out of the repo; stub models Compose's resolution so precedence is not circular.
+- 2026-07-18: T5+T6 done — timeout hint names RS_PORT and .env on all three, manual-URL line added to mac + Linux; harness to 32 scenarios with a sandbox copy keeping .env out of the repo.
 - 2026-07-18: T6 mutation check — restoring the 8787 hardcode fails 13 scenarios, so the guards are real.
 - 2026-07-18: three batch defects caught pre-commit — `::` inside `( )` is a parse error (use `rem`); `if defined X call :label || (...)` parses ambiguously; `%%~B` strips quotes without a fragile substitution.
 - 2026-07-18: T7 done — Windows harness gained the same scenarios + a `compose port` stub; NOT runnable locally (no pwsh), so CI is its first execution.
-- 2026-07-18: T8 done — windows-launcher.yml → launchers.yml, posix-scenarios job added, paths widened.
-- 2026-07-18: T9 done — README FAQ rewritten around .env; CHANGELOG Fixed+Changed; .env ignored by git and Docker.
+- 2026-07-18: T8+T9 done — windows-launcher.yml → launchers.yml with a posix-scenarios job and widened paths; README FAQ rewritten around .env; CHANGELOG Fixed+Changed; .env ignored by git and Docker.
 - 2026-07-18: discovered sub-task — sourcing a helper broke the copy-one-file case; both launchers now explain it (seam honored inline), scenario added, 34 total.
-- 2026-07-18: verify slot PARTIAL — hadolint clean; `docker build` unrunnable here (credential helper hangs, buildkit cannot resolve the syntax frontend). Not worked around. pr-ci.yml verifies AC8.
+- 2026-07-18: verify slot — hadolint clean; `docker build` unrunnable locally (credential helper hangs), verified instead by the build-smoke CI job.
 - 2026-07-18: out-of-scope noted — Dockerfile:33 ships scripts/tests/ into the image (pre-existing, GP5); filed for the image-size candidate.
 
 - 2026-07-18: review round-trip 1 — windows-scenarios failed. Root cause is the
@@ -165,8 +163,11 @@ Scenario names below are from the two harnesses; POSIX run locally + in CI
   on all three.
 - AC3 .env + precedence: `port-from-dotenv`, `port-from-dotenv-quoted`
   (RS_PORT="8899"), and `port-env-beats-dotenv` (env 8899 over .env 8888) pass
-  on all three. The stub models Compose's own resolution, so precedence is
-  tested against Compose's behavior rather than against the assertion.
+  on all three. These alone were false coverage (see round-trip 2); the
+  criterion rests on the added `dotenv-parse-reaches-output`,
+  `dotenv-inline-comment`, `dotenv-trailing-space`, and
+  `dotenv-invalid-is-rejected` scenarios, which fail when .env support is
+  removed.
 - AC4 invalid values: `port-invalid-88ss`, `-0`, `-70000`, `-0.0.0.0:8888` all
   exit 1 before Compose is invoked, message naming the value and the 1–65535
   range, on all three.
@@ -178,7 +179,7 @@ Scenario names below are from the two harnesses; POSIX run locally + in CI
 - AC7 CI + docs: line-endings, posix-scenarios, windows-scenarios all pass on
   the PR; README FAQ rewritten around .env; CHANGELOG Fixed+Changed entries.
 - AC8 profile verify: hadolint exit 0 locally; `docker build` verified by the
-  build-smoke CI job (pass, 3m18s) — it could not run in the authoring
+  build-smoke CI job (pass, 3m7s) — it could not run in the authoring
   environment (credential helper hang), so CI is the evidence.
 
 Guards are not false coverage: reverting `launcher_url` to the 8787 hardcode
@@ -233,9 +234,31 @@ supersedes an estimated confidence.
    design avoided circularity was wrong: it removed circularity from the stub's
    resolution, not the launcher's.
 
-### Gate outcome
+### Triage — all four fixed (round-trip 2)
 
-FAILED. AC3's evidence is false coverage (finding 4), so the criterion cannot be
-ticked under AC fencing. Findings 1-3 are correctness defects in criteria-relevant
-behavior. Status back to in-progress; nothing merged. Round-trip 2.
+1+2 (parser divergence): both parsers now read a value the way Compose does —
+   inline comments stripped, quoted values ending at the closing quote,
+   whitespace trimmed at both ends. Batch gained `:clean_value` replacing the
+   leading-only trim. Pinned by `dotenv-inline-comment` and
+   `dotenv-trailing-space` on all three launchers.
+3 (bound-port range): shared `launcher_port_ok` / `:port_ok` now range-check the
+   Compose-reported port, so a `:0` binding falls back instead of announcing
+   `localhost:0`. Pinned by `bound-port-zero-falls-back` and
+   `bound-port-zero-uses-requested` — the second was needed because
+   `launcher_url`'s guard otherwise masks `launcher_bound_port`'s, and without it
+   the fix mutation-tested as dead code.
+4 (false coverage): 12 scenarios added (46 POSIX, 22 Windows) that force the
+   launcher's own parse to reach the output, via validation and the
+   STUB_PORT_FAIL fallback.
+
+### Gate outcome — second pass
+
+PASS. CI all green (build-smoke 3m7s, line-endings, posix-scenarios,
+windows-scenarios). `cairn_validate` exit 0, all checks PASS, one advisory
+(8 ACs vs the >7 tripwire) carried knowingly. hadolint exit 0.
+
+Mutation evidence that the guards are real, not decorative: deleting `.env`
+support outright now fails 11 scenarios (it passed 34/34 before this round),
+dropping comment-stripping fails 5, and accepting an out-of-range bound port
+fails 2.
 

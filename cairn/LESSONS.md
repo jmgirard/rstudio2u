@@ -37,3 +37,12 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M06): offline-test a parser of a local command's `--version` by
   piping fixture text on stdin — no env seam needed (simpler than M03's
   RS_UPDATE_RESPONSE network seam, since there is no fetch to intercept).
+- 2026-07-18 (M07): simulate an r2u mirror outage in the container smoke by
+  blackholing the non-Ubuntu apt hosts (`/etc/hosts` → 127.0.0.1, refused fast)
+  and pointing `options(repos=)` at a dead port to kill bspm's source fallback;
+  apt's `Acquire::Retries` shows as repeated `Ign:/Err:` lines during the
+  `apt-get update` bspm runs first, so retry count is assertable there.
+- 2026-07-18 (M07): to add a friendly hint on install failure, key on
+  post-install state (is the package still missing?) + a scoped reachability
+  probe, not apt-error text — and scope the probe to the R package mirrors
+  (drop `*.ubuntu.com/.org`), or an unrelated Ubuntu-archive blip false-fires.

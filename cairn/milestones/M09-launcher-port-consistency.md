@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M09: Launcher port consistency
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** IP2, GP1, GP3
@@ -111,49 +111,24 @@ artifact for a student to misread (GP1).
 
 ## Work log
 
-- 2026-07-18: created by /milestone-plan. Promoted from the candidate filed by
-  M08's review; gate chose env-var + `.env` both, a bash harness on
-  ubuntu-latest, and pre-flight validation.
-- 2026-07-18: set in-progress; branch m09-launcher-port-consistency cut from
-  main.
-- 2026-07-18: gate chose a shared launcher_common.sh for the POSIX pair and
-  lenient validation (unparseable .env values pass through to Compose).
-- 2026-07-18: T1 done — launcher_common.sh created with launcher_interactive /
-  launcher_pause; mac + Linux source it; helper added to .dockerignore.
-- 2026-07-18: T2 done — scripts/tests/posix/run_launcher_scenarios.sh drives
-  both POSIX launchers through all 5 branches; 10/10 green against pre-change
-  behavior. Two harness bugs fixed: env -i resolves the interpreter against the
-  scrubbed PATH, so bash and the stub's shebang both need absolute paths.
-- 2026-07-18: T3+T4 done — launcher_common.sh gained launcher_requested_port /
-  launcher_check_port / launcher_bound_port / launcher_url; all three launchers
-  validate before Compose runs and announce the port `docker compose port`
-  reports. Windows carries its own batch copy.
-- 2026-07-18: T5 done — timeout message names RS_PORT and .env on all three;
-  mac and Linux gained the manual-URL line.
-- 2026-07-18: T6 done — POSIX harness extended to 32 scenarios (sandbox copy so
-  tests never write .env into the repo; stub models Compose's own resolution so
-  precedence is not asserted circularly). Mutation check: restoring the 8787
-  hardcode fails 13 scenarios.
-- 2026-07-18: three batch defects caught before commit — `::` comments inside a
-  parenthesised block are a cmd.exe parse error (use `rem`), `if defined X call
-  :label || (...)` parses ambiguously, and `%%~B` strips .env quotes without a
-  fragile substitution. CRLF blob guard re-run against the staged blob: 143/143.
-- 2026-07-18: T7 done — Windows harness gained the same port scenarios and a
-  `compose port`-aware stub; NOT runnable locally (no pwsh/Windows), so CI is
-  its first real execution.
-- 2026-07-18: T8 done — workflow renamed windows-launcher.yml → launchers.yml
-  with a posix-scenarios job; paths widened to start_*/stop_*/launcher_common.sh
-  and both harness dirs.
-- 2026-07-18: T9 done — README FAQ rewritten around .env, CHANGELOG Fixed+Changed
-  entries, .env added to .gitignore and .dockerignore. hadolint clean (exit 0);
-  docker build running to confirm the .dockerignore change is safe.
-- 2026-07-18: discovered sub-task under T1/T6 — sourcing launcher_common.sh
-  introduced a new failure mode (a student copying only the launcher out of the
-  folder). Both POSIX launchers now explain it; the pause there honors the seam
-  inline, since the helper defining launcher_pause is the missing file. Scenario
-  added, 34 total.
-- 2026-07-18: noted out-of-scope — Dockerfile:33 copies scripts/tests/ into the
-  image (pre-existing, GP5); filed for the image-size candidate, not fixed here.
+- 2026-07-18: created by /milestone-plan; promoted from the candidate M08's review filed.
+- 2026-07-18: plan gate — env var + `.env`, bash harness on ubuntu-latest, pre-flight validation.
+- 2026-07-18: set in-progress; branch cut from main.
+- 2026-07-18: implement gate — shared launcher_common.sh for the POSIX pair; lenient validation (unreadable values pass through to Compose).
+- 2026-07-18: T1 done — launcher_common.sh with launcher_interactive/launcher_pause; mac + Linux source it.
+- 2026-07-18: T2 done — POSIX harness, 10/10 green against pre-change behavior (baseline).
+- 2026-07-18: T2 harness bugs — `env -i` resolves interpreters against the scrubbed PATH; bash and the stub shebang both need absolute paths.
+- 2026-07-18: T3+T4 done — requested_port/check_port/bound_port/url helpers; all three launchers validate pre-Compose and announce what `docker compose port` reports.
+- 2026-07-18: T5 done — timeout hint names RS_PORT and .env on all three; manual-URL line added to mac + Linux.
+- 2026-07-18: T6 done — harness to 32 scenarios; sandbox copy keeps .env out of the repo; stub models Compose's resolution so precedence is not circular.
+- 2026-07-18: T6 mutation check — restoring the 8787 hardcode fails 13 scenarios, so the guards are real.
+- 2026-07-18: three batch defects caught pre-commit — `::` inside `( )` is a parse error (use `rem`); `if defined X call :label || (...)` parses ambiguously; `%%~B` strips quotes without a fragile substitution.
+- 2026-07-18: T7 done — Windows harness gained the same scenarios + a `compose port` stub; NOT runnable locally (no pwsh), so CI is its first execution.
+- 2026-07-18: T8 done — windows-launcher.yml → launchers.yml, posix-scenarios job added, paths widened.
+- 2026-07-18: T9 done — README FAQ rewritten around .env; CHANGELOG Fixed+Changed; .env ignored by git and Docker.
+- 2026-07-18: discovered sub-task — sourcing a helper broke the copy-one-file case; both launchers now explain it (seam honored inline), scenario added, 34 total.
+- 2026-07-18: verify slot PARTIAL — hadolint clean; `docker build` unrunnable here (credential helper hangs, buildkit cannot resolve the syntax frontend). Not worked around. pr-ci.yml verifies AC8.
+- 2026-07-18: out-of-scope noted — Dockerfile:33 ships scripts/tests/ into the image (pre-existing, GP5); filed for the image-size candidate.
 
 ## Decisions
 

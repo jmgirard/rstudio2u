@@ -119,7 +119,7 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
       run `start_windows.bat` under a PATH-shadowing `docker` stub across
       scenarios {not-installed, not-running, pull-fail, up-timeout, success},
       asserting message + exit code; also run the T1 guard (via `shell: bash`).
-- [ ] T5 — Port the not-installed vs not-running distinction and the
+- [x] T5 — Port the not-installed vs not-running distinction and the
       pull-failure message to `start_mac.command` and `start_linux.sh` (one-line
       echoes; no new CI lane).
 - [ ] T6 — Sync README troubleshooting (around line 175, "the launcher says
@@ -129,6 +129,11 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (T5): ported not-installed vs not-running + pull-failure diagnostics
+  to start_mac.command and start_linux.sh (`command -v docker` gate + pull check).
+  Verified locally with `bash -n` and a docker-stub PATH drive of start_linux.sh:
+  all four branches (not-installed/not-running/pull-fail/success) give the right
+  message + exit code; mac shares the identical structure (open vs xdg-open).
 - 2026-07-18 (T4): added .github/workflows/windows-launcher.yml (windows-latest
   scenarios via scripts/tests/windows/run_launcher_scenarios.ps1 driving a stub
   `docker` on PATH: not-installed/not-running/pull-fail/timeout/success; asserts

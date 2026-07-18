@@ -6,7 +6,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** IP2, GP1, GP3
-- **Branch/PR:** m09-launcher-port-consistency
+- **Branch/PR:** m09-launcher-port-consistency · https://github.com/jmgirard/rstudio2u/pull/10
 
 ## Goal
 
@@ -129,6 +129,14 @@ artifact for a student to misread (GP1).
 - 2026-07-18: discovered sub-task — sourcing a helper broke the copy-one-file case; both launchers now explain it (seam honored inline), scenario added, 34 total.
 - 2026-07-18: verify slot PARTIAL — hadolint clean; `docker build` unrunnable here (credential helper hangs, buildkit cannot resolve the syntax frontend). Not worked around. pr-ci.yml verifies AC8.
 - 2026-07-18: out-of-scope noted — Dockerfile:33 ships scripts/tests/ into the image (pre-existing, GP5); filed for the image-size candidate.
+
+- 2026-07-18: review round-trip 1 — windows-scenarios failed. Root cause is the
+  harness, not the launcher: PowerShell variable names are case-insensitive, so
+  the `$DotEnv` parameter shadowed the script-level `$dotenv` path, and
+  Set-Content wrote to a path named after the content. Status back to
+  in-progress.
+- 2026-07-18: fixed — script path renamed $dotenvPath; stale windows-launcher.yml
+  reference in the harness header corrected. Back to review pending CI.
 
 ## Decisions
 

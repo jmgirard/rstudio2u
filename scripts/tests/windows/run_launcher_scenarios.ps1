@@ -17,7 +17,7 @@ Each scenario sets a controlled PATH (+ STUB_*_FAIL) in the wrapper, calls the
 launcher with RS_LAUNCHER_NONINTERACTIVE so it runs unattended, and asserts the
 forwarded exit code and a message substring. No network, no real Docker.
 
-Run by .github/workflows/windows-launcher.yml (windows-latest).
+Run by .github/workflows/launchers.yml (windows-latest).
 #>
 $ErrorActionPreference = 'Stop'
 $repo   = (Resolve-Path "$PSScriptRoot\..\..\..").Path
@@ -35,7 +35,9 @@ $sandbox  = Join-Path $work 'sandbox'
 New-Item -ItemType Directory -Force -Path $sandbox | Out-Null
 Copy-Item $source $sandbox -Force
 $launcher = Join-Path $sandbox 'start_windows.bat'
-$dotenv   = Join-Path $sandbox '.env'
+# Named $dotenvPath, not $dotenv: PowerShell variable names are case-insensitive,
+# so a $DotEnv parameter would shadow it inside Invoke-Scenario.
+$dotenvPath = Join-Path $sandbox '.env'
 
 # Compile a docker.exe stub whose info / compose-pull / compose-up outcomes are
 # driven by STUB_*_FAIL env vars. csc.exe (.NET Framework) ships on the runner.
@@ -109,8 +111,8 @@ function Invoke-Scenario {
         [string]   $DotEnv
     )
     # Seed (or clear) the sandbox .env for this scenario.
-    if (Test-Path $dotenv) { Remove-Item $dotenv -Force }
-    if ($DotEnv) { Set-Content -Path $dotenv -Value $DotEnv -Encoding Ascii }
+    if (Test-Path $dotenvPath) { Remove-Item $dotenvPath -Force }
+    if ($DotEnv) { Set-Content -Path $dotenvPath -Value $DotEnv -Encoding Ascii }
     # Generate a wrapper that sets PATH + env in the child shell itself, then
     # calls the launcher and forwards its exit code.
     $lines = @('@echo off', "set `"PATH=$PathValue`"", 'set "RS_LAUNCHER_NONINTERACTIVE=1"')

@@ -23,3 +23,14 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-17 (M03): unit-test a network-scraping shell script offline by giving
   it an env seam (`RS_UPDATE_RESPONSE`) that injects the raw response body in
   place of the fetch — fixtures drive every branch with no network.
+- 2026-07-18 (M05): assert bspm's *binary* install path (not a source fallback)
+  by checking `dpkg -s r-cran-<lowercased-pkg>` after install.packages() — r2u
+  names binaries r-cran-<name>; a source compile would load but register no apt
+  package.
+- 2026-07-18 (M05): smoke-test the Quarto CLI on an image that ships no R
+  packages (IP1) with a chunk-free .qmd — quarto's markdown engine renders via
+  bundled Pandoc, no knitr/jupyter needed; add an R code chunk only if you first
+  install knitr.
+- 2026-07-18 (M05): boot-check an arm64-only image with a single-platform
+  `load:true` build + `docker run` under QEMU binfmt (multi-arch images can't be
+  --load'ed); a native-arm64 host verifies the real arch without emulation.

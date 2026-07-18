@@ -1,0 +1,54 @@
+name: PR CI (build + smoke)
+
+# Pre-merge gate: lint, build the committed noble variant (amd64), and boot it
+# to confirm RStudio Server comes up — before a branch merges. The publish
+# workflow (docker.yml) runs only on push-to-main/schedule/dispatch, so without
+# this lane a broken image is caught only after merge. This lane never logs in
+# and never pushes: it verifies the branch, it does not publish (GP7).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "scripts/**"
+      - ".github/workflows/**"
+
+jobs:
+  build-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build noble for amd64 only and load it into the daemon so we can boot it
+      # (multi-arch images can't be --load'ed — arm64 is boot-checked at publish
+      # time on docker.yml, a documented GP3 asymmetry). No login, no push, no
+      # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
+      # produces no immutable tags. Reuses docker.yml's gha cache scope for speed.
+      - name: Build noble (amd64) for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          build-args: |
+            UBUNTU_VERSION=24.04
+          tags: rstudio2u:pr-smoke-noble
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=noble
+
+      # A non-zero exit fails the job and blocks the merge (cairn never merges
+      # red CI). The script always tears the container down.
+      - name: Smoke-test noble (amd64)
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-noble

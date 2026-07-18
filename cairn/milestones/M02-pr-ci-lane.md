@@ -64,7 +64,7 @@ no version scrape, no immutable tags, no push.
 
 ## Tasks
 
-- [ ] T1: Author `.github/workflows/pr-ci.yml` — `pull_request` trigger on the
+- [x] T1: Author `.github/workflows/pr-ci.yml` — `pull_request` trigger on the
       default branch + path filter (`Dockerfile`, `scripts/**`,
       `.github/workflows/**`); one `ubuntu-latest` job: checkout →
       setup-buildx → `hadolint Dockerfile` → `docker/build-push-action`
@@ -86,6 +86,7 @@ no version scrape, no immutable tags, no push.
 ## Work log
 
 - 2026-07-17: created by /milestone-plan (promoted from candidate A; extends M01).
+- 2026-07-17: T1 — authored `.github/workflows/pr-ci.yml` (hadolint → build amd64/noble → smoke, no login/push); hadolint clean on Dockerfile (exit 0), actionlint clean on the workflow.
 
 ## Decisions
 

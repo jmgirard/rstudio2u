@@ -64,6 +64,39 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # Build the amd64 image and load it into the runner's Docker daemon so we
+      # can boot it and confirm the server comes up BEFORE any tag is pushed
+      # (GP7). Multi-arch images can't be --load'ed, so the smoke gate runs on
+      # amd64 (the runner's native arch); arm64 is still built and pushed below,
+      # just not boot-checked (documented asymmetry — GP3). On scheduled/manual
+      # runs this is a fresh no-cache build, so amd64 is built once here and
+      # again in the push step; the extra native build is cheap next to the
+      # arm64 emulation and is the price of never publishing a dead server.
+      - name: Build ${{ matrix.variant }} (amd64) for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          build-args: |
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+          tags: ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
+          push: false
+          provenance: false
+          pull: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+
+      # A non-zero exit here fails this variant's job (fail-fast: false keeps the
+      # variants independent, so a resolute failure never blocks noble) and, by
+      # aborting before the push step, blocks publishing a broken image.
+      - name: Smoke-test ${{ matrix.variant }} (amd64)
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
+
       - name: Build and push ${{ matrix.variant }}
         uses: docker/build-push-action@v6
         with:
@@ -79,7 +112,8 @@ jobs:
           pull: true
           # Scheduled/manual runs rebuild from scratch so they actually pull in
           # new RStudio/Pandoc/Quarto releases instead of reusing cached layers.
-          # Push-triggered (code change) builds use the cache for speed.
+          # Push-triggered (code change) builds use the cache for speed; the
+          # amd64 layers built for the smoke test above are reused from cache.
           no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}

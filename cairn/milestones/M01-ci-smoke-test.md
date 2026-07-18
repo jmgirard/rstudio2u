@@ -73,7 +73,7 @@ smoke test blocks that variant's push. A CHANGELOG entry.
       the script against it (expect exit 0); run the script against a container
       that never serves `:8787` (expect non-zero). Capture both outputs as
       review evidence.
-- [ ] T3: Restructure `.github/workflows/docker.yml` — before the existing
+- [x] T3: Restructure `.github/workflows/docker.yml` — before the existing
       build-push step, add an amd64 `load: true` build (cache-to the variant
       scope) plus a step invoking `.github/smoke-test.sh`; keep the multi-arch
       build-push (cache-from the same scope, so amd64 layers are reused). Preserve
@@ -90,6 +90,9 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 - 2026-07-17: T1 — wrote `.github/smoke-test.sh` (docker-inspect health poll,
   container-exit + unhealthy + timeout fail paths, always-teardown, port-probe
   fallback for no-healthcheck images). bash -n + shellcheck (via container) clean.
+- 2026-07-17: T3 — restructured docker.yml into amd64 `--load` build →
+  smoke step → multi-arch push; smoke abort blocks the push, fail-fast:false
+  keeps resolute independent of noble. actionlint clean.
 
 ## Decisions
 

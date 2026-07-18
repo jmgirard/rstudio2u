@@ -33,7 +33,9 @@ The easiest way to run the server, good for classrooms and non-technical users.
    - **Windows:** `start_windows.bat`
    - **Linux:** `start_linux.sh`
 4. It downloads the latest image, starts the server, waits until it is ready,
-   and opens <http://localhost:8787> in your browser (no username or password)
+   and opens <http://localhost:8787> in your browser (no username or password).
+   If that port is already taken on your machine, see the FAQ below for how to
+   pick another one — the launcher will then report and open that address instead
 5. When you are done, double-click the matching `stop_...` file. Your session is
    preserved; run the start file again to resume.
 
@@ -184,10 +186,19 @@ That's a network problem, not a broken install — check your internet connectio
 and that you can reach Docker Hub, then run the launcher again.
 
 **Port 8787 is already in use.**
-Use a different host port. With the launcher or Compose, set `RS_PORT`, e.g.
-`RS_PORT=8888 docker compose up -d`, then browse to <http://localhost:8888>. With
-`docker run`, change the mapping to `-p 8888:8787`. (If the launcher reports the
-server "did not become ready in time", a busy port 8787 is the likely cause.)
+Use a different host port. With the launchers, create a plain text file named
+`.env` next to the launcher containing one line:
+
+```
+RS_PORT=8888
+```
+
+Then run the launcher again — it reports and opens the new address for you. (A
+`.env` file works for double-clicking, which is why it is the recommended way;
+setting an environment variable only works if you launch from a terminal, where
+`RS_PORT=8888 docker compose up -d` also does the job.) With `docker run`,
+change the mapping to `-p 8888:8787` instead. If the launcher reports the server
+"did not become ready in time", a busy port is the likely cause.
 
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or

@@ -1,8 +1,8 @@
-name: Windows launcher
+name: Launchers
 
-# The Windows launcher path sees the least real-world testing (a known wart), so
-# this lane executes it on a real windows-latest runner against a stub `docker`
-# on PATH — driving every failure/success branch without needing Docker — plus a
+# The launcher path sees the least real-world testing (a known wart), so this
+# lane executes all three launchers on real runners against a stub `docker` on
+# PATH — driving every failure/success branch without needing Docker — plus a
 # cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
 # ZIP download works on Windows). Its own paths filter keeps the heavy image
 # build in pr-ci.yml from being dragged in by a launcher-only change.
@@ -10,12 +10,14 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "start_windows.bat"
-      - "stop_windows.bat"
+      - "start_*"
+      - "stop_*"
+      - "launcher_common.sh"
       - ".gitattributes"
       - "scripts/tests/test_launcher_line_endings.sh"
+      - "scripts/tests/posix/**"
       - "scripts/tests/windows/**"
-      - ".github/workflows/windows-launcher.yml"
+      - ".github/workflows/launchers.yml"
 
 jobs:
   line-endings:
@@ -26,7 +28,15 @@ jobs:
       - name: Launcher CRLF-in-blob guard
         run: bash scripts/tests/test_launcher_line_endings.sh
 
-  launcher-scenarios:
+  posix-scenarios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run POSIX launcher branches (stubbed docker)
+        run: bash scripts/tests/posix/run_launcher_scenarios.sh
+
+  windows-scenarios:
     runs-on: windows-latest
     steps:
       - name: Checkout

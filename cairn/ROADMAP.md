@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-18 (M08 archived; M03 terminal row pruned to keep 5
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M09 | Launcher port consistency | planned | — | normal | milestones/M09-launcher-port-consistency.md |
+| M09 | Launcher port consistency | review | — | normal | milestones/M09-launcher-port-consistency.md |
 | M08 | Windows launcher hardening | done | — | normal | milestones/archive/M08-windows-launcher-hardening.md |
 | M07 | bspm mirror-failure UX | done | — | normal | milestones/archive/M07-bspm-mirror-ux.md |
 | M06 | Harden the Pandoc version parses | done | — | normal | milestones/archive/M06-pandoc-version-parse-guard.md |

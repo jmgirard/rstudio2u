@@ -1,6 +1,7 @@
 # Only the scripts/ directory is needed in the build context.
 start_*
 stop_*
+launcher_common.sh
 .git
 .github
 .gitattributes

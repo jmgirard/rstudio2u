@@ -74,12 +74,12 @@ artifact for a student to misread (GP1).
 
 ## Tasks
 
-- [ ] T1: Add the `RS_LAUNCHER_NONINTERACTIVE` seam to
+- [x] T1: Add the `RS_LAUNCHER_NONINTERACTIVE` seam to
       [start_mac.command](start_mac.command) and
       [start_linux.sh](start_linux.sh) — suppress the `read` pauses and the
       `open`/`xdg-open` call, mirroring
       [start_windows.bat:71](start_windows.bat:71).
-- [ ] T2: Write `scripts/tests/posix/run_launcher_scenarios.sh` — stub `docker`
+- [x] T2: Write `scripts/tests/posix/run_launcher_scenarios.sh` — stub `docker`
       on PATH, drive both POSIX launchers through the existing five branches
       (not-installed, not-running, pull-failure, health-timeout, success).
       Green against current behavior before any port change lands.
@@ -116,6 +116,16 @@ artifact for a student to misread (GP1).
   ubuntu-latest, and pre-flight validation.
 - 2026-07-18: set in-progress; branch m09-launcher-port-consistency cut from
   main.
+- 2026-07-18: gate chose a shared launcher_common.sh for the POSIX pair and
+  lenient validation (unparseable .env values pass through to Compose).
+- 2026-07-18: T1 done — launcher_common.sh created with launcher_interactive /
+  launcher_pause; mac + Linux source it; helper added to .dockerignore.
+- 2026-07-18: T2 done — scripts/tests/posix/run_launcher_scenarios.sh drives
+  both POSIX launchers through all 5 branches; 10/10 green against pre-change
+  behavior. Two harness bugs fixed: env -i resolves the interpreter against the
+  scrubbed PATH, so bash and the stub's shebang both need absolute paths.
+- 2026-07-18: noted out-of-scope — Dockerfile:33 copies scripts/tests/ into the
+  image (pre-existing, GP5); filed for the image-size candidate, not fixed here.
 
 ## Decisions
 

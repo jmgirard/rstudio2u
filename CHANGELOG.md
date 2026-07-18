@@ -8,9 +8,11 @@ Notable user-visible changes to the rstudio2u image. Format follows
 ### Changed
 
 - Published tags are now smoke-tested before release: CI boots the freshly
-  built image and waits for RStudio Server to answer on port 8787 before
-  pushing any tag, so an automated rebuild can no longer publish an image
-  whose server fails to start.
+  built image and confirms RStudio Server answers on port 8787, a package
+  installs from the binary repository, and Quarto renders a document — on both
+  the amd64 and arm64 builds — before pushing any tag. An automated rebuild can
+  no longer publish an image whose server, package installation, or Quarto
+  toolchain is broken on either architecture.
 
 ### Fixed
 

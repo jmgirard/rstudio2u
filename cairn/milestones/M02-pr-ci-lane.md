@@ -79,7 +79,7 @@ no version scrape, no immutable tags, no push.
       smoke-failing image change (e.g. break the entrypoint/healthcheck), open a
       disposable PR, confirm `pr-ci` goes red at the smoke step, capture the
       failing-run link, then close the PR and delete the branch.
-- [ ] T4: Local profile verify — run `hadolint Dockerfile` and
+- [x] T4: Local profile verify — run `hadolint Dockerfile` and
       `docker build --build-arg UBUNTU_VERSION=24.04 -t rstudio2u-verify .`;
       both clean.
 
@@ -87,6 +87,8 @@ no version scrape, no immutable tags, no push.
 
 - 2026-07-17: created by /milestone-plan (promoted from candidate A; extends M01).
 - 2026-07-17: T1 — authored `.github/workflows/pr-ci.yml` (hadolint → build amd64/noble → smoke, no login/push); hadolint clean on Dockerfile (exit 0), actionlint clean on the workflow.
+- 2026-07-17: T4 — local verify: `hadolint Dockerfile` clean (exit 0); `docker build --build-arg UBUNTU_VERSION=24.04` succeeds (854MB); bonus local smoke on the built image reported healthy.
+- 2026-07-17: T2 — opened milestone PR #2 (https://github.com/jmgirard/rstudio2u/pull/2); pr-ci lane triggered on it.
 
 ## Decisions
 

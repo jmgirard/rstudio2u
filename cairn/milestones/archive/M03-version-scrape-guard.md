@@ -22,5 +22,4 @@ review zero findings.
 ## Notes
 - Pure-bash validation (dropped `grep -P`) — portable + offline-testable.
 - Pandoc/Quarto scrapes (same wart) deferred → ROADMAP candidate.
-- DESIGN Known issue #2 updated: mitigated (fails loud); scrape format
-  dependence remains.
+- DESIGN Known issue #2 → mitigated (fails loud); format dependence remains.

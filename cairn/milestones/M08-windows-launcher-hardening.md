@@ -113,7 +113,7 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
       (d) manual-URL fallback if `start` fails; (e) a non-interactive env seam
       (e.g. `RS_LAUNCHER_NONINTERACTIVE`) suppressing `pause`/`timeout`/browser
       so CI can run it. Every failure branch keeps `exit /b 1`.
-- [ ] T4 — Add `.github/workflows/windows-launcher.yml` (runs-on
+- [x] T4 — Add `.github/workflows/windows-launcher.yml` (runs-on
       `windows-latest`, own `paths` filter on the `.bat` files + `.gitattributes`
       + the workflow, so the heavy image build in `pr-ci.yml` is not dragged in):
       run `start_windows.bat` under a PATH-shadowing `docker` stub across
@@ -129,6 +129,13 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (T4): added .github/workflows/windows-launcher.yml (windows-latest
+  scenarios via scripts/tests/windows/run_launcher_scenarios.ps1 driving a stub
+  `docker` on PATH: not-installed/not-running/pull-fail/timeout/success; asserts
+  exit code + message) + an ubuntu CRLF guard job. Own paths filter keeps the
+  pr-ci image build out. Locally verified: YAML valid, all 7 assertion strings
+  match launcher text, guard green. Real windows-latest run happens on the PR
+  (this lane is pull_request-triggered) — confirm at review.
 - 2026-07-18 (T3): reworked start_windows.bat — `where docker` not-installed vs
   `docker info` not-running; pull-failure vs health-timeout (with RS_PORT hint);
   `RS_LAUNCHER_NONINTERACTIVE` seam suppresses pause/timeout/browser; `if

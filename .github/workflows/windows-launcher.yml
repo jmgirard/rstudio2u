@@ -1,0 +1,36 @@
+name: Windows launcher
+
+# The Windows launcher path sees the least real-world testing (a known wart), so
+# this lane executes it on a real windows-latest runner against a stub `docker`
+# on PATH — driving every failure/success branch without needing Docker — plus a
+# cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
+# ZIP download works on Windows). Its own paths filter keeps the heavy image
+# build in pr-ci.yml from being dragged in by a launcher-only change.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "start_windows.bat"
+      - "stop_windows.bat"
+      - ".gitattributes"
+      - "scripts/tests/test_launcher_line_endings.sh"
+      - "scripts/tests/windows/**"
+      - ".github/workflows/windows-launcher.yml"
+
+jobs:
+  line-endings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Launcher CRLF-in-blob guard
+        run: bash scripts/tests/test_launcher_line_endings.sh
+
+  launcher-scenarios:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run start_windows.bat branches (stubbed docker)
+        shell: pwsh
+        run: ./scripts/tests/windows/run_launcher_scenarios.ps1

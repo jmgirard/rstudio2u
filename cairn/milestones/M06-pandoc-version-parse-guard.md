@@ -70,7 +70,7 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
       stderr, empty stdout).
 - [x] T3: Rewire `install_pandoc.sh` :29, :45, :81 to pipe `pandoc --version`
       through the helper; remove all `grep -oP`.
-- [ ] T4: Add `test_parse_pandoc_version.sh` to the resolver-unit-tests `run:`
+- [x] T4: Add `test_parse_pandoc_version.sh` to the resolver-unit-tests `run:`
       block in `pr-ci.yml`.
 - [ ] T5: Verify — run the unit test; `hadolint Dockerfile`; build the noble
       image and confirm `pandoc --version` and populated `/opt/pandoc/templates`.
@@ -84,6 +84,8 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
   grep -P) + offline unit test; 9/9 green.
 - 2026-07-18: T3 — install_pandoc.sh :29/:45/:81 rewired through the helper;
   no grep -P remains; bash -n clean.
+- 2026-07-18: T4 — test_parse_pandoc_version.sh wired into pr-ci.yml resolver
+  unit-tests step (gates PRs).
 
 ## Decisions
 

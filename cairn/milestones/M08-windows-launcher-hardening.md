@@ -3,11 +3,11 @@
      Per-section owners are tagged below. -->
 # M08: Windows launcher hardening
 
-- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
-- **Branch/PR:** m08-windows-launcher-hardening   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m08-windows-launcher-hardening · https://github.com/jmgirard/rstudio2u/pull/9   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -129,6 +129,10 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (review→in-progress): PR #9 windows-latest lane RED — test-harness
+  bugs, not launcher defects: (1) `.cmd` docker stub chains without returning
+  (bare `docker` → .cmd is a goto in batch; production docker.exe returns fine),
+  (2) inherited-env PATH override leaked real docker in. Fix in T4 harness only.
 - 2026-07-18 (T6): synced README FAQ — not-installed/not-running split, download-failure entry, RS_PORT-on-timeout hint; wording matches launcher.
 - 2026-07-18 (T5): ported not-installed/not-running + pull-failure diagnostics to start_mac.command + start_linux.sh; `bash -n` clean, docker-stub PATH drive of start_linux.sh exercises all four branches (right message + exit code).
 - 2026-07-18 (T4): added .github/workflows/windows-launcher.yml + run_launcher_scenarios.ps1 (windows-latest, stub docker on PATH, 5 scenarios) + ubuntu CRLF guard job; own paths filter keeps pr-ci build out; YAML valid, 7 assertions match launcher — real windows run happens on the PR.

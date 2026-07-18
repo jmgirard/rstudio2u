@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M07: bspm mirror-failure UX
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP1   <!-- owner: plan · create/amend-via-gate; works under infra-only + classroom-first; adds/changes none -->

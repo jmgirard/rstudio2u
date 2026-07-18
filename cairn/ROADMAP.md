@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-18 (M06 archived; M01 terminal row pruned to keep 5
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M07 | bspm mirror-failure UX | planned | — | normal | milestones/M07-bspm-mirror-ux.md |
+| M07 | bspm mirror-failure UX | in-progress | — | normal | milestones/M07-bspm-mirror-ux.md |
 | M06 | Harden the Pandoc version parses | done | — | normal | milestones/archive/M06-pandoc-version-parse-guard.md |
 | M05 | Deepen the smoke test | done | — | normal | milestones/archive/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |

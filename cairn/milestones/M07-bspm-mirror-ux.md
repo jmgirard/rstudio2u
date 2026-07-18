@@ -74,7 +74,7 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
       unavailable package name does **not** emit the mirror hint. Written to fail
       against the current image (`.github/smoke-test.sh:79-92` is the existing
       bspm block to build on).
-- [ ] T2 — Add an apt retry + timeout config layer to the `Dockerfile` (the
+- [x] T2 — Add an apt retry + timeout config layer to the `Dockerfile` (the
       bspm-config `RUN`, `Dockerfile:42`): write `/etc/apt/apt.conf.d/80-retries`
       with `Acquire::Retries "3";`, `Acquire::http::Timeout "30";`,
       `Acquire::https::Timeout "30";`. Confirm the dead-mirror scenario now shows
@@ -101,6 +101,9 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
   /etc/hosts + dead source repo → retries asserted via apt-config + hint
   sentinel). bash -n clean; exercised at the T4 build. Sentinel:
   "r2u package mirror looks unreachable".
+- 2026-07-18: T2 — added /etc/apt/apt.conf.d/80-retries (Retries "3",
+  http/https Timeout "30") to the bspm-config layer. hadolint clean
+  (hadolint/hadolint image).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

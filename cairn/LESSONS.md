@@ -34,3 +34,6 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M05): boot-check an arm64-only image with a single-platform
   `load:true` build + `docker run` under QEMU binfmt (multi-arch images can't be
   --load'ed); a native-arm64 host verifies the real arch without emulation.
+- 2026-07-18 (M06): offline-test a parser of a local command's `--version` by
+  piping fixture text on stdin — no env seam needed (simpler than M03's
+  RS_UPDATE_RESPONSE network seam, since there is no fetch to intercept).

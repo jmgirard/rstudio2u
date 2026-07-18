@@ -1,18 +1,17 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-07-18 (M05 archived; promotion breadcrumbs + completed candidate pruned)_
+_Last hygiene check: 2026-07-18 (M06 archived; M01 terminal row pruned to keep 5)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M06 | Harden the Pandoc version parses | review | — | normal | milestones/M06-pandoc-version-parse-guard.md |
+| M06 | Harden the Pandoc version parses | done | — | normal | milestones/archive/M06-pandoc-version-parse-guard.md |
 | M05 | Deepen the smoke test | done | — | normal | milestones/archive/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |
 | M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |
-| M01 | CI smoke test before publishing moving tags | done | — | normal | milestones/archive/M01-ci-smoke-test.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 

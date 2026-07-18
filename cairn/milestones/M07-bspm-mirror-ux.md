@@ -116,6 +116,12 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
   non-Ubuntu apt hosts, not just the first — the first was the CRAN source
   mirror, so praise still installed from r2u) and added an in-CI retry-
   visibility assertion (>=3 attempts) so AC5 covers AC1 behaviourally.
+- 2026-07-18: review — 3-lens fan-out; diff-bug reviewer found 3 hook defects.
+  Fixed all in scripts/mirror_hint.R: F1 (score 82) scope probe to non-Ubuntu R
+  mirrors; F3 (84) missing(pkgs) early-return + non-throwing diagnose; F2 (78,
+  sub-threshold) filter file-path args. Added smoke Phase 3b (no-arg call keeps
+  its real error, no masking/hint). Rebuilt + re-ran smoke: exit 0. blame &
+  prior-PR lenses clean.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
@@ -170,4 +176,43 @@ only tracking/CHANGELOG changed since, none of which enter the image._
 
 ### Independent review
 
-_pending — three-lens fan-out + scorer._
+Three fresh-context lenses + a Sonnet scorer (2026-07-18).
+
+- **[O] diff-bug (Opus):** 3 findings, all in `scripts/mirror_hint.R`.
+- **[S] blame-history (Sonnet):** no findings — Phase 1/2 untouched, Phase 3
+  scoped to the already-tested container, CI republishes from the gha cache so
+  the dead-mirror mutations can't leak into the shipped image; no D-001/LESSONS
+  conflict.
+- **[S] prior-PR-comments (Sonnet):** no-op — no review comments exist on any
+  merged PR touching these files.
+
+Findings + scores + triage:
+
+- **F1 (score 82) — FIXED.** The reachability probe scraped *every* apt host
+  incl. `archive.ubuntu.com`/`security.ubuntu.com`; `any(!reachable)` meant an
+  unrelated Ubuntu-mirror blip during a genuine package-not-found would fire a
+  false "r2u outage" hint (undercuts AC3). Fix: `mirror_urls()` now drops
+  `*.ubuntu.com/.org` hosts, probing only the R package mirrors.
+- **F2 (score 78 — below action threshold, logged; FIXED opportunistically).**
+  `missing` compared the arg string to installed names, so a successful
+  local-file / `repos=NULL` install (`praise_1.0.0.tar.gz`) counted as missing
+  and, if offline, printed a spurious hint after success. Fix: filename/URL
+  args are filtered out of the missing check (same code path as F1/F3, so
+  fixed now rather than deferred).
+- **F3 (score 84) — FIXED.** `diagnose()` ran before `stop(e)`; a throw inside
+  it (e.g. a bare `install.packages()` forcing a missing `pkgs`) masked the
+  real error. Fix: early `return(prev(...))` on `missing(pkgs)`, and
+  `diagnose()` wrapped so it can never throw.
+- **Minor/low-confidence (logged, not actioned):** (a) the `>=3` retry
+  assertion depends on apt emitting per-retry lines — fails *red*, not green,
+  so brittle-but-safe; (b) `sub("^https?://","",u)` leaves an embedded `:port`
+  in `host` — harmless for the current portless sources, latent only if a
+  source ever specifies a port. Both rejected as non-blocking.
+
+**Re-verification after the fixes** (fresh image rebuilt from the corrected
+`scripts/mirror_hint.R`): full smoke exit 0 — all phases including the new
+Phase 3b (no-arg `install.packages()` surfaces its real error "no packages
+were specified", no masking, no hint). Offline R logic tests cover F1 (ubuntu
+hosts dropped), F2 (file-path args filtered), F3 (missing-arg safety +
+non-throwing diagnose + genuine outage still hints once). AC1–AC6 re-confirmed;
+consistency gate unchanged (still green).

@@ -124,10 +124,11 @@ echo "PASS: quarto rendered .qmd to HTML"
 
 # --- Phase 3: mirror-failure UX ---------------------------------------------
 # Known issue #1: the r2u binary mirror is occasionally unreachable, and a raw
-# apt failure is opaque to a classroom user. Prove two behaviours on the built
+# apt failure is opaque to a classroom user. Prove three behaviours on the built
 # image: (a) an ordinary "package does not exist" error does NOT masquerade as a
-# mirror outage, and (b) a genuine mirror-unreachable failure surfaces a
-# plain-language hint after apt has retried. Runs last: 3b deliberately breaks
+# mirror outage, (b) the hint wrapper does not mask or fabricate errors on odd
+# call forms, and (c) a genuine mirror-unreachable failure surfaces a
+# plain-language hint after apt has retried. Runs last: 3c deliberately breaks
 # apt networking, so it must never precede the happy-path checks above.
 HINT_SENTINEL="r2u package mirror looks unreachable"
 
@@ -142,7 +143,20 @@ if printf '%s' "$fp_out" | grep -qF "$HINT_SENTINEL"; then
 fi
 echo "PASS: unrelated install error did not trigger the mirror hint"
 
-echo "==> [3b] mirror unreachable -> apt retries + plain-language hint"
+echo "==> [3b] no-arg install.packages() keeps its real error (no masking, no hint)"
+# The wrapper must pass a bare install.packages() straight through: surface R's
+# own error, never a forced "argument \"pkgs\" is missing", and fire no hint.
+rob_out="$(docker exec "$NAME" Rscript -e 'tryCatch(install.packages(), error=function(e) cat("ERR:", conditionMessage(e), "\n"))' 2>&1 || true)"
+if printf '%s' "$rob_out" | grep -qF "$HINT_SENTINEL"; then
+  echo "FAIL: mirror hint fired on a no-arg install.packages()"; printf '%s\n' "$rob_out" | tail -5; exit 1
+fi
+if printf '%s' "$rob_out" | grep -qF 'argument "pkgs" is missing'; then
+  echo "FAIL: no-arg install.packages() masked its real error with a forced missing-pkgs error"
+  printf '%s\n' "$rob_out" | tail -5; exit 1
+fi
+echo "PASS: no-arg install.packages() kept its real error and fired no hint"
+
+echo "==> [3c] mirror unreachable -> apt retries + plain-language hint"
 # apt must be configured to retry a failed fetch at least 3 times (AC1).
 retries="$(docker exec "$NAME" apt-config dump Acquire::Retries 2>/dev/null \
   | sed -nE 's/^Acquire::Retries[^"]*"([0-9]+)".*/\1/p' | head -1)"

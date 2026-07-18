@@ -18,14 +18,18 @@
 ## already resolves to bspm's binary installer when we capture it.
 
 local({
-  ## Every http(s) mirror host referenced by apt's sources.
+  ## The R package mirrors referenced by apt's sources. bspm installs r-cran-*
+  ## binaries from the r2u/CRAN mirrors; the Ubuntu system-package archives
+  ## (*.ubuntu.com/.org) are NOT the package mirror, so a blip on one of them
+  ## must not be reported as an r2u outage (AC3) — drop them.
   mirror_urls <- function() {
     files <- c(list.files("/etc/apt/sources.list.d", full.names = TRUE),
                "/etc/apt/sources.list")
     files <- files[file.exists(files)]
     if (!length(files)) return(character(0))
     txt <- unlist(lapply(files, readLines, warn = FALSE))
-    unique(unlist(regmatches(txt, gregexpr("https?://[^[:space:]/]+", txt))))
+    us <- unique(unlist(regmatches(txt, gregexpr("https?://[^[:space:]/]+", txt))))
+    us[!grepl("//[^/]*ubuntu\\.(com|org)", us)]
   }
 
   ## TRUE if a raw TCP connection to the mirror's host:port opens.
@@ -62,12 +66,24 @@ local({
   prev <- get("install.packages")
 
   wrapper <- function(pkgs, ...) {
-    diagnose <- function() {
+    ## No package names to reason about (e.g. a bare interactive
+    ## install.packages()): pass straight through and never touch `pkgs`.
+    if (missing(pkgs)) return(prev(...))
+
+    ## diagnose() is purely additive and must never throw — it runs after the
+    ## real install, so a failure here can never mask or replace the original
+    ## result. Wrapped so any error inside it is swallowed.
+    diagnose <- function() tryCatch({
       if (is.character(pkgs) && length(pkgs)) {
-        missing <- pkgs[!(pkgs %in% rownames(installed.packages()))]
+        ## Only repository package *names* — a local-file / URL install
+        ## (path or archive filename) is not a mirror fetch, and its basename
+        ## would never match an installed package name.
+        cand <- pkgs[!grepl("[/\\\\]|\\.(tar\\.gz|tgz|zip)$", pkgs)]
+        missing <- cand[!(cand %in% rownames(installed.packages()))]
         if (length(missing) && mirror_unreachable()) hint()
       }
-    }
+    }, error = function(e) invisible())
+
     ## bspm may error, warn, or silently fall back to source; diagnose the
     ## post-state in every case, and always re-raise the original error.
     tryCatch(prev(pkgs, ...), error = function(e) { diagnose(); stop(e) })

@@ -18,6 +18,7 @@
 #   SMOKE_TIMEOUT  seconds to wait for server health   (default 180)
 #   SMOKE_PORT     host port to publish container :8787 on (default 8787)
 #   SMOKE_PKG      CRAN package for the bspm binary-install check (default data.table)
+#   SMOKE_MIRROR_PKG  small uninstalled CRAN package for the mirror-failure check (default praise)
 #
 set -euo pipefail
 
@@ -25,6 +26,7 @@ IMAGE="${1:?usage: smoke-test.sh <image-tag>}"
 TIMEOUT="${SMOKE_TIMEOUT:-180}"
 PORT="${SMOKE_PORT:-8787}"
 PKG="${SMOKE_PKG:-data.table}"
+MIRROR_PKG="${SMOKE_MIRROR_PKG:-praise}"
 NAME="rstudio2u-smoke-$$"
 SMOKE_OK=0
 
@@ -120,6 +122,93 @@ QMD
 fi
 echo "PASS: quarto rendered .qmd to HTML"
 
-echo "PASS: smoke test (server + toolchain) succeeded"
+# --- Phase 3: mirror-failure UX ---------------------------------------------
+# Known issue #1: the r2u binary mirror is occasionally unreachable, and a raw
+# apt failure is opaque to a classroom user. Prove three behaviours on the built
+# image: (a) an ordinary "package does not exist" error does NOT masquerade as a
+# mirror outage, (b) the hint wrapper does not mask or fabricate errors on odd
+# call forms, and (c) a genuine mirror-unreachable failure surfaces a
+# plain-language hint after apt has retried. Runs last: 3c deliberately breaks
+# apt networking, so it must never precede the happy-path checks above.
+HINT_SENTINEL="r2u package mirror looks unreachable"
+
+echo "==> [3a] no false mirror hint on an unrelated install error"
+# A CRAN package that does not exist: the install fails, but every mirror is
+# still reachable, so the outage hint must NOT fire (AC3).
+fp_out="$(docker exec "$NAME" Rscript -e 'try(install.packages("nosuchpkg1234321"))' 2>&1 || true)"
+if printf '%s' "$fp_out" | grep -qF "$HINT_SENTINEL"; then
+  echo "FAIL: mirror-outage hint fired on a non-network error (false positive)"
+  printf '%s\n' "$fp_out" | tail -8
+  exit 1
+fi
+echo "PASS: unrelated install error did not trigger the mirror hint"
+
+echo "==> [3b] no-arg install.packages() keeps its real error (no masking, no hint)"
+# The wrapper must pass a bare install.packages() straight through: surface R's
+# own error, never a forced "argument \"pkgs\" is missing", and fire no hint.
+rob_out="$(docker exec "$NAME" Rscript -e 'tryCatch(install.packages(), error=function(e) cat("ERR:", conditionMessage(e), "\n"))' 2>&1 || true)"
+if printf '%s' "$rob_out" | grep -qF "$HINT_SENTINEL"; then
+  echo "FAIL: mirror hint fired on a no-arg install.packages()"; printf '%s\n' "$rob_out" | tail -5; exit 1
+fi
+if printf '%s' "$rob_out" | grep -qF 'argument "pkgs" is missing'; then
+  echo "FAIL: no-arg install.packages() masked its real error with a forced missing-pkgs error"
+  printf '%s\n' "$rob_out" | tail -5; exit 1
+fi
+echo "PASS: no-arg install.packages() kept its real error and fired no hint"
+
+echo "==> [3c] mirror unreachable -> apt retries + plain-language hint"
+# apt must be configured to retry a failed fetch at least 3 times (AC1).
+retries="$(docker exec "$NAME" apt-config dump Acquire::Retries 2>/dev/null \
+  | sed -nE 's/^Acquire::Retries[^"]*"([0-9]+)".*/\1/p' | head -1)"
+if [ -z "${retries:-}" ] || [ "$retries" -lt 3 ]; then
+  echo "FAIL: Acquire::Retries is '${retries:-unset}', expected >= 3"
+  exit 1
+fi
+echo "PASS: apt configured to retry fetches ${retries}x"
+
+# Blackhole every non-Ubuntu apt host (the r2u binary repo *and* the CRAN
+# source mirror) by pointing them at 127.0.0.1 — nothing listens on :80/:443
+# there, so connections are refused: fast and deterministic. Both the binary
+# (apt/r2u) and source-fallback paths must fail for the install to fail.
+mirror_hosts="$(docker exec "$NAME" bash -c \
+  "grep -rhoE 'https?://[^ /]+' /etc/apt/sources.list.d/ /etc/apt/sources.list 2>/dev/null \
+   | sed -E 's#https?://##' | sort -u | grep -viE 'ubuntu\.(com|org)'")"
+if [ -z "${mirror_hosts:-}" ]; then
+  echo "FAIL: could not identify the r2u mirror host(s) from apt sources"; exit 1
+fi
+echo "    blackholing mirror host(s): $(printf '%s' "$mirror_hosts" | tr '\n' ' ')"
+for h in $mirror_hosts; do
+  docker exec "$NAME" bash -c "printf '127.0.0.1 %s\n' '$h' >> /etc/hosts"
+done
+
+# Retries are visible in apt's own output: an `apt-get update` (which bspm runs
+# before installing) attempts each unreachable mirror Acquire::Retries times
+# (Ign:/Err: lines) before giving up. Assert at least one mirror was fetched >=3
+# times, i.e. the retries actually happened (AC1, behavioural).
+upd_out="$(docker exec "$NAME" bash -c 'apt-get update 2>&1' || true)"
+max_attempts=0
+for h in $mirror_hosts; do
+  c="$(printf '%s' "$upd_out" | grep -cE "(Ign|Err):[0-9]+ https?://$h" || true)"
+  [ "$c" -gt "$max_attempts" ] && max_attempts="$c"
+done
+if [ "$max_attempts" -lt 3 ]; then
+  echo "FAIL: apt did not retry the unreachable mirror >=3x (max attempts: $max_attempts)"
+  printf '%s\n' "$upd_out" | grep -iE 'Ign|Err|Failed to fetch' | head
+  exit 1
+fi
+echo "PASS: apt retried an unreachable mirror ${max_attempts}x before failing"
+
+# Request an uninstalled package with the source fallback also dead (repos ->
+# a closed port), so the install genuinely fails and the hook can diagnose it.
+mf_out="$(docker exec "$NAME" Rscript -e \
+  'options(repos=c(CRAN="http://127.0.0.1:9")); try(install.packages("'"$MIRROR_PKG"'"))' 2>&1 || true)"
+if ! printf '%s' "$mf_out" | grep -qF "$HINT_SENTINEL"; then
+  echo "FAIL: mirror-unreachable install did not surface the plain-language hint"
+  printf '%s\n' "$mf_out" | tail -15
+  exit 1
+fi
+echo "PASS: mirror-unreachable install surfaced the hint"
+
+echo "PASS: smoke test (server + toolchain + mirror-failure UX) succeeded"
 SMOKE_OK=1
 exit 0

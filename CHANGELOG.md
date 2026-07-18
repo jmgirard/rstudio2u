@@ -7,6 +7,15 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ### Changed
 
+- Runtime package installs now ride out a flaky binary mirror instead of
+  failing on the first hiccup: apt retries a failed download up to three times
+  with a bounded connection timeout, so a brief outage of the r2u mirror is
+  usually invisible. When an install does ultimately fail because the mirror is
+  unreachable, RStudio now prints a short plain-language note explaining it is a
+  temporary network/mirror problem — not your code — and to try again shortly,
+  instead of only a wall of raw `apt` errors. An ordinary "that package does not
+  exist" error is unaffected and shows no such note.
+
 - Published tags are now smoke-tested before release: CI boots the freshly
   built image and confirms RStudio Server answers on port 8787, a package
   installs from the binary repository, and Quarto renders a document — on both

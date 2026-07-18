@@ -58,4 +58,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD wget -q -O /dev/null http://localhost:8787/ || exit 1
 
 EXPOSE 8787
-CMD ["/init"]
+# NEGATIVE TEST (throwaway): break the entrypoint so the container exits
+# immediately and the smoke gate must catch it. Never merge.
+CMD ["/bin/false"]

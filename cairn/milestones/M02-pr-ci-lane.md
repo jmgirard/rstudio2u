@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M02: Pre-merge PR CI lane
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
@@ -91,6 +91,7 @@ no version scrape, no immutable tags, no push.
 - 2026-07-17: T2 — opened milestone PR #2 (https://github.com/jmgirard/rstudio2u/pull/2); pr-ci lane triggered on it.
 - 2026-07-17: T2 — pr-ci `build-smoke` PASSED in 2m24s on PR #2 (run 29623616590): hadolint clean, amd64 noble built, smoke "PASS: container reported healthy". Step list confirms no Docker Hub login step and `push: false` (AC2, AC3).
 - 2026-07-17: T3 — negative test on throwaway PR #3 (broken entrypoint `CMD ["/bin/false"]`): pr-ci `build-smoke` FAILED in 2m46s (run 29623752356), failure at the *Smoke-test* step — "FAIL: container exited before becoming healthy" (lint+build succeeded first). Gate proven to block a bad image (AC4). PR closed, scratch branch deleted.
+- 2026-07-17: all tasks done; status → review. Milestone PR #2 open with green pr-ci. Note: later cairn-only commits don't retrigger pr-ci (path filter excludes `cairn/`), so the green run sits on the image-relevant commit, not the PR head.
 
 ## Decisions
 

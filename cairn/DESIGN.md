@@ -114,8 +114,6 @@ _Warts confirmed in the 2026-07-17 interview:_
   endpoint; the scraped value is now validated against the expected version
   shape, so a format change fails the build loudly instead of mis-tagging
   (M03) — the scrape still depends on that endpoint's format.
-- arm64 relies on bundled/symlinked fallbacks in places where upstream only
-  ships amd64 (see `install_quarto.sh`); parity can silently diverge.
 - The Windows launcher path sees the least real-world testing.
 - `scripts/` is a fork of rocker_scripts: upstream fixes do not flow in
   automatically (accepted cost of the owned-fork posture).

@@ -18,7 +18,6 @@ _Last hygiene check: 2026-07-18 (M05 archived; promotion breadcrumbs + completed
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - Harden the remaining Pandoc `grep -oP` version parses — `pandoc -v` template-version scrape (install_pandoc.sh:78, on the default build path) + installed/bundled version parses (install_pandoc.sh:29,45) — added 2026-07-17 — GP4; carved out of M04 (they already fail loud, unlike the download-URL scrapes)
-- Quarto now publishes linux-arm64.deb (seen at 1.9.38): refresh the stale "Only amd64 build can be installed now" comment (install_quarto.sh:18) and revisit the quarto arm64-fallback known issue — added 2026-07-17 — GP3; from M04
 - Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
 - bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1

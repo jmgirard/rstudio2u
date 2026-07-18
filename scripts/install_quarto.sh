@@ -15,7 +15,9 @@ set -e
 NCPUS=${NCPUS:--1}
 
 QUARTO_VERSION=${1:-${QUARTO_VERSION:-"default"}}
-# Only amd64 build can be installed now
+# Detected target arch (amd64/arm64). Every install path below resolves the
+# arch-matched .deb (or symlinks the arch-native RStudio-bundled quarto), so
+# arm64 installs natively — Quarto has published linux-arm64 since 1.9.38.
 ARCH=$(dpkg --print-architecture)
 
 # a function to install apt packages only if they are not installed

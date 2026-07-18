@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-18 (M08 planned; candidate absorbed)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M08 | Windows launcher hardening | planned | — | normal | milestones/M08-windows-launcher-hardening.md |
+| M08 | Windows launcher hardening | in-progress | — | normal | milestones/M08-windows-launcher-hardening.md |
 | M07 | bspm mirror-failure UX | done | — | normal | milestones/archive/M07-bspm-mirror-ux.md |
 | M06 | Harden the Pandoc version parses | done | — | normal | milestones/archive/M06-pandoc-version-parse-guard.md |
 | M05 | Deepen the smoke test | done | — | normal | milestones/archive/M05-deepen-smoke-test.md |

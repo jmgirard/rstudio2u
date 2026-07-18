@@ -7,6 +7,7 @@ _Last hygiene check: 2026-07-17 (M02 archived)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M03 | Guard RStudio version auto-detect | planned | — | normal | milestones/M03-version-scrape-guard.md |
 | M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |
 | M01 | CI smoke test before publishing moving tags | done | — | normal | milestones/archive/M01-ci-smoke-test.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
@@ -16,7 +17,8 @@ _Last hygiene check: 2026-07-17 (M02 archived)_
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 <!-- (CI smoke test candidate promoted to M01 on 2026-07-17) -->
 <!-- (Pre-merge PR CI candidate promoted to M02 on 2026-07-17) -->
-- Guard RStudio version auto-detect: validate the scraped version, fail loudly on a bad scrape instead of mis-tagging — added 2026-07-17 — GP2; Known issue #2
+<!-- (Guard RStudio version auto-detect candidate promoted to M03 on 2026-07-17) -->
+- Guard the Pandoc/Quarto version scrapes: same grep-fragility as RStudio, distinct endpoints (install_pandoc.sh:68, install_quarto.sh:58) — added 2026-07-17 — GP2; from M03
 - Deepen smoke test to bspm binary install + quarto render (catches arm64 parity drift) — added 2026-07-17 — GP3/GP7; Known issue #3
 - Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4

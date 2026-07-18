@@ -7,7 +7,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP4
-- **Branch/PR:** —
+- **Branch/PR:** m06-pandoc-version-parse-guard
 
 ## Goal
 
@@ -62,10 +62,10 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 
 ## Tasks
 
-- [ ] T1: Write `scripts/tests/test_parse_pandoc_version.sh` (tests-first) —
+- [x] T1: Write `scripts/tests/test_parse_pandoc_version.sh` (tests-first) —
       assert_ok on realistic `pandoc --version` / `pandoc -v` bodies, assert_fail
       on empty, HTML/garbage, and format-changed bodies; stdin seam, offline.
-- [ ] T2: Write `scripts/parse-pandoc-version.sh` to pass T1 — bash ERE extract
+- [x] T2: Write `scripts/parse-pandoc-version.sh` to pass T1 — bash ERE extract
       off the `pandoc <ver>` line + shape validation, fail loud (non-zero +
       stderr, empty stdout).
 - [ ] T3: Rewire `install_pandoc.sh` :29, :45, :81 to pipe `pandoc --version`
@@ -79,6 +79,9 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 
 - 2026-07-18: created by /milestone-plan (promoted from the M04 version-parse
   carve-out candidate; continues the M03/M04 scrape-guard thread).
+- 2026-07-18: set in-progress; branch m06-pandoc-version-parse-guard.
+- 2026-07-18: T1+T2 — parse-pandoc-version.sh (pure-bash stdin parser, no
+  grep -P) + offline unit test; 9/9 green.
 
 ## Decisions
 

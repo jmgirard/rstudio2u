@@ -64,6 +64,60 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # Step 1 — build BOTH arches once into the layer cache, pushing nothing.
+      # This is the single source build that the smoke test (step 2) and the
+      # publish step (step 3) both reuse, so the image we boot is byte-for-byte
+      # the image we ship (GP7). It owns the cache scope: it is the only step
+      # that writes cache-to, so the amd64-only smoke build can't shadow the
+      # arm64 layers. Scheduled/manual runs rebuild from scratch (no-cache) to
+      # pull in new RStudio/Pandoc/Quarto and a newer r2u base; push-triggered
+      # (code change) runs reuse the cache for speed. The slow emulated arm64
+      # build happens here exactly once per run.
+      - name: Build ${{ matrix.variant }} (both arches, cache only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          build-args: |
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+          push: false
+          provenance: false
+          pull: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+
+      # Step 2 — load just the amd64 image from step 1's cache (multi-arch can't
+      # be --load'ed) so we can boot it. cache-from only, never no-cache: this
+      # must reuse step 1's layers, not build a different image than we publish.
+      # arm64 is still built and pushed (step 3) but not boot-checked — a
+      # documented asymmetry (GP3), since --load can't take a multi-arch image.
+      - name: Build ${{ matrix.variant }} (amd64) for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          build-args: |
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+          tags: ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.variant }}
+
+      # A non-zero exit here fails this variant's job (fail-fast: false keeps the
+      # variants independent, so a resolute failure never blocks noble) and, by
+      # aborting before the publish step, blocks publishing a broken image.
+      - name: Smoke-test ${{ matrix.variant }} (amd64)
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
+
+      # Step 3 — publish. Reuses step 1's cached layers for BOTH arches
+      # (cache-from only, no no-cache — the fresh build already happened in
+      # step 1), so the published image is exactly the one step 2 smoke-tested.
       - name: Build and push ${{ matrix.variant }}
         uses: docker/build-push-action@v6
         with:
@@ -75,11 +129,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           push: true
           provenance: false
-          # Always re-pull the r2u base so builds pick up a newer R
-          pull: true
-          # Scheduled/manual runs rebuild from scratch so they actually pull in
-          # new RStudio/Pandoc/Quarto releases instead of reusing cached layers.
-          # Push-triggered (code change) builds use the cache for speed.
-          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           cache-from: type=gha,scope=${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}

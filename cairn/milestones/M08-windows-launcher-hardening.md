@@ -129,14 +129,8 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
-- 2026-07-18 (review): independent 3-lens review — 1 finding (score 90) fixed:
-  start_linux.sh error branches (pull-failure + timeout) lacked the interactive
-  pause; added it. Success-banner RS_PORT mismatch → candidate. cairn_validate +
-  consistency-gate green; CHANGELOG entry added.
-- 2026-07-18 (review→in-progress): PR #9 windows-latest lane RED — test-harness
-  bugs, not launcher defects: (1) `.cmd` docker stub chains without returning
-  (bare `docker` → .cmd is a goto in batch; production docker.exe returns fine),
-  (2) inherited-env PATH override leaked real docker in. Fix in T4 harness only.
+- 2026-07-18 (review): 3-lens review — 1 finding (score 90) fixed (start_linux.sh error branches lacked the interactive pause); RS_PORT-banner mismatch → candidate; consistency-gate green; CHANGELOG entry added.
+- 2026-07-18 (review→in-progress): PR #9 windows lane RED — test-harness bugs only (`.cmd` stub chains without `call`; inherited-env PATH leaked real docker); fixed harness (exe stub + in-shell PATH + docker-free tool dir).
 - 2026-07-18 (T6): synced README FAQ — not-installed/not-running split, download-failure entry, RS_PORT-on-timeout hint; wording matches launcher.
 - 2026-07-18 (T5): ported not-installed/not-running + pull-failure diagnostics to start_mac.command + start_linux.sh; `bash -n` clean, docker-stub PATH drive of start_linux.sh exercises all four branches (right message + exit code).
 - 2026-07-18 (T4): added .github/workflows/windows-launcher.yml + run_launcher_scenarios.ps1 (windows-latest, stub docker on PATH, 5 scenarios) + ubuntu CRLF guard job; own paths filter keeps pr-ci build out; YAML valid, 7 assertions match launcher — real windows run happens on the PR.

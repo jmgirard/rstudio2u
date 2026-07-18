@@ -82,7 +82,7 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
 ## Tasks
 <!-- owner: plan (create) / implement (check-off, minor edits) -->
 
-- [ ] T1: Deepen `.github/smoke-test.sh` — after the existing server-up/health
+- [x] T1: Deepen `.github/smoke-test.sh` — after the existing server-up/health
       check passes, add a functional phase that `docker exec`s into the
       container to (a) install a compiled-dependency R package via bspm and
       confirm it loads, and (b) `quarto render` a minimal inline `.qmd` (created
@@ -113,6 +113,10 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
 - 2026-07-17: /milestone-implement started; branch m05-deepen-smoke-test cut
   from main (in sync). No implementation choices needed a gate — the smoke
   test's runtime R-package install is a test artifact, not a repo dependency.
+- 2026-07-17: T1 done — deepened smoke-test.sh: phase 1 (server up) now breaks
+  instead of exiting, phase 2 adds a bspm binary install (data.table, asserted
+  apt-registered as r-cran-data.table + loads) and a chunk-free quarto→HTML
+  render (no R engine, targets the arch-sensitive Quarto CLI). bash -n clean.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

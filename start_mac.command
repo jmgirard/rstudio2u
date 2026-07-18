@@ -5,6 +5,19 @@ cd "$(dirname "$0")"
 xattr -c "$0" 2>/dev/null
 chmod u+x "$0" 2>/dev/null
 
+# Sourcing a sibling file means a student who copied only this launcher out of
+# the folder would otherwise get a bare "No such file or directory".
+if [ ! -f ./launcher_common.sh ]; then
+    echo ""
+    echo "❌ This launcher needs the file launcher_common.sh, which is missing"
+    echo "   from this folder. Copy or download the whole project folder, then"
+    echo "   double-click this file again."
+    echo ""
+    # The seam helper lives in the very file that is missing, so honor the
+    # test seam inline here rather than calling launcher_pause.
+    [ -n "${RS_LAUNCHER_NONINTERACTIVE:-}" ] || read -n 1 -s -r -p "Press any key to close..."
+    exit 1
+fi
 # shellcheck source=launcher_common.sh
 . ./launcher_common.sh
 

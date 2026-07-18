@@ -142,6 +142,13 @@ run_scenario() {
 }
 
 for launcher in start_mac.command start_linux.sh; do
+    # A student who copies only the launcher out of the folder must get an
+    # explanation, not a bare "No such file or directory" from the source line.
+    mv "$sandbox/launcher_common.sh" "$work/held_common.sh"
+    run_scenario "$launcher/missing-common-helper" "$launcher" "$stub_path" 1 "" \
+        'launcher_common.sh, which is missing'
+    mv "$work/held_common.sh" "$sandbox/launcher_common.sh"
+
     # --- pre-existing failure/success branches --------------------------------
     run_scenario "$launcher/docker-not-installed" "$launcher" "$nodock" 1 "" \
         'does not appear to be installed'

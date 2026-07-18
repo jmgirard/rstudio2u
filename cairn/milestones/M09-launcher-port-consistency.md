@@ -147,6 +147,11 @@ artifact for a student to misread (GP1).
 - 2026-07-18: T9 done — README FAQ rewritten around .env, CHANGELOG Fixed+Changed
   entries, .env added to .gitignore and .dockerignore. hadolint clean (exit 0);
   docker build running to confirm the .dockerignore change is safe.
+- 2026-07-18: discovered sub-task under T1/T6 — sourcing launcher_common.sh
+  introduced a new failure mode (a student copying only the launcher out of the
+  folder). Both POSIX launchers now explain it; the pause there honors the seam
+  inline, since the helper defining launcher_pause is the missing file. Scenario
+  added, 34 total.
 - 2026-07-18: noted out-of-scope — Dockerfile:33 copies scripts/tests/ into the
   image (pre-existing, GP5); filed for the image-size candidate, not fixed here.
 

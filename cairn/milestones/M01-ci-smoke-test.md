@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M01: CI smoke test before publishing moving tags
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
@@ -68,7 +68,7 @@ smoke test blocks that variant's push. A CHANGELOG entry.
       poll `docker inspect --format '{{.State.Health.Status}}'` (the Dockerfile
       already defines the `:8787` HEALTHCHECK) until `healthy` or timeout, always
       tear the container down, and exit with clear pass/fail logging.
-- [ ] T2: Verify locally — build the amd64 image
+- [x] T2: Verify locally — build the amd64 image
       (`docker build --build-arg UBUNTU_VERSION=24.04 -t rstudio2u:smoke .`), run
       the script against it (expect exit 0); run the script against a container
       that never serves `:8787` (expect non-zero). Capture both outputs as
@@ -80,7 +80,7 @@ smoke test blocks that variant's push. A CHANGELOG entry.
       per-variant matrix independence; a resolute smoke failure fails only its own
       job.
 - [x] T4: Add a `CHANGELOG.md` "Unreleased" entry for the smoke gate.
-- [ ] T5: Run the verify slot (`hadolint Dockerfile`, `docker build`) and confirm
+- [x] T5: Run the verify slot (`hadolint Dockerfile`, `docker build`) and confirm
       clean.
 
 ## Work log
@@ -95,6 +95,12 @@ smoke test blocks that variant's push. A CHANGELOG entry.
   keeps resolute independent of noble. actionlint clean.
 - 2026-07-17: T4 — CHANGELOG.md Unreleased/Changed entry for the pre-push
   smoke gate (no milestone number, user-facing).
+- 2026-07-17: T5 — hadolint clean; `docker build --build-arg UBUNTU_VERSION=24.04`
+  succeeds (native arm64, ~846MB; Dockerfile unchanged & arch-agnostic, amd64
+  build exercised by CI).
+- 2026-07-17: T2 — smoke script verified against the real image (exit 0) and
+  three failure cases (unhealthy stand-in, container-exit, missing arg → exit 1).
+  All tasks done; status → review.
 
 ## Decisions
 

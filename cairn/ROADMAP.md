@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-17 (M01 archived)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M02 | Pre-merge PR CI lane | planned | — | normal | milestones/M02-pr-ci-lane.md |
+| M02 | Pre-merge PR CI lane | review | — | normal | milestones/M02-pr-ci-lane.md |
 | M01 | CI smoke test before publishing moving tags | done | — | normal | milestones/archive/M01-ci-smoke-test.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
@@ -22,3 +22,4 @@ _Last hygiene check: 2026-07-17 (M01 archived)_
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
 - bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1
 - resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
+- pr-ci path filter should also watch `.github/smoke-test.sh` so the gate self-validates its own harness — added 2026-07-17 — from M02 review (diff-bug F1, score 80)

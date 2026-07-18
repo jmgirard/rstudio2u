@@ -102,7 +102,7 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
       `scripts/tests/test_launcher_line_endings.sh`: fail if the stored blob of
       any root `.bat` (`git cat-file -p :<file>`) lacks CRLF. Tests-first — it
       fails against today's LF blobs.
-- [ ] T2 — Fix delivery: set `*.bat -text` in `.gitattributes` (drop
+- [x] T2 — Fix delivery: set `*.bat -text` in `.gitattributes` (drop
       `eol=crlf`, which only smudges on clone) and re-commit
       `start_windows.bat`/`stop_windows.bat` with CRLF bytes so the blob itself
       carries CRLF; T1 then passes.
@@ -129,6 +129,9 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (T2): `.gitattributes` `*.bat/.cmd -text` + re-committed the two
+  .bat files with CRLF bytes; blob is now `i/crlf`, guard green. ZIP/archive
+  delivery of CRLF verified.
 - 2026-07-18 (T1): added scripts/tests/test_launcher_line_endings.sh — asserts
   each *.bat blob is CRLF (via `git cat-file`); fails by design against today's
   LF blobs, goes green after T2. Portable (no mapfile — bash 3.2 / M03 lesson).

@@ -1,8 +1,12 @@
 * text=auto eol=lf
 
-# Windows batch files need CRLF line endings to run reliably
-*.bat text eol=crlf
-*.cmd text eol=crlf
+# Windows batch files need CRLF line endings to run reliably. `-text` (not
+# `text eol=crlf`) stores CRLF in the blob itself, so the README-recommended
+# "Download ZIP" path (git archive, which applies no eol conversion) also
+# delivers CRLF — not just `git clone`. Guarded by
+# scripts/tests/test_launcher_line_endings.sh.
+*.bat -text
+*.cmd -text
 
 # Shell/command launchers must stay LF
 *.sh text eol=lf

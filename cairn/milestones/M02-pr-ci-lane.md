@@ -7,7 +7,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
-- **Branch/PR:** m02-pr-ci-lane
+- **Branch/PR:** m02-pr-ci-lane · https://github.com/jmgirard/rstudio2u/pull/2
 
 ## Goal
 

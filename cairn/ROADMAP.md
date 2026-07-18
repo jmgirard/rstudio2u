@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-18 (M05 archived; promotion breadcrumbs + completed
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M06 | Harden the Pandoc version parses | in-progress | — | normal | milestones/M06-pandoc-version-parse-guard.md |
+| M06 | Harden the Pandoc version parses | review | — | normal | milestones/M06-pandoc-version-parse-guard.md |
 | M05 | Deepen the smoke test | done | — | normal | milestones/archive/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |

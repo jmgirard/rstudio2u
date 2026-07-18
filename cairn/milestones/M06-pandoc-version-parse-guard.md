@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M06: Harden the Pandoc version parses
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP4
@@ -72,7 +72,7 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
       through the helper; remove all `grep -oP`.
 - [x] T4: Add `test_parse_pandoc_version.sh` to the resolver-unit-tests `run:`
       block in `pr-ci.yml`.
-- [ ] T5: Verify — run the unit test; `hadolint Dockerfile`; build the noble
+- [x] T5: Verify — run the unit test; `hadolint Dockerfile`; build the noble
       image and confirm `pandoc --version` and populated `/opt/pandoc/templates`.
 
 ## Work log
@@ -86,6 +86,9 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
   no grep -P remains; bash -n clean.
 - 2026-07-18: T4 — test_parse_pandoc_version.sh wired into pr-ci.yml resolver
   unit-tests step (gates PRs).
+- 2026-07-18: T5 — verify: unit test 9/9; hadolint clean; noble amd64 build
+  succeeds; image ships pandoc 3.8.3 + 64 populated /opt/pandoc/templates (the
+  :81 templates parse ran on the real build path). Status → review.
 
 ## Decisions
 

@@ -68,7 +68,7 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 - [x] T2: Write `scripts/parse-pandoc-version.sh` to pass T1 — bash ERE extract
       off the `pandoc <ver>` line + shape validation, fail loud (non-zero +
       stderr, empty stdout).
-- [ ] T3: Rewire `install_pandoc.sh` :29, :45, :81 to pipe `pandoc --version`
+- [x] T3: Rewire `install_pandoc.sh` :29, :45, :81 to pipe `pandoc --version`
       through the helper; remove all `grep -oP`.
 - [ ] T4: Add `test_parse_pandoc_version.sh` to the resolver-unit-tests `run:`
       block in `pr-ci.yml`.
@@ -82,6 +82,8 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 - 2026-07-18: set in-progress; branch m06-pandoc-version-parse-guard.
 - 2026-07-18: T1+T2 — parse-pandoc-version.sh (pure-bash stdin parser, no
   grep -P) + offline unit test; 9/9 green.
+- 2026-07-18: T3 — install_pandoc.sh :29/:45/:81 rewired through the helper;
+  no grep -P remains; bash -n clean.
 
 ## Decisions
 

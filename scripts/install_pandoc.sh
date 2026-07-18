@@ -26,7 +26,7 @@ function apt_install() {
 apt_install wget ca-certificates
 
 if [ -x "$(command -v pandoc)" ]; then
-    INSTALLED_PANDOC_VERSION=$(pandoc --version 2>/dev/null | head -n 1 | grep -oP '[\d\.]+$')
+    INSTALLED_PANDOC_VERSION=$(pandoc --version 2>/dev/null | /rocker_scripts/parse-pandoc-version.sh)
 fi
 
 if [ -f "/usr/lib/rstudio-server/bin/pandoc/pandoc" ]; then
@@ -42,7 +42,7 @@ elif [ -n "$(ls /usr/lib/rstudio-server/bin/quarto/bin/tools/*/pandoc 2>/dev/nul
 fi
 
 if [ -n "$BUNDLED_PANDOC" ]; then
-    BUNDLED_PANDOC_VERSION="$($BUNDLED_PANDOC --version | head -n 1 | grep -oP '[\d\.]+$')"
+    BUNDLED_PANDOC_VERSION="$($BUNDLED_PANDOC --version | /rocker_scripts/parse-pandoc-version.sh)"
 fi
 
 if [ "$PANDOC_VERSION" != "$INSTALLED_PANDOC_VERSION" ]; then
@@ -78,7 +78,7 @@ if [ "$PANDOC_VERSION" != "$INSTALLED_PANDOC_VERSION" ]; then
     fi
 
     ## Symlink pandoc & standard pandoc templates for use system-wide
-    PANDOC_TEMPLATES_VERSION=$(pandoc -v | grep -oP "(?<=pandoc\s)[0-9\.]+$")
+    PANDOC_TEMPLATES_VERSION=$(pandoc -v | /rocker_scripts/parse-pandoc-version.sh)
     wget "https://github.com/jgm/pandoc-templates/archive/${PANDOC_TEMPLATES_VERSION}.tar.gz" -O pandoc-templates.tar.gz
     rm -fr /opt/pandoc/templates
     mkdir -p /opt/pandoc/templates

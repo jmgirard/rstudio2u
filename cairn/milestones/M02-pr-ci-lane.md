@@ -72,7 +72,7 @@ no version scrape, no immutable tags, no push.
       UBUNTU_VERSION=24.04`, `cache-from: type=gha,scope=noble`, tag
       `:smoke-noble`) → `bash ./.github/smoke-test.sh`. No login, no
       version-scrape, no `cache-to`, no `push`.
-- [ ] T2: Green-path evidence — push the `m02-pr-ci-lane` branch, open its PR,
+- [x] T2: Green-path evidence — push the `m02-pr-ci-lane` branch, open its PR,
       confirm the `pr-ci` check runs and passes via `gh pr checks`, and confirm
       from the run log that no login/push occurred.
 - [ ] T3: Negative test — on a throwaway scratch branch introduce a
@@ -89,6 +89,7 @@ no version scrape, no immutable tags, no push.
 - 2026-07-17: T1 — authored `.github/workflows/pr-ci.yml` (hadolint → build amd64/noble → smoke, no login/push); hadolint clean on Dockerfile (exit 0), actionlint clean on the workflow.
 - 2026-07-17: T4 — local verify: `hadolint Dockerfile` clean (exit 0); `docker build --build-arg UBUNTU_VERSION=24.04` succeeds (854MB); bonus local smoke on the built image reported healthy.
 - 2026-07-17: T2 — opened milestone PR #2 (https://github.com/jmgirard/rstudio2u/pull/2); pr-ci lane triggered on it.
+- 2026-07-17: T2 — pr-ci `build-smoke` PASSED in 2m24s on PR #2 (run 29623616590): hadolint clean, amd64 noble built, smoke "PASS: container reported healthy". Step list confirms no Docker Hub login step and `push: false` (AC2, AC3).
 
 ## Decisions
 

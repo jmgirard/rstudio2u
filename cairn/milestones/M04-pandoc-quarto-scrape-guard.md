@@ -74,7 +74,7 @@ gated by an offline unit test in `pr-ci.yml`.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate -->
 
-- [ ] **T1 — Offline test suite first.** Author
+- [x] **T1 — Offline test suite first.** Author
       `scripts/tests/test_resolve_download_url.sh`, fixing the resolver
       interface (args: endpoint URL, JSON key, arch; `RESOLVE_DL_RESPONSE`
       injection seam à la M03's `RS_UPDATE_RESPONSE`). Cases: valid GitHub-API
@@ -82,7 +82,7 @@ gated by an offline unit test in `pr-ci.yml`.
       URL; both-arch body selects the requested arch (amd64 and arm64); empty,
       HTML/error, renamed-key, no-`.deb`, and wrong-arch-only bodies each fail
       loud (non-zero, empty stdout).
-- [ ] **T2 — Implement the resolver.** Write `scripts/resolve-download-url.sh`
+- [x] **T2 — Implement the resolver.** Write `scripts/resolve-download-url.sh`
       (pure bash, `set -euo pipefail`, `RESOLVE_DL_RESPONSE` seam, bash-ERE
       extraction of `"<key>": "https…<arch>.deb"`, `^https://…<arch>\.deb$`
       shape re-validation, stderr message + non-zero exit on any miss) until the
@@ -103,6 +103,9 @@ gated by an offline unit test in `pr-ci.yml`.
 
 - 2026-07-17: created by /milestone-plan (promoted from ROADMAP candidate;
   extends the M03 scrape-guard pattern to Pandoc/Quarto).
+- 2026-07-17: T1+T2 — added scripts/resolve-download-url.sh (shared, bash-ERE,
+  RESOLVE_DL_RESPONSE seam) + scripts/tests/test_resolve_download_url.sh; 9/9
+  offline assertions pass (arch selection, both JSON shapes, all failure modes).
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

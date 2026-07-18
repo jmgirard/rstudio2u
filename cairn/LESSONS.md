@@ -17,3 +17,9 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   whole-PR diff (base…head), not just the latest push — so once a PR's cumulative
   diff contains a watched path, every later push retriggers the workflow, even
   pushes touching only unwatched files (e.g. tracking-only commits).
+- 2026-07-17 (M03): `grep -oP` (PCRE) isn't portable — BSD grep (macOS) rejects
+  `-P`. For shell version-parsing, validate with bash's own `[[ =~ ]]` (ERE) +
+  parameter-expansion field extraction; no `grep -P`, testable anywhere.
+- 2026-07-17 (M03): unit-test a network-scraping shell script offline by giving
+  it an env seam (`RS_UPDATE_RESPONSE`) that injects the raw response body in
+  place of the fetch — fixtures drive every branch with no network.

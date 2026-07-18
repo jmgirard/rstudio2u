@@ -111,7 +111,9 @@ _Warts confirmed in the 2026-07-17 interview:_
 - The server bspm downloads r2u binaries from can be unreliable — runtime
   package installs can fail through no fault of the image.
 - CI's RStudio version auto-detect scrapes rstudio.org's check_for_update
-  endpoint with grep; a format change breaks tag naming or pins wrongly.
+  endpoint; the scraped value is now validated against the expected version
+  shape, so a format change fails the build loudly instead of mis-tagging
+  (M03) — the scrape still depends on that endpoint's format.
 - arm64 relies on bundled/symlinked fallbacks in places where upstream only
   ships amd64 (see `install_quarto.sh`); parity can silently diverge.
 - The Windows launcher path sees the least real-world testing.

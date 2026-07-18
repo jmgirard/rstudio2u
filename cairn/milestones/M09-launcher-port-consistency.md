@@ -2,11 +2,11 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M09: Launcher port consistency
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** IP2, GP1, GP3
-- **Branch/PR:** —
+- **Branch/PR:** m09-launcher-port-consistency
 
 ## Goal
 
@@ -114,6 +114,8 @@ artifact for a student to misread (GP1).
 - 2026-07-18: created by /milestone-plan. Promoted from the candidate filed by
   M08's review; gate chose env-var + `.env` both, a bash harness on
   ubuntu-latest, and pre-flight validation.
+- 2026-07-18: set in-progress; branch m09-launcher-port-consistency cut from
+  main.
 
 ## Decisions
 

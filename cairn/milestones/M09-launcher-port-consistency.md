@@ -111,13 +111,10 @@ artifact for a student to misread (GP1).
 
 ## Work log
 
-- 2026-07-18: created by /milestone-plan; promoted from the candidate M08's review filed.
-- 2026-07-18: plan gate — env var + `.env`, bash harness on ubuntu-latest, pre-flight validation.
-- 2026-07-18: set in-progress; branch cut from main.
-- 2026-07-18: implement gate — shared launcher_common.sh for the POSIX pair; lenient validation (unreadable values pass through to Compose).
+- 2026-07-18: created by /milestone-plan from the candidate M08's review filed; plan gate chose env var + `.env`, bash harness on ubuntu-latest, pre-flight validation.
+- 2026-07-18: set in-progress; implement gate chose a shared launcher_common.sh for the POSIX pair and lenient validation (unreadable values pass through to Compose).
 - 2026-07-18: T1 done — launcher_common.sh with launcher_interactive/launcher_pause; mac + Linux source it.
-- 2026-07-18: T2 done — POSIX harness, 10/10 green against pre-change behavior (baseline).
-- 2026-07-18: T2 harness bugs — `env -i` resolves interpreters against the scrubbed PATH; bash and the stub shebang both need absolute paths.
+- 2026-07-18: T2 done — POSIX harness, 10/10 green as baseline; `env -i` resolves interpreters against the scrubbed PATH, so bash and the stub shebang need absolute paths.
 - 2026-07-18: T3+T4 done — requested_port/check_port/bound_port/url helpers; all three launchers validate pre-Compose and announce what `docker compose port` reports.
 - 2026-07-18: T5 done — timeout hint names RS_PORT and .env on all three; manual-URL line added to mac + Linux.
 - 2026-07-18: T6 done — harness to 32 scenarios; sandbox copy keeps .env out of the repo; stub models Compose's resolution so precedence is not circular.

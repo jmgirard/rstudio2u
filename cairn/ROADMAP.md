@@ -14,3 +14,10 @@ _Last hygiene check: 2026-07-17 (M01 archived)_
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 <!-- (CI smoke test candidate promoted to M01 on 2026-07-17) -->
+- Pre-merge PR CI lane: build+smoke on PRs (amd64) so branches verify before merge — added 2026-07-17 — GP7; extends M01
+- Guard RStudio version auto-detect: validate the scraped version, fail loudly on a bad scrape instead of mis-tagging — added 2026-07-17 — GP2; Known issue #2
+- Deepen smoke test to bspm binary install + quarto render (catches arm64 parity drift) — added 2026-07-17 — GP3/GP7; Known issue #3
+- Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
+- Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
+- bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1
+- resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2

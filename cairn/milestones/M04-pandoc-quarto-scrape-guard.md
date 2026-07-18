@@ -7,7 +7,7 @@
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** GP4, GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
-- **Branch/PR:** m04-pandoc-quarto-scrape-guard   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m04-pandoc-quarto-scrape-guard · https://github.com/jmgirard/rstudio2u/pull/5   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -121,3 +121,40 @@ gated by an offline unit test in `pr-ci.yml`.
 <!-- owner: review · exclusive; evidence per criterion, consistency-gate
      results, review findings + triage. EXEMPT from the 150-line cap (M55):
      only the plan-owned body above counts; evidence never scrambles it. -->
+
+_Reviewed 2026-07-17 · PR #5 · branch m04-pandoc-quarto-scrape-guard._
+
+### Acceptance-criterion evidence (fresh)
+
+- **AC1 (resolves valid responses)** ✓ — `test_resolve_download_url.sh` 4/4
+  valid-body assertions pass: GitHub-API amd64 + arm64 (arch-selected from a
+  multi-asset body incl. tarball), Quarto release + prerelease. Live-fetch
+  confirms on real endpoints: pandoc 3.10 amd64/arm64, quarto 1.9.38 (release),
+  1.10.15 (prerelease).
+- **AC2 (fails loud on bad responses)** ✓ — same suite, 5/5 failure assertions:
+  empty, HTML/error, renamed key, no-`.deb`, wrong-arch-only all exit non-zero
+  with empty stdout.
+- **AC3 (all three sites use the resolver)** ✓ — inspection: `install_pandoc.sh`
+  `latest` and `install_quarto.sh` `release`/`prerelease` call
+  `/rocker_scripts/resolve-download-url.sh`; no `grep -oP` at those sites (the
+  remaining `:29,:45,:81` version-parses are the carved-out candidate). Default
+  noble `docker build` succeeds (exit 0), running both install scripts to end.
+- **AC4 (gated and green)** ✓ — `pr-ci.yml` runs `test_resolve_download_url.sh`;
+  hadolint clean (via hadolint/hadolint image); default noble build exit 0;
+  live-fetch transcript above. PR CI (build + hadolint + resolver tests) is the
+  authoritative fresh gate on #5.
+
+### Consistency gate
+
+- `cairn_validate.py` — all 15 checks PASS (exit 0); coverage complete,
+  principles slot valid.
+- `cairn_impact.py` — skipped: diff touches no `cairn/DESIGN.md` principle text
+  (M04 works under GP3/GP4, changes neither).
+- Toolchain (docker-image `consistency-gate`): `docker build` succeeds +
+  hadolint clean; base image pinned via version tag (`rocker/r2u:${UBUNTU_VERSION}`,
+  default 24.04, not bare `latest`); no secrets in layers; `.dockerignore`
+  excludes `.git` + `cairn`; CHANGELOG has the milestone's user-visible entry.
+
+### Independent three-lens review
+<!-- appended after the fan-out + scorer -->
+

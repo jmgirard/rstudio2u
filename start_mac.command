@@ -31,6 +31,10 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 
+# Catch a bad RS_PORT before Compose does, so the student gets a plain message
+# instead of a port-binding error.
+launcher_check_port "$(launcher_requested_port)" || exit 1
+
 # A pull failure is a different problem from a slow or unhealthy start.
 if ! docker compose pull; then
     echo ""
@@ -44,19 +48,23 @@ fi
 
 # Start the server and wait until it is healthy
 if docker compose up -d --wait --wait-timeout 180; then
+    url=$(launcher_url)
     echo ""
     echo "============================================================"
-    echo "✅ RStudio Server is running at http://localhost:8787"
+    echo "✅ RStudio Server is running at $url"
+    echo "   If your browser does not open, go to that address manually."
     echo "🚀 Opening your web browser..."
     echo "============================================================"
     echo ""
     if launcher_interactive; then
-        open http://localhost:8787
+        open "$url"
     fi
 else
     echo ""
     echo "❌ The server did not become ready in time. Please try again,"
     echo "   or check Docker Desktop for errors."
+    echo "   If the port is already in use, pick another one by putting"
+    echo "   RS_PORT=8888 in a file named .env next to this launcher."
     echo ""
     launcher_pause
     exit 1

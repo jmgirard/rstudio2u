@@ -83,19 +83,19 @@ artifact for a student to misread (GP1).
       on PATH, drive both POSIX launchers through the existing five branches
       (not-installed, not-running, pull-failure, health-timeout, success).
       Green against current behavior before any port change lands.
-- [ ] T3: Add the pre-flight `RS_PORT` read (env, else `.env`) and 1–65535
+- [x] T3: Add the pre-flight `RS_PORT` read (env, else `.env`) and 1–65535
       numeric validation to all three launchers; portable bash `[[ =~ ]]`, no
       `grep -P` (M03 lesson).
-- [ ] T4: Replace the hardcoded banner/browser-open URLs
+- [x] T4: Replace the hardcoded banner/browser-open URLs
       ([start_mac.command:46,50](start_mac.command:46),
       [start_linux.sh:40,44](start_linux.sh:40),
       [start_windows.bat:64,74](start_windows.bat:64)) with the port reported
       by `docker compose port rstudio2u 8787`; fall back to the validated value
       if the query fails.
-- [ ] T5: Parity sweep — timeout message names `RS_PORT` and `.env` on all
+- [x] T5: Parity sweep — timeout message names `RS_PORT` and `.env` on all
       three ([start_windows.bat:53](start_windows.bat:53) is the model); add
       the manual-URL line to mac and Linux.
-- [ ] T6: Extend the POSIX harness with the port scenarios (default, env var,
+- [x] T6: Extend the POSIX harness with the port scenarios (default, env var,
       `.env`, env-beats-`.env`, invalid values, compose-reports-different).
 - [ ] T7: Extend
       [run_launcher_scenarios.ps1](scripts/tests/windows/run_launcher_scenarios.ps1)
@@ -124,6 +124,20 @@ artifact for a student to misread (GP1).
   both POSIX launchers through all 5 branches; 10/10 green against pre-change
   behavior. Two harness bugs fixed: env -i resolves the interpreter against the
   scrubbed PATH, so bash and the stub's shebang both need absolute paths.
+- 2026-07-18: T3+T4 done — launcher_common.sh gained launcher_requested_port /
+  launcher_check_port / launcher_bound_port / launcher_url; all three launchers
+  validate before Compose runs and announce the port `docker compose port`
+  reports. Windows carries its own batch copy.
+- 2026-07-18: T5 done — timeout message names RS_PORT and .env on all three;
+  mac and Linux gained the manual-URL line.
+- 2026-07-18: T6 done — POSIX harness extended to 32 scenarios (sandbox copy so
+  tests never write .env into the repo; stub models Compose's own resolution so
+  precedence is not asserted circularly). Mutation check: restoring the 8787
+  hardcode fails 13 scenarios.
+- 2026-07-18: three batch defects caught before commit — `::` comments inside a
+  parenthesised block are a cmd.exe parse error (use `rem`), `if defined X call
+  :label || (...)` parses ambiguously, and `%%~B` strips .env quotes without a
+  fragile substitution. CRLF blob guard re-run against the staged blob: 143/143.
 - 2026-07-18: noted out-of-scope — Dockerfile:33 copies scripts/tests/ into the
   image (pre-existing, GP5); filed for the image-size candidate, not fixed here.
 

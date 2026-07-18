@@ -79,7 +79,7 @@ smoke test blocks that variant's push. A CHANGELOG entry.
       build-push (cache-from the same scope, so amd64 layers are reused). Preserve
       per-variant matrix independence; a resolute smoke failure fails only its own
       job.
-- [ ] T4: Add a `CHANGELOG.md` "Unreleased" entry for the smoke gate.
+- [x] T4: Add a `CHANGELOG.md` "Unreleased" entry for the smoke gate.
 - [ ] T5: Run the verify slot (`hadolint Dockerfile`, `docker build`) and confirm
       clean.
 
@@ -93,6 +93,8 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 - 2026-07-17: T3 — restructured docker.yml into amd64 `--load` build →
   smoke step → multi-arch push; smoke abort blocks the push, fail-fast:false
   keeps resolute independent of noble. actionlint clean.
+- 2026-07-17: T4 — CHANGELOG.md Unreleased/Changed entry for the pre-push
+  smoke gate (no milestone number, user-facing).
 
 ## Decisions
 

@@ -22,3 +22,4 @@ _Last hygiene check: 2026-07-17 (M01 archived)_
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
 - bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1
 - resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
+- pr-ci path filter should also watch `.github/smoke-test.sh` so the gate self-validates its own harness — added 2026-07-17 — from M02 review (diff-bug F1, score 80)

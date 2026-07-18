@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M08: Windows launcher hardening
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
@@ -52,31 +52,31 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets -->
 
-- [ ] AC1 — The stored git blob for every root `.bat` file contains CRLF
+- [x] AC1 — The stored git blob for every root `.bat` file contains CRLF
       (`\r\n`) line endings, so a `git archive`/ZIP export delivers CRLF
       (evidence: `git cat-file -p :start_windows.bat | …` and a `git archive`
       extract both show `\r\n`).
-- [ ] AC2 — `start_windows.bat` distinguishes Docker **not installed** from
+- [x] AC2 — `start_windows.bat` distinguishes Docker **not installed** from
       Docker **not running**, each printing its own actionable message and
       exiting non-zero (evidence: the two windows-latest CI scenarios assert
       the distinct messages + exit code 1).
-- [ ] AC3 — `start_windows.bat` distinguishes a `docker compose pull` failure
+- [x] AC3 — `start_windows.bat` distinguishes a `docker compose pull` failure
       from a health-check timeout, each with its own message and non-zero exit,
       and the timeout path surfaces the `RS_PORT` port-in-use hint (evidence:
       the pull-fail and up-timeout windows-latest CI scenarios).
-- [ ] AC4 — `start_windows.bat` prints a manual-URL fallback when the browser
+- [x] AC4 — `start_windows.bat` prints a manual-URL fallback when the browser
       cannot open, and honors a documented non-interactive env seam so the
       happy path runs to a success message and exits 0 without blocking on
       input (evidence: the success-path windows-latest CI scenario exits 0
       unattended; the fallback message is asserted).
-- [ ] AC5 — A cross-platform guard test fails when any `.bat` blob is LF-only
+- [x] AC5 — A cross-platform guard test fails when any `.bat` blob is LF-only
       (evidence: guard passes on the fixed blobs; mutation — rewrite a blob to
       LF — makes it fail).
-- [ ] AC6 — `start_mac.command` and `start_linux.sh` gain the not-installed vs
+- [x] AC6 — `start_mac.command` and `start_linux.sh` gain the not-installed vs
       not-running distinction and the pull-failure message, keeping the three
       launchers' diagnostics consistent (evidence: their content shows the
       distinct branches; README troubleshooting wording matches).
-- [ ] AC7 — Profile `verify` is satisfied: the new `windows-launcher` workflow
+- [x] AC7 — Profile `verify` is satisfied: the new `windows-launcher` workflow
       is green and the existing `pr-ci.yml` build+smoke lane is unaffected (no
       Dockerfile/build-context change, so `hadolint`/`docker build` are not
       re-triggered by this milestone).
@@ -149,3 +149,46 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 <!-- owner: review · exclusive; evidence per criterion, consistency-gate
      results, review findings + triage. EXEMPT from the 150-line cap (M55):
      only the plan-owned body above counts; evidence never scrambles it. -->
+
+PR #9. Fresh evidence gathered 2026-07-18.
+
+### Acceptance-criteria evidence
+
+- AC1 (ZIP delivers CRLF): `git archive HEAD -- <bat> | tar -xO` →
+  start_windows.bat 85 CRLF / 0 bare-LF lines; stop_windows.bat 12 / 0. The
+  README-recommended ZIP path ships CRLF.
+- AC2 (not-installed vs not-running): windows-latest lane (run 88082391375) —
+  `docker-not-installed` exit 1 + "does not appear to be installed";
+  `docker-not-running` exit 1 + "installed but not running".
+- AC3 (pull-fail vs timeout): same lane — `pull-failure` exit 1 + "Could not
+  download the latest image"; `health-timeout` exit 1 + "did not become ready
+  in time" + "RS_PORT" hint.
+- AC4 (browser fallback + non-interactive seam): same lane — `success` exit 0
+  unattended (RS_LAUNCHER_NONINTERACTIVE) with "RStudio Server is running" and
+  "go to that address manually" in output.
+- AC5 (guard fails on LF blob): guard green on CRLF blobs; mutation (LF blob
+  staged in a throwaway index) → guard exit 1, "85 LF-only line(s)". Rule locked.
+- AC6 (mac/linux parity): `bash -n` clean; docker-stub PATH drive of
+  start_linux.sh — not-installed/not-running/pull-fail/success each give the
+  right message + exit code; start_mac.command shares the identical structure.
+- AC7 (profile verify): windows-launcher lane green (line-endings +
+  launcher-scenarios); pr-ci `build-smoke` green (docker build + hadolint), so
+  the image build is unaffected.
+
+### Consistency gate
+
+- `cairn_validate`: all checks pass.
+- docker-image consistency-gate: `docker build` + `hadolint` green via pr-ci
+  build-smoke; base image pin, secrets, `.dockerignore` unchanged (no
+  Dockerfile/build-context change — `.bat`/launchers are `.dockerignore`d);
+  CHANGELOG.md gained an Unreleased entry for the user-visible launcher changes.
+- No DESIGN principle changed (works under GP3) → `cairn_impact` skipped.
+
+### Round-trips
+
+- 1× review→in-progress→review: windows-latest lane caught two test-harness
+  bugs (`.cmd` stub chaining without `call`; real docker.exe reachable via
+  System32). Launcher unchanged; harness fixed (exe stub + in-shell PATH +
+  docker-free tool dir). All 5 scenarios now green.
+
+### Independent review

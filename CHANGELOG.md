@@ -18,3 +18,8 @@ Notable user-visible changes to the rstudio2u image. Format follows
   validated before publishing. If the upstream version lookup returns an empty
   or unexpected response, the build fails loudly instead of publishing an image
   under a blank or wrong version tag.
+- The Pandoc and Quarto download URLs scraped when building with a non-default
+  version (`latest`/`release`/`prerelease`) are now validated for the target
+  architecture before download. A changed upstream response now fails the build
+  with a clear message instead of feeding an empty or wrong URL to the
+  downloader.

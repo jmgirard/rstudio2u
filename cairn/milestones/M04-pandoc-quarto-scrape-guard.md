@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M04: Guard the Pandoc/Quarto download-URL scrapes
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** GP4, GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
@@ -87,12 +87,12 @@ gated by an offline unit test in `pr-ci.yml`.
       extraction of `"<key>": "https…<arch>.deb"`, `^https://…<arch>\.deb$`
       shape re-validation, stderr message + non-zero exit on any miss) until the
       suite is green. No `grep -P`/PCRE anywhere in it.
-- [ ] **T3 — Wire the three scrape sites.** Replace the inline scrapes at
+- [x] **T3 — Wire the three scrape sites.** Replace the inline scrapes at
       `install_pandoc.sh:68` (GitHub-API `latest`), `install_quarto.sh:58`
       (`_download.json` release/latest), and `install_quarto.sh:60`
       (`_prerelease.json`) with calls to the shared resolver; leave the default
       bundled-symlink path untouched.
-- [ ] **T4 — Gate + verify.** Add the resolver test as a step in
+- [x] **T4 — Gate + verify.** Add the resolver test as a step in
       `.github/workflows/pr-ci.yml` (alongside the RStudio resolver unit test);
       confirm `hadolint Dockerfile` clean and default noble `docker build`
       succeeds; run the resolver live against all three endpoints and capture
@@ -106,6 +106,12 @@ gated by an offline unit test in `pr-ci.yml`.
 - 2026-07-17: T1+T2 — added scripts/resolve-download-url.sh (shared, bash-ERE,
   RESOLVE_DL_RESPONSE seam) + scripts/tests/test_resolve_download_url.sh; 9/9
   offline assertions pass (arch selection, both JSON shapes, all failure modes).
+- 2026-07-17: T3+T4 — wired resolver into install_pandoc.sh (latest) and
+  install_quarto.sh (release + prerelease); gated the test in pr-ci.yml; added
+  CHANGELOG entry. Live-fetch verified all 3 endpoints × amd64/arm64; default
+  noble `docker build` succeeds (exit 0). hadolint not installed locally
+  (Dockerfile unchanged since M03-clean; pr-ci runs it on the PR).
+- 2026-07-17: all tasks done, local checks clean → status review.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

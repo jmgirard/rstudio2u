@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-17 (M03 archived)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M04 | Guard the Pandoc/Quarto download-URL scrapes | in-progress | — | normal | milestones/M04-pandoc-quarto-scrape-guard.md |
+| M04 | Guard the Pandoc/Quarto download-URL scrapes | review | — | normal | milestones/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |
 | M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |
 | M01 | CI smoke test before publishing moving tags | done | — | normal | milestones/archive/M01-ci-smoke-test.md |

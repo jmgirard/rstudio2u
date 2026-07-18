@@ -106,7 +106,7 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
       `eol=crlf`, which only smudges on clone) and re-commit
       `start_windows.bat`/`stop_windows.bat` with CRLF bytes so the blob itself
       carries CRLF; T1 then passes.
-- [ ] T3 — Rework `start_windows.bat`: (a) `where docker` → not-installed
+- [x] T3 — Rework `start_windows.bat`: (a) `where docker` → not-installed
       message; else `docker info` → not-running message; (b) check `docker
       compose pull` result → distinct pull-failure message; (c) on
       `up --wait` failure, health-timeout message + `RS_PORT` port-in-use hint;
@@ -129,6 +129,13 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (T3): reworked start_windows.bat — `where docker` not-installed vs
+  `docker info` not-running; pull-failure vs health-timeout (with RS_PORT hint);
+  `RS_LAUNCHER_NONINTERACTIVE` seam suppresses pause/timeout/browser; `if
+  errorlevel 1` form avoids the %errorlevel%-in-block gotcha. Minor refinement:
+  Windows `start` gives no reliable failure code, so the manual URL is shown in
+  the success banner always (superset of "when the browser cannot open"), not
+  conditionally. Behavioral verification is T4 (windows-latest CI).
 - 2026-07-18 (T2): `.gitattributes` `*.bat/.cmd -text` + re-committed the two
   .bat files with CRLF bytes; blob is now `i/crlf`, guard green. ZIP/archive
   delivery of CRLF verified.

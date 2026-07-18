@@ -65,13 +65,13 @@ instead of publishing a mis-named immutable tag.
 
 ## Tasks
 
-- [ ] T1 — Write `scripts/resolve-rstudio-version.sh`: fetch the
+- [x] T1 — Write `scripts/resolve-rstudio-version.sh`: fetch the
       `check_for_update` endpoint (or accept an injected raw body via arg/env
       seam so it is testable offline), URL-decode, validate against the
       `^[0-9]{4}\.[0-9]{2}\.[0-9]+[+-][0-9]+$` shape, fail loud (non-zero +
       stderr) on empty/malformed, and print the canonical version on success
       (supporting both the `-` tag rendering and the `+` URL rendering).
-- [ ] T2 — Write `scripts/tests/test_resolve_rstudio_version.sh`: assert a good
+- [x] T2 — Write `scripts/tests/test_resolve_rstudio_version.sh`: assert a good
       fixture yields exit 0 + the expected canonical output, and each bad
       fixture (empty, HTML error page, format-changed string) yields non-zero +
       a message and no usable stdout.
@@ -90,6 +90,9 @@ instead of publishing a mis-named immutable tag.
 ## Work log
 
 - 2026-07-17: created by /milestone-plan.
+- 2026-07-17: T1+T2 — added pure-bash resolver (validates the RStudio version
+  shape via bash ERE + parameter expansion, no `grep -P`/PCRE dependency) and
+  its offline fixture test (7 assertions pass; live fetch resolves 2026.07.0+139).
 
 ## Decisions
 

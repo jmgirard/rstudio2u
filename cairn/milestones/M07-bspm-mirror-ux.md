@@ -7,7 +7,7 @@
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP1   <!-- owner: plan · create/amend-via-gate; works under infra-only + classroom-first; adds/changes none -->
-- **Branch/PR:** m07-bspm-mirror-ux   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m07-bspm-mirror-ux · https://github.com/jmgirard/rstudio2u/pull/8   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -33,21 +33,21 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets -->
 
-- [ ] AC1 — With the apt source pointed at an unreachable mirror, a runtime
+- [x] AC1 — With the apt source pointed at an unreachable mirror, a runtime
       `install.packages()` retries the fetch **≥3 times** before failing, visible
       in the install output (driven by `Acquire::Retries "3"`).
-- [ ] AC2 — When such a fetch fails, the R session emits a plain-language hint
+- [x] AC2 — When such a fetch fails, the R session emits a plain-language hint
       naming a likely mirror outage and suggesting a retry, in addition to the
       underlying apt error.
-- [ ] AC3 — The hint is scoped to network/mirror failures: a normal unrelated
+- [x] AC3 — The hint is scoped to network/mirror failures: a normal unrelated
       install error (a package name apt cannot find) does **not** emit the
       mirror-outage hint.
-- [ ] AC4 — Happy path unregressed: a normal `install.packages()` of a CRAN
+- [x] AC4 — Happy path unregressed: a normal `install.packages()` of a CRAN
       package installs as an apt binary (`r-cran-<pkg>` present via `dpkg -s`)
       and loads — the M05 binary-path check still passes.
-- [ ] AC5 — Both scenarios (happy-path binary install and dead-mirror failure)
+- [x] AC5 — Both scenarios (happy-path binary install and dead-mirror failure)
       run in `.github/smoke-test.sh` on the built image.
-- [ ] AC6 — verify slot clean: `hadolint Dockerfile` reports no violations and
+- [x] AC6 — verify slot clean: `hadolint Dockerfile` reports no violations and
       `docker build` succeeds; `CHANGELOG.md` has a user-visible entry for the
       retry + diagnostic behavior (consistency-gate; no milestone numbers).
 
@@ -133,3 +133,41 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
 ## Review
 <!-- owner: review · exclusive; evidence per criterion, consistency-gate
      results, review findings + triage. EXEMPT from the 150-line cap (M55). -->
+
+_Reviewed 2026-07-18 on branch m07-bspm-mirror-ux (PR #8). Image
+`rstudio2u:m07-test` built from the committed Dockerfile + scripts (T4);
+only tracking/CHANGELOG changed since, none of which enter the image._
+
+### Acceptance-criteria evidence (fresh)
+
+- AC1 ✓ — `apt-config dump Acquire::Retries` = 3 in the image; against a
+  blackholed mirror `apt-get update` attempts each mirror 4× (3 `Ign:` + 1
+  `Err:`) before failing. Smoke Phase 3b: "apt configured to retry fetches 3x"
+  + "apt retried an unreachable mirror 4x before failing".
+- AC2 ✓ — a mirror-unreachable `install.packages()` prints the plain-language
+  hint ("the r2u package mirror looks unreachable … Wait a minute and run
+  install.packages(...) again") and re-raises the original error. Smoke
+  Phase 3b: "mirror-unreachable install surfaced the hint".
+- AC3 ✓ — `install.packages("nosuchpkg1234321")` (mirror reachable) fails with
+  no mirror hint. Smoke Phase 3a: "unrelated install error did not trigger the
+  mirror hint".
+- AC4 ✓ — `install.packages("data.table")` installs as `r-cran-data.table`
+  (`dpkg -s` present) and loads. Smoke Phase [1/2] PASS.
+- AC5 ✓ — happy-path + dead-mirror scenarios both run in
+  `.github/smoke-test.sh`; full run exit 0.
+- AC6 ✓ — `hadolint Dockerfile` no violations; `docker build` (noble) exit 0;
+  `CHANGELOG.md` Unreleased/Changed entry present (no milestone numbers).
+
+### Consistency gate
+
+- Universal: `cairn_validate` exit 0 (all checks pass); no DESIGN principle
+  changed → `cairn_impact` skipped.
+- Toolchain (docker-image `consistency-gate`): `docker build` from clean
+  context succeeds + `hadolint` clean; base image pinned (`rocker/r2u:24.04`
+  via `UBUNTU_VERSION`, not bare `latest`); no secrets in `ENV`/`COPY`;
+  `.dockerignore` present (excludes `.git`, `cairn`, build noise); CHANGELOG
+  entry present.
+
+### Independent review
+
+_pending — three-lens fan-out + scorer._

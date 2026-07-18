@@ -3,17 +3,6 @@
 _Durable, append-only repo lessons (build quirks, testing tricks). Captured at
 milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 
-- 2026-07-17 (M01): buildx `no-cache: true` ignores `cache-from`, so a
-  build-then-push pair that sets no-cache on both rebuilds independently — to
-  publish exactly what you smoke-tested, build once into the gha cache and have
-  the publish step reuse it (`cache-from` only, no `no-cache`).
-- 2026-07-17 (M02): a GitHub Actions `pull_request` `paths` filter matches the
-  whole-PR diff (base…head), not just the latest push — so once a PR's cumulative
-  diff contains a watched path, every later push retriggers the workflow, even
-  pushes touching only unwatched files (e.g. tracking-only commits).
-- 2026-07-17 (M03): `grep -oP` (PCRE) isn't portable — BSD grep (macOS) rejects
-  `-P`. For shell version-parsing, validate with bash's own `[[ =~ ]]` (ERE) +
-  parameter-expansion field extraction; no `grep -P`, testable anywhere.
 - 2026-07-17 (M03): unit-test a network-scraping shell script offline by giving
   it an env seam (`RS_UPDATE_RESPONSE`) that injects the raw response body in
   place of the fetch — fixtures drive every branch with no network.
@@ -47,3 +36,13 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M08): to run a Windows `.bat` in CI, stub `docker` as a real `.exe`
   (bare `docker`→`.cmd` chains via goto, never returns), set PATH inside a
   wrapper `.cmd`, fake "not installed" with a tool-only dir (real docker.exe is on the runner's System32).
+- 2026-07-18 (M09): a stub that resolves the same config as the code under test
+  gives false coverage — the assertion passes on the stub's parse whatever the
+  code does. Force the code's own parse to reach the output, then mutate to confirm.
+- 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv`
+  parameter silently shadows a script-scope `$dotenv`.
+- 2026-07-18 (M09): batch `for /f "tokens=* delims= "` is trim-LEFT only; trim
+  both ends with a `:~0,1` / `:~-1` loop.
+- 2026-07-18 (M09): ask `docker compose port <svc> <port>` for the real host
+  binding instead of re-deriving it from RS_PORT/.env — authoritative across
+  every override mechanism.

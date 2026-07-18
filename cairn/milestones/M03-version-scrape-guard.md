@@ -7,7 +7,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP2
-- **Branch/PR:** m03-version-scrape-guard
+- **Branch/PR:** m03-version-scrape-guard · https://github.com/jmgirard/rstudio2u/pull/4
 
 ## Goal
 
@@ -97,6 +97,9 @@ instead of publishing a mis-named immutable tag.
   + `--tag`) and install_rstudio.sh's stable/latest branch, and added the test as
   a pr-ci gate. Verify: hadolint clean; full noble build succeeds (BUILD_EXIT=0) —
   build log shows the resolver resolving `stable` → 2026.07.0+139 in-container.
+- 2026-07-17: review consistency-gate caught a missing CHANGELOG entry (the
+  changelog slot requires one for user-visible changes); bounced to in-progress,
+  added a "Fixed" entry for the tag-validation guarantee, back to review.
 
 ## Decisions
 

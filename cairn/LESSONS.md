@@ -7,12 +7,6 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   build-then-push pair that sets no-cache on both rebuilds independently — to
   publish exactly what you smoke-tested, build once into the gha cache and have
   the publish step reuse it (`cache-from` only, no `no-cache`).
-- 2026-07-17 (M01): multi-arch buildx images can't be `--load`ed into the
-  daemon; load a single-platform (native amd64) build from the shared cache to
-  boot-test, and let the multi-arch push reuse the same cache.
-- 2026-07-17 (M01): `.github/workflows/docker.yml` runs on push-to-main /
-  schedule / dispatch, not on PRs — there is no pre-merge CI, so verify image
-  build + smoke locally before merging.
 - 2026-07-17 (M02): a GitHub Actions `pull_request` `paths` filter matches the
   whole-PR diff (base…head), not just the latest push — so once a PR's cumulative
   diff contains a watched path, every later push retriggers the workflow, even
@@ -46,3 +40,10 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   post-install state (is the package still missing?) + a scoped reachability
   probe, not apt-error text — and scope the probe to the R package mirrors
   (drop `*.ubuntu.com/.org`), or an unrelated Ubuntu-archive blip false-fires.
+- 2026-07-18 (M08): to ship CRLF on every download channel use `*.bat -text` +
+  committed CRLF bytes — `eol=crlf` only smudges on `git clone`, while
+  `git archive` (GitHub "Download ZIP") exports blobs verbatim; guard the blob
+  with `git cat-file -p :file`.
+- 2026-07-18 (M08): to run a Windows `.bat` in CI, stub `docker` as a real `.exe`
+  (bare `docker`→`.cmd` chains via goto, never returns), set PATH inside a
+  wrapper `.cmd`, fake "not installed" with a tool-only dir (real docker.exe is on the runner's System32).

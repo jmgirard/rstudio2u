@@ -7,6 +7,7 @@ _Last hygiene check: 2026-07-17 (M04 archived)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M05 | Deepen the smoke test | planned | — | normal | milestones/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |
 | M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |
@@ -20,6 +21,7 @@ _Last hygiene check: 2026-07-17 (M04 archived)_
 <!-- (Pre-merge PR CI candidate promoted to M02 on 2026-07-17) -->
 <!-- (Guard RStudio version auto-detect candidate promoted to M03 on 2026-07-17) -->
 <!-- (Pandoc/Quarto download-URL scrapes candidate promoted to M04 on 2026-07-17; version-parse remainder re-filed as a candidate) -->
+<!-- (Deepen smoke test candidate promoted to M05 on 2026-07-17; pr-ci-watches-smoke-test.sh candidate absorbed into M05; pre-merge arm64 emulation re-filed below) -->
 - Harden the remaining Pandoc `grep -oP` version parses — `pandoc -v` template-version scrape (install_pandoc.sh:78, on the default build path) + installed/bundled version parses (install_pandoc.sh:29,45) — added 2026-07-17 — GP4; carved out of M04 (they already fail loud, unlike the download-URL scrapes)
 - Quarto now publishes linux-arm64.deb (seen at 1.9.38): refresh the stale "Only amd64 build can be installed now" comment (install_quarto.sh:18) and revisit the quarto arm64-fallback known issue — added 2026-07-17 — GP3; from M04
 - Deepen smoke test to bspm binary install + quarto render (catches arm64 parity drift) — added 2026-07-17 — GP3/GP7; Known issue #3
@@ -27,4 +29,4 @@ _Last hygiene check: 2026-07-17 (M04 archived)_
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
 - bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1
 - resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
-- pr-ci path filter should also watch `.github/smoke-test.sh` so the gate self-validates its own harness — added 2026-07-17 — from M02 review (diff-bug F1, score 80)
+- Pre-merge arm64 emulated smoke in `pr-ci.yml` — run the deepened smoke on an emulated arm64 build in the PR lane too; deferred from M05 for PR-CI speed — added 2026-07-17 — GP3; from M05

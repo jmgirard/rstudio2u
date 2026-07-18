@@ -1,13 +1,13 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-07-17 (M01 archived)_
+_Last hygiene check: 2026-07-17 (M02 archived)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M02 | Pre-merge PR CI lane | review | — | normal | milestones/M02-pr-ci-lane.md |
+| M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |
 | M01 | CI smoke test before publishing moving tags | done | — | normal | milestones/archive/M01-ci-smoke-test.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->

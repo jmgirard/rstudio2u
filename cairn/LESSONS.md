@@ -13,3 +13,7 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-17 (M01): `.github/workflows/docker.yml` runs on push-to-main /
   schedule / dispatch, not on PRs — there is no pre-merge CI, so verify image
   build + smoke locally before merging.
+- 2026-07-17 (M02): a GitHub Actions `pull_request` `paths` filter matches the
+  whole-PR diff (base…head), not just the latest push — so once a PR's cumulative
+  diff contains a watched path, every later push retriggers the workflow, even
+  pushes touching only unwatched files (e.g. tracking-only commits).

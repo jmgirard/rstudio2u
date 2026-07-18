@@ -3,11 +3,11 @@
      Per-section owners are tagged below. -->
 # M03: Guard the RStudio version auto-detect
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP2
-- **Branch/PR:** —
+- **Branch/PR:** m03-version-scrape-guard
 
 ## Goal
 

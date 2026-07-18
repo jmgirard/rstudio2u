@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M09: Launcher port consistency
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** IP2, GP1, GP3
@@ -137,6 +137,9 @@ artifact for a student to misread (GP1).
   in-progress.
 - 2026-07-18: fixed — script path renamed $dotenvPath; stale windows-launcher.yml
   reference in the harness header corrected. Back to review pending CI.
+- 2026-07-18: CI all green after the fix (build-smoke, line-endings, posix, windows).
+- 2026-07-18: review round-trip 2 — gate FAILED on four confirmed diff-bug
+  findings; AC3 evidence proved to be false coverage. Details in Review section.
 
 ## Decisions
 
@@ -148,3 +151,92 @@ artifact for a student to misread (GP1).
   the repo at large.
 
 ## Review
+
+_PR: https://github.com/jmgirard/rstudio2u/pull/10 — CI all green
+(build-smoke, line-endings, posix-scenarios, windows-scenarios)._
+
+### Acceptance-criteria evidence
+
+Scenario names below are from the two harnesses; POSIX run locally + in CI
+(34 scenarios), Windows run in CI (16 scenarios). All green.
+
+- AC1 default: `port-default` passes on all three launchers; each announces
+  `http://localhost:8787` with no RS_PORT and no .env.
+- AC2 env var: `port-from-env` (RS_PORT=8888) announces `http://localhost:8888`
+  on all three.
+- AC3 .env + precedence: `port-from-dotenv`, `port-from-dotenv-quoted`
+  (RS_PORT="8899"), and `port-env-beats-dotenv` (env 8899 over .env 8888) pass
+  on all three. The stub models Compose's own resolution, so precedence is
+  tested against Compose's behavior rather than against the assertion.
+- AC4 invalid values: `port-invalid-88ss`, `-0`, `-70000`, `-0.0.0.0:8888` all
+  exit 1 before Compose is invoked, message naming the value and the 1–65535
+  range, on all three.
+- AC5 Compose is authority: `port-compose-is-authority` (requested 8888, stub
+  reports 9999 → announces 9999) and `port-query-failure-falls-back` (query
+  fails → falls back to 8888) pass on all three.
+- AC6 parity: `health-timeout` asserts both `RS_PORT` and `.env` in the timeout
+  message on all three; `port-default` asserts the manual-URL line.
+- AC7 CI + docs: line-endings, posix-scenarios, windows-scenarios all pass on
+  the PR; README FAQ rewritten around .env; CHANGELOG Fixed+Changed entries.
+- AC8 profile verify: hadolint exit 0 locally; `docker build` verified by the
+  build-smoke CI job (pass, 3m18s) — it could not run in the authoring
+  environment (credential helper hang), so CI is the evidence.
+
+Guards are not false coverage: reverting `launcher_url` to the 8787 hardcode
+fails 13 POSIX scenarios.
+
+### Consistency gate
+
+`cairn_validate` exit 0, all checks PASS; one advisory (8 ACs vs the >7
+tripwire) — not a gate failure, carried knowingly. No principle changed, so
+`cairn_impact` skipped. Profile consistency-gate slot: docker build (CI) and
+hadolint clean; base image pinned to `rocker/r2u:${UBUNTU_VERSION}` (24.04),
+never bare latest; no secrets in layers (the two `--build-arg` mentions are
+comments documenting UBUNTU_VERSION/RSTUDIO_VERSION); `.dockerignore` present
+and excluding `.git`, `cairn`, `.env`; changelog entry present with no
+milestone numbers in user-facing text.
+
+### Round-trips
+
+One, caught by CI: `windows-scenarios` failed on the first run. Root cause was
+the harness, not the launcher — PowerShell variable names are case-insensitive,
+so the `$DotEnv` parameter shadowed the script-level `$dotenv` path and
+Set-Content wrote to a path named after the content. Fixed in b144ee4; the
+launcher itself had behaved correctly (reporting 8787 when no .env existed).
+
+### Independent review
+
+Three fresh-context reviewers, distinct evidence bases. Blame-history: no
+findings (verified M08's CRLF guarantee, the seam, the `rem`-in-block lesson,
+and that the workflow rename widened rather than narrowed coverage).
+Prior-PR-comments: no findings (confirmed the new missing-helper branches follow
+the pause convention M08's review established). Diff-bug (Opus): four findings,
+all confirmed by execution or inspection rather than scored — direct evidence
+supersedes an estimated confidence.
+
+1. `launcher_common.sh:42` — inline `#` comments in `.env` are not stripped, so
+   a `.env` Compose accepts is hard-rejected. `RS_PORT=8888  # avoid clash`
+   parses as the whole string and `launcher_check_port` exits 1, while Compose
+   would have bound 8888. Contradicts this milestone's own lenient policy.
+   VERIFIED by execution.
+2. `start_windows.bat:53` — the trim is leading-only (`for /f "tokens=* delims= "`
+   is trim-left), so a trailing space in `.env` (`RS_PORT=8888 `) is rejected on
+   Windows while mac/Linux and Compose accept it. A consistency milestone
+   shipping a Windows-only rejection. VERIFIED by inspection.
+3. `launcher_common.sh:94` — no lower/upper-bound check on the Compose-reported
+   port, so a `:0` binding (a compose override dropping `ports`) announces
+   `http://localhost:0`. Windows is accidentally immune, so this is also a
+   platform divergence. VERIFIED by execution (`:0` and `:70000`).
+4. Both harnesses give the `.env` parsers zero effective coverage: each stub
+   resolves `.env` itself, so every `.env` assertion is satisfied by the stub's
+   parse regardless of the launcher's. VERIFIED by mutation — deleting `.env`
+   support outright still yields 34/34 PASS. The work-log claim that the stub
+   design avoided circularity was wrong: it removed circularity from the stub's
+   resolution, not the launcher's.
+
+### Gate outcome
+
+FAILED. AC3's evidence is false coverage (finding 4), so the criterion cannot be
+ticked under AC fencing. Findings 1-3 are correctness defects in criteria-relevant
+behavior. Status back to in-progress; nothing merged. Round-trip 2.
+

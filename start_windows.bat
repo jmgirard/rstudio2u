@@ -50,9 +50,7 @@ if not defined RS_PORT_REQUESTED (
         )
     )
 )
-if defined RS_PORT_REQUESTED (
-    for /f "tokens=* delims= " %%V in ("!RS_PORT_REQUESTED!") do set "RS_PORT_REQUESTED=%%V"
-)
+call :clean_value
 
 :: Catch a bad value before Compose does, so the student gets a plain message
 :: instead of a port-binding error -- and so a value like 0.0.0.0:8888 can never
@@ -101,9 +99,11 @@ if errorlevel 1 (
 :: means the URL we print can never disagree with reality, whatever set it.
 set "RS_URL_PORT="
 for /f "usebackq tokens=2 delims=:" %%P in (`docker compose port rstudio2u 8787 2^>nul`) do set "RS_URL_PORT=%%P"
-if not defined RS_URL_PORT set "RS_URL_PORT=!RS_PORT_REQUESTED!"
-if not defined RS_URL_PORT set "RS_URL_PORT=8787"
-echo !RS_URL_PORT!| findstr /r "^[0-9][0-9]*$" >nul
+:: A :0 binding (an override that drops `ports`) is not something to announce,
+:: so range-check before trusting it, then fall back the same way POSIX does.
+call :port_ok "!RS_URL_PORT!"
+if errorlevel 1 set "RS_URL_PORT=!RS_PORT_REQUESTED!"
+call :port_ok "!RS_URL_PORT!"
 if errorlevel 1 set "RS_URL_PORT=8787"
 set "RS_URL=http://localhost:!RS_URL_PORT!"
 
@@ -133,11 +133,43 @@ exit /b 0
 if not defined RS_PORT_REQUESTED exit /b 0
 echo !RS_PORT_REQUESTED!| findstr /c:"$" /c:"{" >nul
 if not errorlevel 1 exit /b 0
-echo !RS_PORT_REQUESTED!| findstr /r "^[0-9][0-9]*$" >nul
+call :port_ok "!RS_PORT_REQUESTED!"
 if errorlevel 1 exit /b 1
-if !RS_PORT_REQUESTED! LSS 1 exit /b 1
-if !RS_PORT_REQUESTED! GTR 65535 exit /b 1
 exit /b 0
+
+:: Is %~1 a decimal port number in the usable range? The length guard keeps a
+:: very long digit string from overflowing batch's numeric comparison.
+:port_ok
+set "PORTCAND=%~1"
+if not defined PORTCAND exit /b 1
+if not "!PORTCAND:~5!"=="" exit /b 1
+echo !PORTCAND!| findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 exit /b 1
+if !PORTCAND! LSS 1 exit /b 1
+if !PORTCAND! GTR 65535 exit /b 1
+exit /b 0
+
+:: Strip an inline comment and surrounding spaces, matching launcher_common.sh
+:: and Compose. The previous `for /f "tokens=* delims= "` was trim-LEFT only, so
+:: a trailing space rejected on Windows while POSIX and Compose accepted it.
+:clean_value
+if not defined RS_PORT_REQUESTED goto :eof
+if "!RS_PORT_REQUESTED:~0,1!"=="#" (
+    set "RS_PORT_REQUESTED="
+    goto :eof
+)
+for /f "tokens=1 delims=#" %%C in ("!RS_PORT_REQUESTED!") do set "RS_PORT_REQUESTED=%%C"
+:clean_trim
+if not defined RS_PORT_REQUESTED goto :eof
+if "!RS_PORT_REQUESTED:~0,1!"==" " (
+    set "RS_PORT_REQUESTED=!RS_PORT_REQUESTED:~1!"
+    goto :clean_trim
+)
+if "!RS_PORT_REQUESTED:~-1!"==" " (
+    set "RS_PORT_REQUESTED=!RS_PORT_REQUESTED:~0,-1!"
+    goto :clean_trim
+)
+goto :eof
 
 :: Interactive pause, suppressed under the test seam.
 :wait

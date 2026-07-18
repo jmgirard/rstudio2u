@@ -44,16 +44,41 @@ launcher_requested_port() {
         fi
     done < .env
 
-    # Trim surrounding whitespace, then one layer of matching quotes.
+    # Trim leading whitespace, then read the value the way Compose does: a
+    # quoted value ends at its closing quote, an unquoted one ends at an inline
+    # comment. Getting this wrong in the strict direction is the dangerous one --
+    # it rejects a .env Compose would have accepted.
     value=${value#"${value%%[![:space:]]*}"}
-    value=${value%"${value##*[![:space:]]}"}
-    if [ ${#value} -ge 2 ]; then
-        case $value in
-            \"*\") value=${value:1:${#value}-2} ;;
-            \'*\') value=${value:1:${#value}-2} ;;
-        esac
-    fi
+    case $value in
+        \"*)
+            value=${value#\"}
+            value=${value%%\"*}
+            ;;
+        \'*)
+            value=${value#\'}
+            value=${value%%\'*}
+            ;;
+        \#*)
+            # The whole value is a comment; treat as unset.
+            value=""
+            ;;
+        *)
+            # An inline comment starts at whitespace followed by '#'.
+            if [[ $value =~ ^(.*[^[:space:]])?[[:space:]]+\#.*$ ]]; then
+                value=${BASH_REMATCH[1]}
+            fi
+            value=${value%"${value##*[![:space:]]}"}
+            ;;
+    esac
     printf '%s' "$value"
+}
+
+# Is $1 a decimal port number in the usable range?
+launcher_port_ok() {
+    [[ $1 =~ ^[0-9]+$ ]] || return 1
+    [ ${#1} -le 5 ] || return 1
+    local n=$((10#$1))
+    [ "$n" -ge 1 ] && [ "$n" -le 65535 ]
 }
 
 # Catch a typo before Compose fails on it with a cryptic binding error, and stop
@@ -72,12 +97,7 @@ launcher_check_port() {
         *'$'*|*'{'*) return 0 ;;
     esac
 
-    if [[ $port =~ ^[0-9]+$ ]]; then
-        local n=$((10#$port))
-        if [ "$n" -ge 1 ] && [ "$n" -le 65535 ]; then
-            return 0
-        fi
-    fi
+    launcher_port_ok "$port" && return 0
 
     echo ""
     echo "❌ RS_PORT is set to '$port', which is not a usable port number."
@@ -96,7 +116,10 @@ launcher_bound_port() {
     out=$(docker compose port rstudio2u 8787 2>/dev/null) || return 1
     port=${out##*:}
     port=${port//[!0-9]/}
-    [ -n "$port" ] || return 1
+    # `docker compose port` prints :0 and exits 0 when nothing is published for
+    # that container port (e.g. an override that drops `ports`). Announcing
+    # localhost:0 would be worse than falling back.
+    launcher_port_ok "$port" || return 1
     printf '%s' "$port"
 }
 
@@ -106,6 +129,6 @@ launcher_url() {
     local port
     port=$(launcher_bound_port) || port=""
     [ -n "$port" ] || port=$(launcher_requested_port)
-    [[ $port =~ ^[0-9]+$ ]] || port=8787
+    launcher_port_ok "$port" || port=8787
     printf 'http://localhost:%s' "$port"
 }

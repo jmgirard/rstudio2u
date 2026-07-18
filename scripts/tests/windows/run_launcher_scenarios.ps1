@@ -186,6 +186,43 @@ Invoke-Scenario -Name 'port-query-failure-falls-back' -PathValue $stubPath `
     -ExtraEnv @{ RS_PORT = '8888'; STUB_PORT_FAIL = '1' } `
     -ExpectExit 0 -ExpectText @('http://localhost:8888')
 
+# --- the launcher's OWN .env parse -------------------------------------------
+# The scenarios above cannot see it: the stub resolves .env itself, so the
+# announced port comes from the stub's parse whatever the launcher does. These
+# force the launcher's reading to reach the output -- via validation, which only
+# ever uses the launcher's own parse, and via STUB_PORT_FAIL, which makes the
+# fallback path observable.
+
+Invoke-Scenario -Name 'dotenv-invalid-is-rejected' -PathValue $stubPath -ExtraEnv @{} `
+    -ExpectExit 1 -ExpectText @('not a usable port number') -DotEnv 'RS_PORT=0'
+
+Invoke-Scenario -Name 'dotenv-parse-reaches-output' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PORT_FAIL = '1' } `
+    -ExpectExit 0 -ExpectText @('http://localhost:8855') -DotEnv 'RS_PORT=8855'
+
+# An inline comment is a comment to Compose, so it must not become part of the
+# value -- rejecting here would refuse a .env that works.
+Invoke-Scenario -Name 'dotenv-inline-comment' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PORT_FAIL = '1' } `
+    -ExpectExit 0 -ExpectText @('http://localhost:8866') `
+    -DotEnv 'RS_PORT=8866  # avoid clash with my other container'
+
+# Trailing whitespace is invisible in an editor and must not reject. The old
+# leading-only trim rejected this on Windows while POSIX and Compose accepted it.
+Invoke-Scenario -Name 'dotenv-trailing-space' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PORT_FAIL = '1' } `
+    -ExpectExit 0 -ExpectText @('http://localhost:8877') -DotEnv 'RS_PORT=8877 '
+
+# A :0 binding means nothing is published; fall back rather than announce it,
+# and the fallback must reach the requested value, not skip to the default.
+Invoke-Scenario -Name 'bound-port-zero-falls-back' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_BOUND_PORT = '0' } `
+    -ExpectExit 0 -ExpectText @('http://localhost:8787')
+
+Invoke-Scenario -Name 'bound-port-zero-uses-requested' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_BOUND_PORT = '0' } `
+    -ExpectExit 0 -ExpectText @('http://localhost:8844') -DotEnv 'RS_PORT=8844'
+
 # --- rejected values ---------------------------------------------------------
 # Single-quoted on purpose: '${CUSTOM}' must reach the launcher literally, not
 # be interpolated by PowerShell.

@@ -137,6 +137,8 @@ artifact for a student to misread (GP1).
 - 2026-07-18: CI all green after the fix (build-smoke, line-endings, posix, windows).
 - 2026-07-18: review round-trip 2 — gate FAILED on four confirmed diff-bug
   findings; AC3 evidence proved to be false coverage. Details in Review section.
+- 2026-07-18: all four fixed — .env values now read the way Compose reads them (inline comments stripped, quoted values end at the closing quote, both ends trimmed) in bash and batch alike; shared launcher_port_ok / :port_ok range-check the Compose-reported port so a :0 binding falls back instead of announcing localhost:0.
+- 2026-07-18: harness gained 12 scenarios that force the launcher's own parse to reach the output (46 total). Mutations now caught: deleting .env support 11 failures, dropping comment-stripping 5, accepting an out-of-range bound port 2 — the last needed a scenario pairing :0 with a requested port, since launcher_url's guard otherwise masks launcher_bound_port's.
 
 ## Decisions
 

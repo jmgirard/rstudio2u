@@ -192,6 +192,43 @@ for launcher in start_mac.command start_linux.sh; do
     run_scenario "$launcher/port-query-failure-falls-back" "$launcher" "$stub_path" 0 \
         'RS_PORT=8888 STUB_PORT_FAIL=1' 'http://localhost:8888'
 
+    # --- the launcher's OWN .env parse ---------------------------------------
+    # The scenarios above cannot see it: the stub resolves .env itself, so the
+    # announced port comes from the stub's parse whatever the launcher does
+    # (deleting .env support outright still passed them). These force the
+    # launcher's reading to reach the output -- via validation, which only ever
+    # uses the launcher's own parse, and via STUB_PORT_FAIL, which makes the
+    # fallback path observable.
+    DOTENV='RS_PORT=0'
+    run_scenario "$launcher/dotenv-invalid-is-rejected" "$launcher" "$stub_path" 1 "" \
+        'not a usable port number'
+
+    DOTENV='RS_PORT=8855'
+    run_scenario "$launcher/dotenv-parse-reaches-output" "$launcher" "$stub_path" 0 \
+        'STUB_PORT_FAIL=1' 'http://localhost:8855'
+
+    # An inline comment is a comment to Compose, so it must not become part of
+    # the value -- rejecting here would refuse a .env that works.
+    DOTENV='RS_PORT=8866  # avoid clash with my other container'
+    run_scenario "$launcher/dotenv-inline-comment" "$launcher" "$stub_path" 0 \
+        'STUB_PORT_FAIL=1' 'http://localhost:8866'
+
+    # Trailing whitespace is invisible in an editor and must not reject.
+    DOTENV='RS_PORT=8877 '
+    run_scenario "$launcher/dotenv-trailing-space" "$launcher" "$stub_path" 0 \
+        'STUB_PORT_FAIL=1' 'http://localhost:8877'
+
+    # A :0 binding means nothing is published; fall back rather than announce it.
+    run_scenario "$launcher/bound-port-zero-falls-back" "$launcher" "$stub_path" 0 \
+        'STUB_BOUND_PORT=0' 'http://localhost:8787'
+
+    # ...and the fallback must reach the *requested* value, not skip past it to
+    # the default. This is what distinguishes rejecting :0 in launcher_bound_port
+    # from merely catching it later in launcher_url.
+    DOTENV='RS_PORT=8844'
+    run_scenario "$launcher/bound-port-zero-uses-requested" "$launcher" "$stub_path" 0 \
+        'STUB_BOUND_PORT=0' 'http://localhost:8844'
+
     # --- rejected values ------------------------------------------------------
     for bad in 88ss 0 70000 0.0.0.0:8888; do
         run_scenario "$launcher/port-invalid-$bad" "$launcher" "$stub_path" 1 \

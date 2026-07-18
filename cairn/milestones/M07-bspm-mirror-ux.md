@@ -79,7 +79,7 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
       with `Acquire::Retries "3";`, `Acquire::http::Timeout "30";`,
       `Acquire::https::Timeout "30";`. Confirm the dead-mirror scenario now shows
       ≥3 retry attempts.
-- [ ] T3 — Append an `Rprofile.site` diagnostic hook (after the
+- [x] T3 — Append an `Rprofile.site` diagnostic hook (after the
       `bspm::enable()` line the `Dockerfile:44` sed targets in
       `/etc/R/Rprofile.site`): wrap the bspm install path so that on apt/network
       failure signatures ("Could not resolve", "Failed to fetch", "Connection
@@ -104,10 +104,23 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
 - 2026-07-18: T2 — added /etc/apt/apt.conf.d/80-retries (Retries "3",
   http/https Timeout "30") to the bspm-config layer. hadolint clean
   (hadolint/hadolint image).
+- 2026-07-18: T3 — added scripts/mirror_hint.R (reachability-probe hook, see
+  MD-1) and appended it to /etc/R/Rprofile.site after bspm::enable() in the
+  Dockerfile. R parse clean; parsing/probe/wrapper control-flow validated
+  offline (4 cases). hadolint clean. Full behaviour verified at T4.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote
      cross-cutting ones to cairn/DECISIONS.md -->
+
+- MD-1 (2026-07-18, T3): Detect the outage by a TCP reachability probe of the
+  configured apt mirrors, not by matching apt-error text. Text matching is
+  brittle across apt versions and cannot separate a transient outage from an
+  ordinary "package does not exist" error (both leave the package
+  uninstalled). The hook checks the post-install state (requested packages
+  still missing?) then probes reachability — so a missing-but-reachable
+  install (nonexistent package) never fires the hint (AC3). The hint is
+  additive; the original error/warning is always preserved and re-raised.
 
 ## Review
 <!-- owner: review · exclusive; evidence per criterion, consistency-gate

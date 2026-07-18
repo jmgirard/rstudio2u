@@ -49,6 +49,10 @@ RUN set -eux \
        'Acquire::http::Timeout "30";' \
        'Acquire::https::Timeout "30";' \
        > /etc/apt/apt.conf.d/80-retries \
+    # Add a plain-language hint when an install fails on an unreachable mirror.
+    # Appended after bspm::enable() so install.packages resolves to bspm's
+    # installer when the wrapper captures it — Known issue #1
+    && cat /rocker_scripts/mirror_hint.R >> /etc/R/Rprofile.site \
     # Re-apply staff-group write access after every apt/bspm install
     && echo 'DPkg::Post-Invoke {"chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library || true"; "chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library || true";};' > /etc/apt/apt.conf.d/99fix-r-lib-perms \
     # Grant that write access once for the libraries already present

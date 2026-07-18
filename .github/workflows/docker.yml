@@ -51,10 +51,14 @@ jobs:
       - name: Compute tags and RStudio version
         id: meta
         run: |
-          set -e
+          set -euo pipefail
           DATE=$(date -u +%Y-%m-%d)
-          RSVER=$(wget -qO- "https://www.rstudio.org/links/check_for_update?version=1.0.0" \
-            | grep -oP '(?<=update-version=)[^&]+' | sed 's/%2B/-/g')
+          # Resolve + validate the current stable RStudio version. The resolver
+          # exits non-zero on an empty/HTML/format-changed scrape, so pipefail +
+          # -e abort the job here rather than publishing a mis-named "<variant>-"
+          # tag (Known issue #2 / GP2). --tag gives the '-' form used for both
+          # the immutable tag suffix and the RSTUDIO_VERSION build-arg.
+          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
           echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
           {
             echo "tags<<EOF"

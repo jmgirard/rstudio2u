@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M08: Windows launcher hardening
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** GP3   <!-- owner: plan · create/amend-via-gate; comma-separated IPn/GPn ids this milestone touches, or — -->
@@ -122,42 +122,20 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 - [x] T5 — Port the not-installed vs not-running distinction and the
       pull-failure message to `start_mac.command` and `start_linux.sh` (one-line
       echoes; no new CI lane).
-- [ ] T6 — Sync README troubleshooting (around line 175, "the launcher says
+- [x] T6 — Sync README troubleshooting (around line 175, "the launcher says
       Docker isn't running") to the new clearer messages, including the
       not-installed guidance.
 
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
-- 2026-07-18 (T5): ported not-installed vs not-running + pull-failure diagnostics
-  to start_mac.command and start_linux.sh (`command -v docker` gate + pull check).
-  Verified locally with `bash -n` and a docker-stub PATH drive of start_linux.sh:
-  all four branches (not-installed/not-running/pull-fail/success) give the right
-  message + exit code; mac shares the identical structure (open vs xdg-open).
-- 2026-07-18 (T4): added .github/workflows/windows-launcher.yml (windows-latest
-  scenarios via scripts/tests/windows/run_launcher_scenarios.ps1 driving a stub
-  `docker` on PATH: not-installed/not-running/pull-fail/timeout/success; asserts
-  exit code + message) + an ubuntu CRLF guard job. Own paths filter keeps the
-  pr-ci image build out. Locally verified: YAML valid, all 7 assertion strings
-  match launcher text, guard green. Real windows-latest run happens on the PR
-  (this lane is pull_request-triggered) — confirm at review.
-- 2026-07-18 (T3): reworked start_windows.bat — `where docker` not-installed vs
-  `docker info` not-running; pull-failure vs health-timeout (with RS_PORT hint);
-  `RS_LAUNCHER_NONINTERACTIVE` seam suppresses pause/timeout/browser; `if
-  errorlevel 1` form avoids the %errorlevel%-in-block gotcha. Minor refinement:
-  Windows `start` gives no reliable failure code, so the manual URL is shown in
-  the success banner always (superset of "when the browser cannot open"), not
-  conditionally. Behavioral verification is T4 (windows-latest CI).
-- 2026-07-18 (T2): `.gitattributes` `*.bat/.cmd -text` + re-committed the two
-  .bat files with CRLF bytes; blob is now `i/crlf`, guard green. ZIP/archive
-  delivery of CRLF verified.
-- 2026-07-18 (T1): added scripts/tests/test_launcher_line_endings.sh — asserts
-  each *.bat blob is CRLF (via `git cat-file`); fails by design against today's
-  LF blobs, goes green after T2. Portable (no mapfile — bash 3.2 / M03 lesson).
-- 2026-07-18: created by /milestone-plan. Promotes the "Windows launcher
-  hardening" candidate (added 2026-07-17; GP3, Known issue #4). Gate decisions:
-  guarantee CRLF in blob (`-text`); windows-latest CI + EOL guard; Windows-
-  focused with shared-diagnostic parity to mac/linux.
+- 2026-07-18 (T6): synced README FAQ — not-installed/not-running split, download-failure entry, RS_PORT-on-timeout hint; wording matches launcher.
+- 2026-07-18 (T5): ported not-installed/not-running + pull-failure diagnostics to start_mac.command + start_linux.sh; `bash -n` clean, docker-stub PATH drive of start_linux.sh exercises all four branches (right message + exit code).
+- 2026-07-18 (T4): added .github/workflows/windows-launcher.yml + run_launcher_scenarios.ps1 (windows-latest, stub docker on PATH, 5 scenarios) + ubuntu CRLF guard job; own paths filter keeps pr-ci build out; YAML valid, 7 assertions match launcher — real windows run happens on the PR.
+- 2026-07-18 (T3): reworked start_windows.bat — not-installed vs not-running, pull-failure vs health-timeout (RS_PORT hint), `RS_LAUNCHER_NONINTERACTIVE` seam, `if errorlevel 1` form. Refinement: `start` gives no reliable rc so the manual URL is always in the success banner (superset). Behavioral check = T4 CI.
+- 2026-07-18 (T2): `.gitattributes` `*.bat/.cmd -text` + re-committed .bat with CRLF; blob `i/crlf`, `git archive` delivers CRLF (AC1), guard green.
+- 2026-07-18 (T1): added scripts/tests/test_launcher_line_endings.sh (asserts each .bat blob is CRLF via `git cat-file`; fails pre-fix; portable, no mapfile — M03).
+- 2026-07-18: created by /milestone-plan; promotes the Windows-launcher-hardening candidate. Gate: CRLF-in-blob (`-text`); windows-latest CI + EOL guard; Windows-focused with mac/linux parity.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

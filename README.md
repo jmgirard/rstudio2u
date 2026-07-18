@@ -172,13 +172,22 @@ safely:
 
 ## FAQ / Troubleshooting
 
-**"Cannot connect to the Docker daemon" / the launcher says Docker isn't running.**
-Open Docker Desktop, wait until it reports *Running*, then try again.
+**The launcher says Docker isn't installed, or isn't running.**
+The launchers tell these two apart. *Not installed:* install
+[Docker Desktop](https://www.docker.com/products/docker-desktop/) (Docker Engine
+on Linux), then run the launcher again. *Installed but not running* (also shown
+as "Cannot connect to the Docker daemon"): open Docker Desktop, wait until it
+reports *Running*, then try again.
+
+**The launcher says it couldn't download the latest image.**
+That's a network problem, not a broken install — check your internet connection
+and that you can reach Docker Hub, then run the launcher again.
 
 **Port 8787 is already in use.**
 Use a different host port. With the launcher or Compose, set `RS_PORT`, e.g.
 `RS_PORT=8888 docker compose up -d`, then browse to <http://localhost:8888>. With
-`docker run`, change the mapping to `-p 8888:8787`.
+`docker run`, change the mapping to `-p 8888:8787`. (If the launcher reports the
+server "did not become ready in time", a busy port 8787 is the likely cause.)
 
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or

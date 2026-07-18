@@ -152,17 +152,37 @@ if [ -z "${retries:-}" ] || [ "$retries" -lt 3 ]; then
 fi
 echo "PASS: apt configured to retry fetches ${retries}x"
 
-# Blackhole the r2u binary mirror by pointing its host at 127.0.0.1 (nothing
-# listens on :80/:443 there -> connection refused, fast and deterministic). Pick
-# the non-Ubuntu apt host, which is the r2u/cranapt binary repo.
-mirror_host="$(docker exec "$NAME" bash -c \
+# Blackhole every non-Ubuntu apt host (the r2u binary repo *and* the CRAN
+# source mirror) by pointing them at 127.0.0.1 — nothing listens on :80/:443
+# there, so connections are refused: fast and deterministic. Both the binary
+# (apt/r2u) and source-fallback paths must fail for the install to fail.
+mirror_hosts="$(docker exec "$NAME" bash -c \
   "grep -rhoE 'https?://[^ /]+' /etc/apt/sources.list.d/ /etc/apt/sources.list 2>/dev/null \
-   | sed -E 's#https?://##' | sort -u | grep -viE 'ubuntu\.(com|org)' | head -1")"
-if [ -z "${mirror_host:-}" ]; then
-  echo "FAIL: could not identify the r2u mirror host from apt sources"; exit 1
+   | sed -E 's#https?://##' | sort -u | grep -viE 'ubuntu\.(com|org)'")"
+if [ -z "${mirror_hosts:-}" ]; then
+  echo "FAIL: could not identify the r2u mirror host(s) from apt sources"; exit 1
 fi
-echo "    blackholing mirror host: $mirror_host"
-docker exec "$NAME" bash -c "printf '127.0.0.1 %s\n' '$mirror_host' >> /etc/hosts"
+echo "    blackholing mirror host(s): $(printf '%s' "$mirror_hosts" | tr '\n' ' ')"
+for h in $mirror_hosts; do
+  docker exec "$NAME" bash -c "printf '127.0.0.1 %s\n' '$h' >> /etc/hosts"
+done
+
+# Retries are visible in apt's own output: an `apt-get update` (which bspm runs
+# before installing) attempts each unreachable mirror Acquire::Retries times
+# (Ign:/Err: lines) before giving up. Assert at least one mirror was fetched >=3
+# times, i.e. the retries actually happened (AC1, behavioural).
+upd_out="$(docker exec "$NAME" bash -c 'apt-get update 2>&1' || true)"
+max_attempts=0
+for h in $mirror_hosts; do
+  c="$(printf '%s' "$upd_out" | grep -cE "(Ign|Err):[0-9]+ https?://$h" || true)"
+  [ "$c" -gt "$max_attempts" ] && max_attempts="$c"
+done
+if [ "$max_attempts" -lt 3 ]; then
+  echo "FAIL: apt did not retry the unreachable mirror >=3x (max attempts: $max_attempts)"
+  printf '%s\n' "$upd_out" | grep -iE 'Ign|Err|Failed to fetch' | head
+  exit 1
+fi
+echo "PASS: apt retried an unreachable mirror ${max_attempts}x before failing"
 
 # Request an uninstalled package with the source fallback also dead (repos ->
 # a closed port), so the install genuinely fails and the hook can diagnose it.

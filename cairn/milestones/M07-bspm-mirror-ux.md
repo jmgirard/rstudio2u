@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M07: bspm mirror-failure UX
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP1   <!-- owner: plan · create/amend-via-gate; works under infra-only + classroom-first; adds/changes none -->
@@ -86,7 +86,7 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
       timed out", "Temporary failure") it appends the plain-language hint, and
       passes unrelated errors through unchanged. Log the apt-text-matching
       fragility in the work log.
-- [ ] T4 — Full local build of the noble image + end-to-end smoke run (happy
+- [x] T4 — Full local build of the noble image + end-to-end smoke run (happy
       path + dead mirror + false-positive); `hadolint Dockerfile` clean; add the
       `CHANGELOG.md` entry; capture evidence for AC4/AC5/AC6.
 
@@ -108,6 +108,14 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
   MD-1) and appended it to /etc/R/Rprofile.site after bspm::enable() in the
   Dockerfile. R parse clean; parsing/probe/wrapper control-flow validated
   offline (4 cases). hadolint clean. Full behaviour verified at T4.
+- 2026-07-18: T4 — built the noble image (docker build exit 0, hadolint clean)
+  and ran the full smoke end-to-end (exit 0): AC1 apt retried the dead mirror
+  4x (3 Ign + 1 Err), AC2 hint printed, AC3 no false hint, AC4 data.table
+  binary install intact, AC5 both scenarios in CI smoke. Added the CHANGELOG
+  Unreleased/Changed entry. Fixed the T1 blackhole targeting (blackhole *all*
+  non-Ubuntu apt hosts, not just the first — the first was the CRAN source
+  mirror, so praise still installed from r2u) and added an in-CI retry-
+  visibility assertion (>=3 attempts) so AC5 covers AC1 behaviourally.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

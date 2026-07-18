@@ -97,14 +97,14 @@ artifact for a student to misread (GP1).
       the manual-URL line to mac and Linux.
 - [x] T6: Extend the POSIX harness with the port scenarios (default, env var,
       `.env`, env-beats-`.env`, invalid values, compose-reports-different).
-- [ ] T7: Extend
+- [x] T7: Extend
       [run_launcher_scenarios.ps1](scripts/tests/windows/run_launcher_scenarios.ps1)
       with the same port scenarios; teach the `docker.exe` stub `compose port`.
-- [ ] T8: CI — add the POSIX job to
+- [x] T8: CI — add the POSIX job to
       [.github/workflows/windows-launcher.yml](.github/workflows/windows-launcher.yml),
       widen its paths filter to the POSIX launchers and new harness, rename the
       lane from "Windows launcher" to "Launchers".
-- [ ] T9: Docs — README `.env` instructions in the launcher section plus the
+- [x] T9: Docs — README `.env` instructions in the launcher section plus the
       rewritten port FAQ ([README.md:186](README.md:186)); CHANGELOG entry;
       `.env` added to `.gitignore` and `.dockerignore`; confirm the profile
       verify slot still clean.
@@ -138,9 +138,25 @@ artifact for a student to misread (GP1).
   parenthesised block are a cmd.exe parse error (use `rem`), `if defined X call
   :label || (...)` parses ambiguously, and `%%~B` strips .env quotes without a
   fragile substitution. CRLF blob guard re-run against the staged blob: 143/143.
+- 2026-07-18: T7 done — Windows harness gained the same port scenarios and a
+  `compose port`-aware stub; NOT runnable locally (no pwsh/Windows), so CI is
+  its first real execution.
+- 2026-07-18: T8 done — workflow renamed windows-launcher.yml → launchers.yml
+  with a posix-scenarios job; paths widened to start_*/stop_*/launcher_common.sh
+  and both harness dirs.
+- 2026-07-18: T9 done — README FAQ rewritten around .env, CHANGELOG Fixed+Changed
+  entries, .env added to .gitignore and .dockerignore. hadolint clean (exit 0);
+  docker build running to confirm the .dockerignore change is safe.
 - 2026-07-18: noted out-of-scope — Dockerfile:33 copies scripts/tests/ into the
   image (pre-existing, GP5); filed for the image-size candidate, not fixed here.
 
 ## Decisions
+
+- 2026-07-18: the announced URL comes from `docker compose port`, not from the
+  launcher's own reading of RS_PORT/.env. A launcher-side parser would have to
+  agree with Compose's resolution in every case; asking Compose removes that
+  whole class of divergence, and reduces the launcher's own parse to a
+  best-effort typo check. Milestone-local: it constrains these three files, not
+  the repo at large.
 
 ## Review

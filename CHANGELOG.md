@@ -5,7 +5,21 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ## Unreleased
 
+### Fixed
+
+- The double-click launchers no longer send you to the wrong address when the
+  server is running on a port other than 8787. They previously announced and
+  opened `http://localhost:8787` unconditionally; they now report the address
+  the server was actually started on.
+
 ### Changed
+
+- You can change the port the launchers use by putting `RS_PORT=8888` in a file
+  named `.env` next to the launcher. This works when double-clicking, which
+  setting an environment variable does not — previously the only documented way
+  to change the port required launching from a terminal. A value that is not a
+  usable port number is now reported in plain language before startup rather
+  than surfacing as a raw Docker error.
 
 - The double-click launchers now explain failures in plain language instead of
   blaming a generic timeout. They tell apart Docker not being *installed* from

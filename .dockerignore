@@ -2,6 +2,7 @@
 start_*
 stop_*
 launcher_common.sh
+.env
 .git
 .github
 .gitattributes

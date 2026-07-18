@@ -2,3 +2,4 @@
 cairn/references/pdf/
 cairn/.merge-approved
 cairn/.merge-approved.pending
+.env

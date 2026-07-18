@@ -7,7 +7,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP7, GP3
-- **Branch/PR:** m01-ci-smoke-test
+- **Branch/PR:** m01-ci-smoke-test · https://github.com/jmgirard/rstudio2u/pull/1
 
 ## Goal
 
@@ -36,21 +36,21 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 
 ## Acceptance criteria
 
-- [ ] `.github/smoke-test.sh` exists: given a local image tag, it runs a
+- [x] `.github/smoke-test.sh` exists: given a local image tag, it runs a
       container publishing `:8787`, polls the container health signal, tears the
       container down, and exits `0` when healthy within the timeout / non-zero on
       failure or timeout (GP7).
-- [ ] Evidence the script gates correctly: run against a freshly-built healthy
+- [x] Evidence the script gates correctly: run against a freshly-built healthy
       amd64 image exits `0`; run against a container that never serves `:8787`
       exits non-zero (the failure path fires — the behavior this milestone must
       test).
-- [ ] `.github/workflows/docker.yml` is restructured so each matrix variant
+- [x] `.github/workflows/docker.yml` is restructured so each matrix variant
       builds its amd64 image with `--load`, runs the smoke test, and performs the
       multi-arch build-and-push only if the smoke test passed; variants stay
       independent — a resolute smoke failure fails the resolute job (red) and
       never blocks noble's build/smoke/push (GP3, preview-tier).
-- [ ] `CHANGELOG.md` "Unreleased" notes the pre-push smoke gate.
-- [ ] verify slot clean: `hadolint Dockerfile` reports no violations and
+- [x] `CHANGELOG.md` "Unreleased" notes the pre-push smoke gate.
+- [x] verify slot clean: `hadolint Dockerfile` reports no violations and
       `docker build` succeeds.
 
 ## Coverage
@@ -101,7 +101,80 @@ smoke test blocks that variant's push. A CHANGELOG entry.
 - 2026-07-17: T2 — smoke script verified against the real image (exit 0) and
   three failure cases (unhealthy stand-in, container-exit, missing arg → exit 1).
   All tasks done; status → review.
+- 2026-07-17: review — opened PR #1; AC evidence + consistency gate recorded.
+  3-lens review: diff-bug found 2 cache-wiring findings (scored 85/80), fixed
+  in place by restructuring docker.yml into build-both-arches → load-amd64-smoke
+  → publish-from-cache (published image == smoke-tested image; arm64 emulated
+  once). blame-history + prior-PR clean. actionlint clean post-fix.
 
 ## Decisions
 
 ## Review
+
+_Reviewed 2026-07-17 · PR #1 · branch `m01-ci-smoke-test` · diff vs `main`:
+5 files, +130/−9._
+
+### Acceptance-criteria evidence (fresh, this session)
+
+- **AC1** — `.github/smoke-test.sh` present (66 lines); `bash -n` + shellcheck
+  (koalaman container) clean. Boots via `docker run -d -p 127.0.0.1:8787:8787`,
+  polls `docker inspect .State.Health.Status`, `trap`-teardown always runs.
+- **AC2** — healthy `rstudio2u` image → `PASS: container reported healthy`,
+  exit 0. Failure paths all non-zero: unhealthy stand-in (same `:8787`
+  HEALTHCHECK, no server) → `FAIL: healthcheck reported unhealthy`, exit 1;
+  container that exits immediately → `FAIL: container exited before becoming
+  healthy`, exit 1; missing image-tag arg → usage error, exit 1.
+- **AC3** — `docker.yml` restructured (final, post-review) into three steps:
+  (1) build BOTH arches once into the cache (`push: false`, owns cache-to),
+  (2) load amd64 from that cache (`load: true`, cache-from only) → `Smoke-test`
+  step (`bash ./.github/smoke-test.sh …`), (3) multi-arch `push: true`
+  (cache-from only) — so the published image is exactly the one smoke-tested.
+  Smoke abort precedes the push step, so a failure blocks publishing.
+  `fail-fast: false` keeps noble/resolute as independent jobs (resolute failure
+  red, noble unaffected). actionlint clean. NOTE: the live in-Actions gate first
+  runs on merge to `main` (workflow triggers on push-to-main / dispatch /
+  schedule, not feature branches) — restructure validated by actionlint + local
+  script runs.
+- **AC4** — `CHANGELOG.md` "Unreleased / Changed" entry present, user-facing,
+  no milestone number.
+- **AC5** — `hadolint Dockerfile` clean; `docker build --build-arg
+  UBUNTU_VERSION=24.04` → exit 0 (~846 MB). Local build is native arm64; the
+  Dockerfile is unchanged & arch-agnostic and CI exercises the amd64 build.
+
+### Consistency gate
+
+- Universal: `cairn_validate` exit 0, all checks pass. No DESIGN principle
+  changed on this branch (the plan-phase principle-format fix landed on `main`
+  earlier) → `cairn_impact` skipped.
+- Toolchain (docker-image `consistency-gate`): `docker build` succeeds from a
+  clean context; `hadolint` clean; base pinned to a version tag
+  (`rocker/r2u:${UBUNTU_VERSION}` → 24.04, not bare `latest`); no secrets in
+  `ENV`/`ARG`/`COPY`; `.dockerignore` present (excludes `.git`, `.github`,
+  `cairn`, `CHANGELOG.md`); changelog entry present for the user-visible change.
+
+### Independent review — 3 lenses + scorer
+
+- **[O] diff-bug (Opus):** 2 findings, both in the cache wiring between the two
+  build steps (see resolution). Script logic, gating, IP2 localhost bind all
+  judged sound.
+- **[S] blame-history (Sonnet):** No findings — weekly no-cache rebuild,
+  `pull: true`, multi-arch push, and immutable+moving tag set all preserved; no
+  D-entry contradicted.
+- **[S] prior-PR-comments (Sonnet):** No prior-PR evidence (PR #1 is the first).
+- **[S] scorer (Sonnet):** F1 = 85, F2 = 80 (both actioned, ≥80).
+
+**Findings actioned (both fixed in review, commit on branch):**
+
+1. (85) On `schedule`/`workflow_dispatch` runs `no-cache: true` made BuildKit
+   ignore `cache-from`, so the old push step rebuilt amd64 from scratch instead
+   of reusing the smoke-tested layers — the unattended weekly rebuild (exactly
+   the GP7 scenario) would publish a *second, un-smoke-tested* amd64 build.
+2. (80) The amd64-only smoke build's `cache-to` on the shared scope shadowed the
+   prior run's arm64 cache, forcing a full QEMU-emulated arm64 rebuild every
+   push — an efficiency regression the diff introduced.
+
+**Resolution:** restructured into three steps — build both arches once into the
+cache (sole cache writer) → load amd64 from cache for smoke → publish both arches
+from the same cache (cache-from only, no `no-cache`). The published image is now
+byte-for-byte the smoke-tested one, and the emulated arm64 build runs exactly
+once per run. actionlint clean after the fix.

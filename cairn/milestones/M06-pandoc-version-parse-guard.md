@@ -112,3 +112,17 @@ _Reviewed 2026-07-18 on branch m06-pandoc-version-parse-guard._
 (works under GP4) → `cairn_impact` skipped. Toolchain (docker-image): hadolint
 clean, `docker build` succeeds, base pinned `rocker/r2u:24.04`. PASS.
 
+**Independent 3-lens fresh-context review — 0 findings.**
+- [O] diff-bug (Opus): no defects — regex requires `pandoc <2+-component>` and
+  fails loud on drift; `set -e` fail-loud preserved (matches old grep behavior);
+  `head -n1` removal safe (parser breaks on first `^pandoc <ver>$`, only line 1
+  matches); test contract correct; helper deployed executable via Dockerfile
+  COPY+chmod.
+- [S] blame-history: no findings — the three `grep -oP` lines came from
+  `initialize` (inherited upstream), no prior milestone hardened them; M06
+  continues the M03/M04 lineage rather than reversing intent.
+- [S] prior-PR-comments: no findings — PRs #1–#6 carry no inline comments; M06
+  implements M04's own recorded version-parse candidate and follows the M03
+  portability/testability lessons.
+No findings to score or triage.
+

@@ -49,8 +49,15 @@ if (-not (Test-Path $csc)) { throw "csc.exe not found at $csc" }
 & $csc /nologo /out:"$stubDir\docker.exe" $csFile | Out-Null
 if (-not (Test-Path "$stubDir\docker.exe")) { throw "failed to build docker.exe stub" }
 
-# Minimal PATH with no docker anywhere (real docker lives under Program Files,
-# not System32) — used to simulate "Docker not installed".
+# The runner's real docker.exe turns out to be reachable via System32/Windows,
+# so "Docker not installed" cannot be simulated by merely omitting a stub dir.
+# Instead point PATH at a clean dir holding ONLY the tools the launcher needs
+# (where.exe for `where docker`, chcp.com for the codepage line) and no docker.
+$nodockDir = Join-Path $work 'nodock'
+New-Item -ItemType Directory -Force -Path $nodockDir | Out-Null
+Copy-Item "$env:WINDIR\System32\where.exe" $nodockDir -Force
+Copy-Item "$env:WINDIR\System32\chcp.com"  $nodockDir -Force
+
 $sysPath  = "$env:WINDIR\System32;$env:WINDIR"
 $stubPath = "$stubDir;$sysPath"
 $wrapper  = Join-Path $work 'run.cmd'
@@ -95,7 +102,7 @@ function Invoke-Scenario {
     }
 }
 
-Invoke-Scenario -Name 'docker-not-installed' -PathValue $sysPath  -ExtraEnv @{} `
+Invoke-Scenario -Name 'docker-not-installed' -PathValue $nodockDir -ExtraEnv @{} `
     -ExpectExit 1 -ExpectText @('does not appear to be installed')
 
 Invoke-Scenario -Name 'docker-not-running'   -PathValue $stubPath -ExtraEnv @{ STUB_INFO_FAIL = '1' } `

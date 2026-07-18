@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M06: Harden the Pandoc version parses
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP4

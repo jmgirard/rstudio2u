@@ -7,6 +7,7 @@ _Last hygiene check: 2026-07-18 (M05 archived; promotion breadcrumbs + completed
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M06 | Harden the Pandoc version parses | planned | — | normal | milestones/M06-pandoc-version-parse-guard.md |
 | M05 | Deepen the smoke test | done | — | normal | milestones/archive/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |
@@ -17,7 +18,6 @@ _Last hygiene check: 2026-07-18 (M05 archived; promotion breadcrumbs + completed
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- Harden the remaining Pandoc `grep -oP` version parses — `pandoc -v` template-version scrape (install_pandoc.sh:78, on the default build path) + installed/bundled version parses (install_pandoc.sh:29,45) — added 2026-07-17 — GP4; carved out of M04 (they already fail loud, unlike the download-URL scrapes)
 - Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
 - Windows launcher hardening: robustness + clearer error messages for the least-tested path — added 2026-07-17 — GP3; Known issue #4
 - bspm mirror-failure UX: retry or clearer diagnostic when r2u installs fail — added 2026-07-17 — Known issue #1

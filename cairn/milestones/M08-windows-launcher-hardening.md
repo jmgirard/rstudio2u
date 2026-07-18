@@ -98,7 +98,7 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate -->
 
-- [ ] T1 — Write the cross-platform line-ending guard
+- [x] T1 — Write the cross-platform line-ending guard
       `scripts/tests/test_launcher_line_endings.sh`: fail if the stored blob of
       any root `.bat` (`git cat-file -p :<file>`) lacks CRLF. Tests-first — it
       fails against today's LF blobs.
@@ -129,6 +129,9 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (T1): added scripts/tests/test_launcher_line_endings.sh — asserts
+  each *.bat blob is CRLF (via `git cat-file`); fails by design against today's
+  LF blobs, goes green after T2. Portable (no mapfile — bash 3.2 / M03 lesson).
 - 2026-07-18: created by /milestone-plan. Promotes the "Windows launcher
   hardening" candidate (added 2026-07-17; GP3, Known issue #4). Gate decisions:
   guarantee CRLF in blob (`-text`); windows-latest CI + EOL guard; Windows-

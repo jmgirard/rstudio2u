@@ -129,6 +129,10 @@ it under a real Windows CI test so regressions are caught (GP3; Known issue:
 ## Work log
 <!-- owner: any skill · append-only; one line per entry; absolute dates -->
 
+- 2026-07-18 (review): independent 3-lens review — 1 finding (score 90) fixed:
+  start_linux.sh error branches (pull-failure + timeout) lacked the interactive
+  pause; added it. Success-banner RS_PORT mismatch → candidate. cairn_validate +
+  consistency-gate green; CHANGELOG entry added.
 - 2026-07-18 (review→in-progress): PR #9 windows-latest lane RED — test-harness
   bugs, not launcher defects: (1) `.cmd` docker stub chains without returning
   (bare `docker` → .cmd is a goto in batch; production docker.exe returns fine),
@@ -192,3 +196,22 @@ PR #9. Fresh evidence gathered 2026-07-18.
   docker-free tool dir). All 5 scenarios now green.
 
 ### Independent review
+
+Three fresh-context lenses (diff-bug [O], blame-history [S], prior-PR [S]) +
+scorer [S].
+
+- **Finding 1 (score 90 → fixed):** start_linux.sh's new pull-failure branch —
+  and its pre-existing up-timeout branch — omitted the `read -n 1 -s -r -p
+  "Press any key to close..."` pause that the file's other error branches and
+  start_mac.command's pull-failure branch have; a double-clicked terminal would
+  close before the student reads the error. Fixed: added the pause to both
+  error branches; re-drove all five branches (right message + exit code, no
+  hang). Corroborated by the blame-history lens.
+- **Prior-PR lens:** no prior-PR evidence — the launcher/attrs/test files trace
+  to pre-cairn un-reviewed commits; no merged PR touched them. Clean no-op.
+- **Observation (out of scope → candidate):** all three launchers' success
+  banner + browser-open hardcode `localhost:8787` even when `RS_PORT` is set;
+  M08 newly advertises `RS_PORT` on the Windows timeout path, making the
+  mismatch more reachable. Pre-existing, not introduced by this diff → filed as
+  a ROADMAP candidate, not fixed here.
+- No findings scored below 80 (nothing excluded-but-logged).

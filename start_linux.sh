@@ -29,6 +29,7 @@ if ! docker compose pull; then
     echo "   Check your internet connection and that you can reach Docker Hub,"
     echo "   then try again."
     echo ""
+    read -n 1 -s -r -p "Press any key to close..."
     exit 1
 fi
 
@@ -46,5 +47,6 @@ else
     echo ""
     echo "❌ The server did not become ready in time. Please try again."
     echo ""
+    read -n 1 -s -r -p "Press any key to close..."
     exit 1
 fi

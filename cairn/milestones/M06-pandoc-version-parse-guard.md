@@ -7,7 +7,7 @@
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP4
-- **Branch/PR:** m06-pandoc-version-parse-guard
+- **Branch/PR:** m06-pandoc-version-parse-guard · https://github.com/jmgirard/rstudio2u/pull/7
 
 ## Goal
 

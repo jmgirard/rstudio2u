@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M03: Guard the RStudio version auto-detect
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Principles touched:** GP2
@@ -75,15 +75,15 @@ instead of publishing a mis-named immutable tag.
       fixture yields exit 0 + the expected canonical output, and each bad
       fixture (empty, HTML error page, format-changed string) yields non-zero +
       a message and no usable stdout.
-- [ ] T3 — Rewire `docker.yml`'s "Compute tags and RStudio version" step
+- [x] T3 — Rewire `docker.yml`'s "Compute tags and RStudio version" step
       ([docker.yml:51-65](.github/workflows/docker.yml:51)) to call the resolver
       under `set -o pipefail`; feed its canonical output to both the immutable
       tag suffix and the `RSTUDIO_VERSION` build-arg.
-- [ ] T4 — Rewire `install_rstudio.sh`'s `stable`/`latest` branch
+- [x] T4 — Rewire `install_rstudio.sh`'s `stable`/`latest` branch
       ([install_rstudio.sh:50-58](scripts/install_rstudio.sh:50)) to the shared
       resolver (script is already copied into the image at build time),
       replacing the inline scrape + empty-only check.
-- [ ] T5 — Add a "Resolver unit test" step to `pr-ci.yml` that runs T2's script
+- [x] T5 — Add a "Resolver unit test" step to `pr-ci.yml` that runs T2's script
       (its `scripts/**` path filter already triggers the lane); confirm a
       failing assertion fails the job.
 
@@ -93,6 +93,10 @@ instead of publishing a mis-named immutable tag.
 - 2026-07-17: T1+T2 — added pure-bash resolver (validates the RStudio version
   shape via bash ERE + parameter expansion, no `grep -P`/PCRE dependency) and
   its offline fixture test (7 assertions pass; live fetch resolves 2026.07.0+139).
+- 2026-07-17: T3+T4+T5 — wired the resolver into docker.yml's meta step (pipefail
+  + `--tag`) and install_rstudio.sh's stable/latest branch, and added the test as
+  a pr-ci gate. Verify: hadolint clean; full noble build succeeds (BUILD_EXIT=0) —
+  build log shows the resolver resolving `stable` → 2026.07.0+139 in-container.
 
 ## Decisions
 

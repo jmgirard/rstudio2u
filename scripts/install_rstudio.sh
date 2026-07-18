@@ -48,12 +48,10 @@ DOWNLOAD_FILE=rstudio-server.deb
 # working we look up the current stable version and fall through to the
 # versioned download URLs below (which have an arm64 S3 fallback).
 if [ "$RSTUDIO_VERSION" = "latest" ] || [ "$RSTUDIO_VERSION" = "stable" ]; then
-    RSTUDIO_VERSION=$(wget -qO- "https://www.rstudio.org/links/check_for_update?version=1.0.0" |
-        grep -oP '(?<=update-version=)[^&]+' | sed 's/%2B/+/g')
-    if [ -z "$RSTUDIO_VERSION" ]; then
-        echo "Failed to resolve the latest stable RStudio Server version" >&2
-        exit 1
-    fi
+    # Shared resolver validates the scraped version's shape and exits non-zero
+    # on an empty/HTML/format-changed scrape; set -e then aborts the build with
+    # its message instead of feeding garbage into the download URL below.
+    RSTUDIO_VERSION=$(/rocker_scripts/resolve-rstudio-version.sh)
     echo "Resolved latest stable RStudio Server version: ${RSTUDIO_VERSION}"
 fi
 

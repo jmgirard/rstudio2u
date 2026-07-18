@@ -36,22 +36,22 @@ instead of publishing a mis-named immutable tag.
 
 ## Acceptance criteria
 
-- [ ] The resolver exits non-zero with a clear stderr message and emits nothing
+- [x] The resolver exits non-zero with a clear stderr message and emits nothing
       usable to stdout on a bad scrape — empty output, an HTML/error body, or a
       value not matching the RStudio version shape. (fixture test)
-- [ ] The resolver accepts a valid version string and prints the canonical
+- [x] The resolver accepts a valid version string and prints the canonical
       version, preserving the tag rendering (`%2B`→`-`) `docker.yml` relies on
       and the URL rendering `install_rstudio.sh` relies on. (fixture test)
-- [ ] `docker.yml`'s "Compute tags and RStudio version" step calls the resolver
+- [x] `docker.yml`'s "Compute tags and RStudio version" step calls the resolver
       under `pipefail`; a bad scrape fails the job, so an empty/mis-named
       `<variant>-` immutable tag can never be published. (evidence: wired step
       + resolver non-zero exit)
-- [ ] `install_rstudio.sh`'s `stable`/`latest` branch is wired to the shared
+- [x] `install_rstudio.sh`'s `stable`/`latest` branch is wired to the shared
       resolver — a nonempty-but-malformed scrape aborts the build with a clear
       message instead of flowing into the download URL. (evidence: wired branch
       + fixture test)
-- [ ] The resolver fixture test runs as a merge-gating step in `pr-ci.yml`.
-- [ ] Profile `verify` slot clean: `hadolint Dockerfile` reports no violations
+- [x] The resolver fixture test runs as a merge-gating step in `pr-ci.yml`.
+- [x] Profile `verify` slot clean: `hadolint Dockerfile` reports no violations
       and `docker build` succeeds (`cairn/PROFILE.md`).
 
 ## Coverage
@@ -104,3 +104,54 @@ instead of publishing a mis-named immutable tag.
 ## Decisions
 
 ## Review
+
+_Reviewed 2026-07-17 · PR #4 · branch `m03-version-scrape-guard`._
+
+### Acceptance-criteria evidence (fresh)
+
+- **AC1** ✓ — `test_resolve_rstudio_version.sh` 7/7 pass; direct runs: empty body
+  → rc=1 ("no update-version…"), malformed `2024.12+x` → rc=1 ("does not match
+  the expected RStudio version shape").
+- **AC2** ✓ — fixture asserts both renderings; live fetch: default `2026.07.0+139`,
+  `--tag` `2026.07.0-139`.
+- **AC3** ✓ — `docker.yml` meta step diff: `set -euo pipefail` +
+  `RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)`; resolver exits
+  non-zero on bad scrape, so the job aborts before any tag is emitted.
+- **AC4** ✓ — `install_rstudio.sh` diff: stable/latest branch now
+  `RSTUDIO_VERSION=$(/rocker_scripts/resolve-rstudio-version.sh)`; `set -e`
+  aborts the build on the resolver's non-zero exit.
+- **AC5** ✓ — `pr-ci.yml` diff adds a "Resolver unit test" step running the
+  fixture test (gates the merge).
+- **AC6** ✓ — hadolint clean (fresh); full noble `docker build` succeeds
+  (`BUILD_EXIT=0`) on this HEAD, resolving `stable`→`2026.07.0+139` in-container.
+
+### Consistency gate
+
+- Universal: `cairn_validate` all checks pass. No DESIGN principle changed
+  (GP2 worked-under, not modified) → `cairn_impact` skipped.
+- Toolchain (docker-image slot): hadolint clean; `docker build` succeeds; base
+  version-pinned (`rocker/r2u:${UBUNTU_VERSION}`); `.dockerignore` present and
+  excludes `cairn`/`.git`; no secret-like ENV/ARG; CHANGELOG has a user-visible
+  entry (added mid-review — see below).
+- Gate catch: the consistency gate flagged a missing CHANGELOG entry; bounced
+  to `in-progress`, added a "Fixed" entry, returned to `review` (work log).
+
+### Independent review (three lenses + scorer)
+
+- **[O] diff-bug (Opus):** no real defects. Verified rendering per consumer,
+  `%2B`-only decode sufficiency, empty-injection seam, regex correctness
+  (preview/daily route through a different branch), `set -e`/pipefail aborts,
+  path/exec assumptions, arg handling under `set -u`.
+- **[S] blame-history (Sonnet):** no findings; no M01/M02 regression, rendering
+  behavior preserved, empty-check not weakened (resolver+`set -e` is stronger).
+- **[S] prior-PR-comments (Sonnet):** no prior-PR evidence (PRs #1/#2 carry no
+  review comments) — clean no-op.
+- **Scorer:** zero findings survived any lens → empty actioned list; nothing
+  scored, nothing excluded.
+
+### Follow-up (post-merge hygiene)
+
+- DESIGN.md Known issue #2 is now partly obsolete (the scrape is guarded — fails
+  loudly instead of mis-tagging). Update its wording during the done hygiene
+  pass to reflect "mitigated: bad scrape now fails the build" (fragility still
+  exists; failure mode changed).

@@ -3,7 +3,7 @@
      Per-section owners are tagged below. -->
 # M05: Deepen the smoke test
 
-- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** review   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP3, GP7   <!-- owner: plan · create/amend-via-gate -->
@@ -99,7 +99,7 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
       `load: true` build (reusing the variant cache scope) and a smoke step that
       boots it under QEMU and runs the deepened checks, placed before the publish
       step, with a generous emulation `SMOKE_TIMEOUT`.
-- [ ] T5: End-to-end verification — build the noble amd64 image locally and run
+- [x] T5: End-to-end verification — build the noble amd64 image locally and run
       the deepened smoke green; validate the arm64 emulated path (local QEMU run
       or a CI run); confirm this CI-internal change needs no `CHANGELOG.md`
       entry (no user-visible behavior change); record evidence lines.
@@ -123,6 +123,18 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
   arm64 toolchain drift blocks the ship. amd64 SMOKE_TIMEOUT unchanged (it
   bounds only phase-1 boot; functional checks run unbounded after). Both
   workflow YAMLs parse clean.
+- 2026-07-17: T5 done — verified on a real NATIVE arm64 image (this host is
+  aarch64), built noble locally. Deepened smoke passed end-to-end (exit 0):
+  healthy → r-cran-data.table arm64 .deb installed via r2u/bspm + loads →
+  quarto rendered .qmd to HTML via the RStudio-bundled CLI (the arch-sensitive
+  fallback surface, Known issue #3). Forced-failure runs exit 1: bogus SMOKE_PKG
+  (bspm path) and a non-serving container (before functional phase). No user-
+  visible image change, but strengthened the M01 CHANGELOG smoke-test bullet to
+  the deepened both-arch guarantee. All tasks done; status → review.
+- 2026-07-17: /milestone-implement complete; status → review. arm64's literal
+  emulated docker.yml run lands on the first push to main; a broken arm64 there
+  blocks publish (never ships broken), and the script itself is proven on
+  native arm64 here.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

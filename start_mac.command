@@ -7,10 +7,20 @@ chmod u+x "$0" 2>/dev/null
 
 echo "Starting rstudio2u..."
 
-# Make sure Docker is running before doing anything else
+# Distinguish "not installed" from "not running" so a student who never
+# installed Docker Desktop is not told to wait for it to finish starting.
+if ! command -v docker >/dev/null 2>&1; then
+    echo ""
+    echo "❌ Docker Desktop does not appear to be installed."
+    echo "   Install it from https://www.docker.com/products/docker-desktop/"
+    echo "   then double-click this file again."
+    echo ""
+    read -n 1 -s -r -p "Press any key to close..."
+    exit 1
+fi
 if ! docker info >/dev/null 2>&1; then
     echo ""
-    echo "❌ Docker does not appear to be running."
+    echo "❌ Docker Desktop is installed but not running."
     echo "   Please open Docker Desktop, wait for it to finish starting,"
     echo "   then double-click this file again."
     echo ""
@@ -18,8 +28,18 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 
-# Get the latest image, then start the server and wait until it is healthy
-docker compose pull
+# A pull failure is a different problem from a slow or unhealthy start.
+if ! docker compose pull; then
+    echo ""
+    echo "❌ Could not download the latest image."
+    echo "   Check your internet connection and that you can reach Docker Hub,"
+    echo "   then try again."
+    echo ""
+    read -n 1 -s -r -p "Press any key to close..."
+    exit 1
+fi
+
+# Start the server and wait until it is healthy
 if docker compose up -d --wait --wait-timeout 180; then
     echo ""
     echo "============================================================"

@@ -7,6 +7,12 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ### Changed
 
+- The double-click launchers now explain failures in plain language instead of
+  blaming a generic timeout. They tell apart Docker not being *installed* from
+  Docker being installed but not *running*, report a failed image download as a
+  network problem, and — on Windows — suggest setting `RS_PORT` when port 8787
+  is already in use. The clearer messages apply on Windows, macOS, and Linux.
+
 - Runtime package installs now ride out a flaky binary mirror instead of
   failing on the first hiccup: apt retries a failed download up to three times
   with a bounded connection timeout, so a brief outage of the r2u mirror is
@@ -24,6 +30,11 @@ Notable user-visible changes to the rstudio2u image. Format follows
   toolchain is broken on either architecture.
 
 ### Fixed
+
+- The Windows double-click launchers now work when the project is obtained via
+  **Download ZIP**, not only `git clone`. The `.bat` files are stored with
+  Windows (CRLF) line endings, so every download path produces launchers that
+  Windows runs reliably.
 
 - The RStudio version behind the `<variant>-<rstudio>` image tags is now
   validated before publishing. If the upstream version lookup returns an empty

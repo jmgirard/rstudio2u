@@ -41,15 +41,15 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 
 ## Acceptance criteria
 
-- [ ] `install_pandoc.sh` contains no `grep -oP` / `grep -P`; all three version
+- [x] `install_pandoc.sh` contains no `grep -oP` / `grep -P`; all three version
       parses go through `parse-pandoc-version.sh`.
-- [ ] The helper extracts the correct version from realistic `pandoc --version`
+- [x] The helper extracts the correct version from realistic `pandoc --version`
       and `pandoc -v` output, and exits non-zero with a stderr diagnostic
       (nothing on stdout) on empty, HTML/garbage, and format-changed input —
       proven by `test_parse_pandoc_version.sh` running green offline.
-- [ ] `test_parse_pandoc_version.sh` is wired into `pr-ci.yml`'s resolver
+- [x] `test_parse_pandoc_version.sh` is wired into `pr-ci.yml`'s resolver
       unit-tests step so it gates PRs.
-- [ ] `hadolint Dockerfile` clean and the noble image builds, with `pandoc`
+- [x] `hadolint Dockerfile` clean and the noble image builds, with `pandoc`
       installed and `/opt/pandoc/templates` populated (the templates parse still
       yields a working download).
 
@@ -93,3 +93,22 @@ output — closing the last `grep -P` scrape wart carved out of M04 (GP4).
 ## Decisions
 
 ## Review
+
+_Reviewed 2026-07-18 on branch m06-pandoc-version-parse-guard._
+
+**Acceptance criteria (fresh evidence):**
+- AC1 — `grep -nE 'grep -o?P' scripts/install_pandoc.sh` → no match; the three
+  parses (:29/:45/:81) all call `/rocker_scripts/parse-pandoc-version.sh`. PASS.
+- AC2 — `bash scripts/tests/test_parse_pandoc_version.sh` → 9/9 (valid
+  --version/-v + four-component + version-not-first resolve; empty, HTML,
+  extra-word, non-numeric, trailing-junk, single-component fail loud). PASS.
+- AC3 — `test_parse_pandoc_version.sh` present in pr-ci.yml resolver
+  unit-tests step (line 31). PASS.
+- AC4 — noble amd64 build succeeds; `docker run` shows `pandoc 3.8.3` and 64
+  files in `/opt/pandoc/templates` (the :81 templates parse ran on the real
+  build path). PASS.
+
+**Consistency gate:** `cairn_validate` all-pass (exit 0). No principle change
+(works under GP4) → `cairn_impact` skipped. Toolchain (docker-image): hadolint
+clean, `docker build` succeeds, base pinned `rocker/r2u:24.04`. PASS.
+

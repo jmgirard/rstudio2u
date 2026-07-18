@@ -7,7 +7,7 @@
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP1   <!-- owner: plan · create/amend-via-gate; works under infra-only + classroom-first; adds/changes none -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m07-bspm-mirror-ux   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -66,7 +66,7 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
 <!-- owner: plan (create) / implement (check-off, minor edits); substantive
      change is amend-via-gate -->
 
-- [ ] T1 — Extend `.github/smoke-test.sh` with a mirror-failure scenario, run
+- [x] T1 — Extend `.github/smoke-test.sh` with a mirror-failure scenario, run
       *after* the existing happy-path bspm check (so it doesn't poison it):
       repoint the r2u apt source to an unreachable host, attempt an install, and
       assert (a) retry attempts appear in the output and (b) the friendly
@@ -96,6 +96,11 @@ slimming (→ image-size candidate, GP5). "Out" means not in *this* milestone.
 - 2026-07-18: created by /milestone-plan (candidate: bspm mirror-failure UX,
   Known issue #1). Scope = retry-hardening + friendly diagnostic; test bar =
   live dead-mirror smoke scenario (both chosen at the plan gate).
+- 2026-07-18: T1 — added smoke Phase 3 (mirror-failure UX): 3a false-positive
+  guard (nonexistent pkg, no hint) + 3b dead-mirror (blackhole r2u host via
+  /etc/hosts + dead source repo → retries asserted via apt-config + hint
+  sentinel). bash -n clean; exercised at the T4 build. Sentinel:
+  "r2u package mirror looks unreachable".
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local; promote

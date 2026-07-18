@@ -7,7 +7,7 @@ _Last hygiene check: 2026-07-17 (M04 archived)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M05 | Deepen the smoke test | planned | — | normal | milestones/M05-deepen-smoke-test.md |
+| M05 | Deepen the smoke test | in-progress | — | normal | milestones/M05-deepen-smoke-test.md |
 | M04 | Guard the Pandoc/Quarto download-URL scrapes | done | — | normal | milestones/archive/M04-pandoc-quarto-scrape-guard.md |
 | M03 | Guard RStudio version auto-detect | done | — | normal | milestones/archive/M03-version-scrape-guard.md |
 | M02 | Pre-merge PR CI lane | done | — | normal | milestones/archive/M02-pr-ci-lane.md |

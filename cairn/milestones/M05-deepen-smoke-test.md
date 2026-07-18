@@ -3,11 +3,11 @@
      Per-section owners are tagged below. -->
 # M05: Deepen the smoke test
 
-- **Status:** planned   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
+- **Status:** in-progress   <!-- owner: transitioning skill · mirror-update; cairn/ROADMAP.md is the authority -->
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP3, GP7   <!-- owner: plan · create/amend-via-gate -->
-- **Branch/PR:** —   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m05-deepen-smoke-test   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -110,6 +110,9 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
 - 2026-07-17: created by /milestone-plan. Promotes ROADMAP candidate "deepen
   smoke test" (GP3/GP7, Known issue #3); absorbs candidate #8 (pr-ci watches
   smoke-test.sh). Gate: arm64 on publish path only; bspm install + HTML render.
+- 2026-07-17: /milestone-implement started; branch m05-deepen-smoke-test cut
+  from main (in sync). No implementation choices needed a gate — the smoke
+  test's runtime R-package install is a test artifact, not a repo dependency.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

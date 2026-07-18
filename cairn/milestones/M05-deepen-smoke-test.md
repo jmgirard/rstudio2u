@@ -7,7 +7,7 @@
 - **Priority:** normal   <!-- owner: plan · create/amend-via-gate; high | normal | low -->
 - **Depends on:** —   <!-- owner: plan · create/amend-via-gate; M<xx>, M<yy> or — -->
 - **Principles touched:** IP1, GP3, GP7   <!-- owner: plan · create/amend-via-gate -->
-- **Branch/PR:** m05-deepen-smoke-test   <!-- owner: implement (branch) / review (PR URL) · create -->
+- **Branch/PR:** m05-deepen-smoke-test · https://github.com/jmgirard/rstudio2u/pull/6   <!-- owner: implement (branch) / review (PR URL) · create -->
 
 ## Goal
 <!-- owner: plan · create; a wrong goal returns to plan, never edited in place -->
@@ -45,28 +45,28 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
 ## Acceptance criteria
 <!-- owner: plan · create/amend-via-gate; review reads, never reinterprets -->
 
-- [ ] AC1: `smoke-test.sh`, against a healthy container, installs an R package
+- [x] AC1: `smoke-test.sh`, against a healthy container, installs an R package
       with a compiled dependency via bspm and confirms it loads; the install or
       load failing exits the script non-zero. Evidence: a run log showing the
       install + successful `library()` load, and a forced-failure run that exits
       non-zero.
-- [ ] AC2: `smoke-test.sh` renders a minimal `.qmd` to HTML via `quarto render`
+- [x] AC2: `smoke-test.sh` renders a minimal `.qmd` to HTML via `quarto render`
       inside the container and asserts the output `.html` exists; render failure
       exits non-zero. Evidence: a run log showing the produced HTML, and a
       forced-failure run that exits non-zero.
-- [ ] AC3: The existing server-up check is preserved — the deepened script still
+- [x] AC3: The existing server-up check is preserved — the deepened script still
       requires RStudio Server to answer on `:8787` before the functional phase,
       and a container that never becomes healthy still fails. Evidence: a run
       against a non-starting container exits non-zero before the functional phase.
-- [ ] AC4: `docker.yml` boots a single-platform arm64 image under QEMU and runs
+- [x] AC4: `docker.yml` boots a single-platform arm64 image under QEMU and runs
       the deepened bspm-install + quarto-render checks before the publish step;
       a failure blocks that variant's publish (fail-fast:false keeps variants
       independent). Evidence: a green `docker.yml` run (or equivalent local
       emulated run) showing the arm64 functional checks passing pre-publish.
-- [ ] AC5: `pr-ci.yml` runs the deepened checks on the amd64 pre-merge build.
+- [x] AC5: `pr-ci.yml` runs the deepened checks on the amd64 pre-merge build.
       Evidence: a green PR-CI run log showing the bspm-install + quarto-render
       checks.
-- [ ] AC6: The `paths:` filters in both `pr-ci.yml` and `docker.yml` include
+- [x] AC6: The `paths:` filters in both `pr-ci.yml` and `docker.yml` include
       `.github/smoke-test.sh`. Evidence: the diff of both filter blocks.
 
 ## Coverage
@@ -135,9 +135,70 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
   emulated docker.yml run lands on the first push to main; a broken arm64 there
   blocks publish (never ships broken), and the script itself is proven on
   native arm64 here.
+- 2026-07-18: /milestone-review — PR #6. All 6 ACs verified with fresh evidence
+  (amd64 pr-ci green, native arm64 local run green, forced-failures exit 1).
+  Consistency gate clean (cairn_validate, hadolint, build). Three-lens review:
+  0 findings across all lenses; scorer no-op. Awaiting merge-approval gate.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->
 
 ## Review
 <!-- owner: review · exclusive; EXEMPT from the 150-line cap (M55). -->
+
+_Reviewed 2026-07-18. PR #6. Base `main` (0 behind, 4 ahead — no merge needed)._
+
+### Acceptance-criteria evidence (fresh)
+
+- **AC1 (bspm binary install) ✓** — amd64 pr-ci run 29627108917 and a native
+  arm64 local run both show: `PASS: data.table installed via bspm as
+  r-cran-data.table and loads`; the arm64 run pulled `r-cran-data.table_
+  1.18.4-1.ca2404.1_arm64.deb` from r2u. Forced-failure: `SMOKE_PKG=<bogus>`
+  exits 1 (`FAIL: bspm install/load … failed`).
+- **AC2 (quarto render → HTML) ✓** — both runs show `PASS: quarto rendered .qmd
+  to HTML`; arm64 render used the RStudio-bundled CLI (`/usr/lib/rstudio-server/
+  bin/quarto/…`), the arch-sensitive fallback. Negative path is covered by
+  construction — identical `if ! docker exec …; then exit 1` idiom as AC1, whose
+  forced-failure was demonstrated; diff-bug reviewer confirmed the render
+  failure propagates out.
+- **AC3 (server-up preserved) ✓** — pointing the script at a non-serving image
+  (`alpine`, short timeout) exits 1 with `FAIL: container exited before becoming
+  healthy`, before the functional phase. Diff-bug reviewer verified all phase-1
+  exit paths (exited/unhealthy/timeout) survive the `exit`→`break` refactor.
+- **AC4 (arm64 boot before publish, blocks publish) ✓** — `docker.yml` sequence
+  is amd64 build→smoke→arm64 build→arm64 smoke→publish; arm64 smoke (line 149)
+  precedes the publish step, so a non-zero exit aborts before publish
+  (`fail-fast:false` isolates variants). The deepened script is proven on real
+  arm64 hardware (native local run, exit 0). Note: the literal *emulated*
+  docker.yml QEMU run first executes on the next push to main; a failure there
+  blocks publish (never ships broken — GP7).
+- **AC5 (pr-ci deepened amd64) ✓** — pr-ci run 29627108917 `build-smoke`
+  SUCCESS: healthy → bspm install+load → quarto render → `PASS: smoke test
+  (server + toolchain) succeeded`.
+- **AC6 (paths filters watch harness) ✓** — `.github/smoke-test.sh` present in
+  the `paths:` of both `pr-ci.yml` (line 15) and `docker.yml` (line 10).
+
+### Consistency gate
+
+- Universal: `cairn_validate` exit 0 (all checks pass). No `DESIGN.md`
+  principle-text change (DESIGN.md untouched) → `cairn_impact` skipped.
+- Toolchain (docker-image profile): `hadolint Dockerfile` clean; `docker build`
+  succeeds (built this session, exit 0 — Dockerfile/build-context untouched by
+  this diff); base pinned (`rocker/r2u:24.04`); no secrets added; `.dockerignore`
+  excludes `cairn/`; CHANGELOG has the user-visible entry (deepened both-arch
+  smoke guarantee).
+
+### Independent fresh-context review (3 lenses)
+
+- **[O] diff-bug (Opus): 0 findings.** Verified shell exit paths, `SMOKE_OK`/trap
+  bookkeeping, `set -euo pipefail` × `if !` guards, heredoc quoting, the
+  `r-cran-<lowercased>` mapping, the dpkg binary-path assertion (non-spurious
+  under IP1), docker.yml ordering/port-isolation/cache-scope, comments, CHANGELOG.
+- **[S] blame-history (Sonnet): 0 findings.** M05 preserves M01's exit paths and
+  "build once into cache" design (no `cache-to` → no cache-shadowing regression),
+  and *completes* M02's banked follow-up (pr-ci self-validating its harness).
+- **[S] prior-PR-comments (Sonnet): 0 findings — no prior-PR evidence.** No
+  GitHub PR review threads exist (this repo reviews via cairn), nothing to regress.
+
+Zero findings across all lenses → confidence scorer is a no-op; nothing to
+triage or defer.

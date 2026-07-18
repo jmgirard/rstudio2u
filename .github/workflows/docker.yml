@@ -7,6 +7,7 @@ on:
       - "Dockerfile"
       - "scripts/**"
       - ".github/workflows/docker.yml"
+      - ".github/smoke-test.sh"
   # Weekly rebuild to pick up base-image (rocker/r2u) security updates
   schedule:
     - cron: "0 6 * * 1"
@@ -92,11 +93,15 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
-      # Step 2 — load just the amd64 image from step 1's cache (multi-arch can't
-      # be --load'ed) so we can boot it. cache-from only, never no-cache: this
-      # must reuse step 1's layers, not build a different image than we publish.
-      # arm64 is still built and pushed (step 3) but not boot-checked — a
-      # documented asymmetry (GP3), since --load can't take a multi-arch image.
+      # Step 2 — load each arch's image singly from step 1's cache (multi-arch
+      # can't be --load'ed) so we can boot it. cache-from only, never no-cache:
+      # this must reuse step 1's layers, not build a different image than we
+      # publish. Both arches are boot-checked here: amd64 natively, then arm64
+      # under QEMU emulation (setup-qemu-action registered binfmt above), which
+      # closes the old arm64 parity blind spot — the deepened smoke exercises the
+      # bundled/symlinked Quarto and r2u binary paths where arm64 can diverge
+      # (GP3, Known issue #3). Emulated boot is slow, so arm64 gets a longer
+      # timeout; fail-fast:false keeps a resolute failure from blocking noble.
       - name: Build ${{ matrix.variant }} (amd64) for smoke test
         uses: docker/build-push-action@v6
         with:
@@ -118,6 +123,32 @@ jobs:
         env:
           SMOKE_TIMEOUT: "300"
         run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
+
+      # Load the arm64 image singly (same cache scope as step 1, so it is the
+      # arm64 half of what we publish) so the deepened smoke can boot it under
+      # emulation. A different smoke tag keeps it distinct from the amd64 load.
+      - name: Build ${{ matrix.variant }} (arm64) for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          load: true
+          build-args: |
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+          tags: ${{ env.IMAGE }}:smoke-${{ matrix.variant }}-arm64
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.variant }}
+
+      # Boot the arm64 image under QEMU and run the same deepened checks. A
+      # non-zero exit aborts before publish, so arm64 parity drift (a broken
+      # bundled/symlinked Quarto or r2u binary path) blocks the ship (GP3,
+      # Known issue #3). Emulated boot + install + render is slow: 15-min timeout.
+      - name: Smoke-test ${{ matrix.variant }} (arm64, emulated)
+        env:
+          SMOKE_TIMEOUT: "900"
+        run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}-arm64
 
       # Step 3 — publish. Reuses step 1's cached layers for BOTH arches
       # (cache-from only, no no-cache — the fresh build already happened in

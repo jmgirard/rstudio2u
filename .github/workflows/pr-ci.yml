@@ -12,6 +12,7 @@ on:
       - "Dockerfile"
       - "scripts/**"
       - ".github/workflows/**"
+      - ".github/smoke-test.sh"
 
 jobs:
   build-smoke:

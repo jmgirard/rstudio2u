@@ -89,13 +89,13 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
       in-container, no repo fixture) to HTML and assert the output file exists;
       either failure exits non-zero. Preserve the cleanup trap and failure
       log-dump.
-- [ ] T2: `.github/workflows/pr-ci.yml` — ensure the amd64 pre-merge smoke step
+- [x] T2: `.github/workflows/pr-ci.yml` — ensure the amd64 pre-merge smoke step
       runs the deepened script (raise `SMOKE_TIMEOUT` for install+render), and
       add `.github/smoke-test.sh` to its `paths:` filter.
-- [ ] T3: `.github/workflows/docker.yml` — the amd64 smoke step already calls
+- [x] T3: `.github/workflows/docker.yml` — the amd64 smoke step already calls
       the script (now deepened); add `.github/smoke-test.sh` to its `paths:`
       filter and raise `SMOKE_TIMEOUT` if needed.
-- [ ] T4: `.github/workflows/docker.yml` — add a single-platform `linux/arm64`
+- [x] T4: `.github/workflows/docker.yml` — add a single-platform `linux/arm64`
       `load: true` build (reusing the variant cache scope) and a smoke step that
       boots it under QEMU and runs the deepened checks, placed before the publish
       step, with a generous emulation `SMOKE_TIMEOUT`.
@@ -117,6 +117,12 @@ arm64 parity drift is caught instead of shipping silently (Known issue #3).
   instead of exiting, phase 2 adds a bspm binary install (data.table, asserted
   apt-registered as r-cran-data.table + loads) and a chunk-free quarto→HTML
   render (no R engine, targets the arch-sensitive Quarto CLI). bash -n clean.
+- 2026-07-17: T2/T3/T4 done — added `.github/smoke-test.sh` to both workflow
+  `paths:` filters (absorbs candidate #8); added an arm64 single-platform
+  load + emulated smoke (SMOKE_TIMEOUT 900) to docker.yml before publish, so
+  arm64 toolchain drift blocks the ship. amd64 SMOKE_TIMEOUT unchanged (it
+  bounds only phase-1 boot; functional checks run unbounded after). Both
+  workflow YAMLs parse clean.
 
 ## Decisions
 <!-- owner: implement / review · append-only; milestone-local -->

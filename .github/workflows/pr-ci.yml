@@ -29,6 +29,7 @@ jobs:
           bash ./scripts/tests/test_resolve_rstudio_version.sh
           bash ./scripts/tests/test_resolve_download_url.sh
           bash ./scripts/tests/test_parse_pandoc_version.sh
+          bash ./scripts/tests/test_retry.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0

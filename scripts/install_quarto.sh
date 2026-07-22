@@ -20,6 +20,12 @@ QUARTO_VERSION=${1:-${QUARTO_VERSION:-"default"}}
 # arm64 installs natively — Quarto has published linux-arm64 since 1.9.38.
 ARCH=$(dpkg --print-architecture)
 
+# Every `quarto …` invocation below runs Quarto's bundled Deno (V8), which
+# intermittently aborts with SIGILL (exit 132) under QEMU aarch64 emulation
+# during the arm64 image build — a re-run of the identical command succeeds. So
+# each Deno-invoking call is wrapped in retry.sh; a genuinely broken quarto
+# still fails every attempt and aborts the build.
+
 # a function to install apt packages only if they are not installed
 function apt_install() {
     if ! dpkg -s "$@" >/dev/null 2>&1; then
@@ -33,7 +39,7 @@ function apt_install() {
 apt_install wget ca-certificates
 
 if [ -x "$(command -v quarto)" ]; then
-    INSTALLED_QUARTO_VERSION=$(quarto --version)
+    INSTALLED_QUARTO_VERSION=$(/rocker_scripts/retry.sh 5 quarto --version)
 fi
 
 # Check RStudio bundled quarto cli
@@ -42,7 +48,7 @@ if [ -f "/usr/lib/rstudio-server/bin/quarto/bin/quarto" ]; then
 fi
 
 if [ -n "$BUNDLED_QUARTO" ]; then
-    BUNDLED_QUARTO_VERSION="$($BUNDLED_QUARTO --version)"
+    BUNDLED_QUARTO_VERSION="$(/rocker_scripts/retry.sh 5 "$BUNDLED_QUARTO" --version)"
 fi
 
 # Install quarto cli
@@ -71,7 +77,7 @@ if [ "$QUARTO_VERSION" != "$INSTALLED_QUARTO_VERSION" ]; then
         rm quarto.deb
     fi
 
-    quarto check install
+    /rocker_scripts/retry.sh 5 quarto check install
 
 fi
 

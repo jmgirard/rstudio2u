@@ -7,6 +7,12 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ### Fixed
 
+- The ARM64 image (Apple Silicon, ARM servers) now builds reliably. The build
+  occasionally failed while installing Quarto because Quarto's engine can crash
+  at random under the emulation used to produce the ARM64 image; the install now
+  retries such a transient crash, so a fresh ARM64 image no longer fails to
+  publish for that reason. A genuinely broken install still stops the build.
+
 - The double-click launchers no longer send you to the wrong address when the
   server is running on a port other than 8787. They previously announced and
   opened `http://localhost:8787` unconditionally; they now report the address

@@ -22,3 +22,4 @@ _Last hygiene check: 2026-07-18 (M09 archived; M04 terminal row pruned to keep 5
 - Pre-merge arm64 emulated smoke in `pr-ci.yml` — run the deepened smoke on an emulated arm64 build in the PR lane too; deferred from M05 for PR-CI speed — added 2026-07-17 — GP3; from M05
 - Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
 - macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
+- Harden the arm64 emulated smoke `quarto render` against the same transient QEMU/Deno SIGILL the build install now retries — `.github/smoke-test.sh` runs Deno under emulation and can flaky-crash identically — added 2026-07-21 — GP3, GP7; from the quarto-qemu-retry hotfix

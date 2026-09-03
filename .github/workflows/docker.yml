@@ -79,7 +79,7 @@ jobs:
       # (code change) runs reuse the cache for speed. The slow emulated arm64
       # build happens here exactly once per run.
       - name: Build ${{ matrix.variant }} (both arches, cache only)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ env.PLATFORMS }}
@@ -103,7 +103,7 @@ jobs:
       # (GP3, Known issue #3). Emulated boot is slow, so arm64 gets a longer
       # timeout; fail-fast:false keeps a resolute failure from blocking noble.
       - name: Build ${{ matrix.variant }} (amd64) for smoke test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -128,7 +128,7 @@ jobs:
       # arm64 half of what we publish) so the deepened smoke can boot it under
       # emulation. A different smoke tag keeps it distinct from the amd64 load.
       - name: Build ${{ matrix.variant }} (arm64) for smoke test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/arm64
@@ -154,7 +154,7 @@ jobs:
       # (cache-from only, no no-cache — the fresh build already happened in
       # step 1), so the published image is exactly the one step 2 smoke-tested.
       - name: Build and push ${{ matrix.variant }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ env.PLATFORMS }}

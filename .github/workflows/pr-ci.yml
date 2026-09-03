@@ -45,7 +45,7 @@ jobs:
       # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
       # produces no immutable tags. Reuses docker.yml's gha cache scope for speed.
       - name: Build noble (amd64) for smoke test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64

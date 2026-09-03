@@ -68,9 +68,13 @@ trigger the image build).
 - 2026-09-03: plan gate chose a separate `lint.yml` over a job in `pr-ci.yml` because pr-ci's path filter would then pull the image build into launcher-only PRs; falsified by GitHub Actions gaining per-job path filters.
 - 2026-09-03: T1 done — `.github/workflows/lint.yml` written: tarball download of v0.11.0 verified by sha256, `-x -S warning` over the `git ls-files` list, list asserted non-empty; gate picked 0.11.0 and the warning floor.
 - 2026-09-03: T2 done — 4 findings at the warning floor, all SC2164 (`cd "$(dirname "$0")"` unguarded) in the four launchers; fixed with `|| exit 1`; lint exit 0 over 24 files; POSIX launcher harness and CRLF guard pass.
+- 2026-09-03: T3 planted SC2086 in `scripts/retry.sh` under bash at the warning floor: exit 0 — the floor cannot catch it; first T3 attempt under the zsh tool shell failed for an unrelated reason (zsh does not word-split `$files`), discarded.
+- 2026-09-03: T2 continued at the info floor: 7 findings — fixed SC2018/SC2019 (`tr` classes) in smoke-test.sh and SC2012 ×2 in install_pandoc.sh (glob loop replaces `ls | head`, glob branch simulated found/none); disabled with reasons SC2329 (trap-invoked), SC2153 (env-var contract), SC2016 (literal `${CUSTOM}` under test). Lint exit 0 over 24 files; launcher harness and pandoc parser tests pass. Local `docker build` (verify slot, build-context change) running.
+- 2026-09-03: T3 at the info floor: planted SC2086 → exit 1 naming SC2086 at retry.sh:49; reverted; clean tree exit 0.
 
 ## Decisions
 
 - 2026-09-03: shellcheck pinned at 0.11.0, severity floor `-S warning` (gate). Promoted to D-002.
+- 2026-09-03: floor moved to `-S info` (mini gate) because SC2086 is info-level and the warning floor passed a planted SC2086; D-002's floor superseded by D-003.
 
 ## Review

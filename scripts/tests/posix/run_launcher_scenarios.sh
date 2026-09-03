@@ -344,6 +344,7 @@ for launcher in start_mac.command start_linux.sh; do
 
     # Interpolation we cannot read is Compose's business, not ours: pass it
     # through rather than refuse a config that may well work.
+    # shellcheck disable=SC2016  # the literal ${CUSTOM} is the Compose interpolation under test
     run_scenario "$launcher/port-interpolation-passes-through" "$launcher" "$stub_path" 0 \
         'RS_PORT=${CUSTOM}' 'RStudio Server is running'
 done

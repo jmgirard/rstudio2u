@@ -35,7 +35,8 @@ jobs:
           shellcheck --version
 
       # -x follows `# shellcheck source=` directives (the launchers source
-      # launcher_common.sh); -S warning fails on error and warning findings.
+      # launcher_common.sh); -S info fails on error, warning, and info findings
+      # (SC2086, the unquoted-expansion check, is info-level).
       # The enumeration is asserted non-empty so a broken pathspec cannot pass
       # by linting nothing.
       - name: shellcheck tracked shell files
@@ -45,4 +46,4 @@ jobs:
           [ -n "$files" ] || { echo "no shell files enumerated"; exit 1; }
           echo "$files"
           # shellcheck disable=SC2086  # $files is a newline-separated list of tracked paths
-          shellcheck -x -S warning $files
+          shellcheck -x -S info $files

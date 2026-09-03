@@ -7,4 +7,5 @@ set -o nounset
 
 IFS='' read -r password
 
+# shellcheck disable=SC2153  # PASSWORD is the container env var, set by init_userconf.sh
 [ "${USER}" = "${1}" ] && [ "${PASSWORD}" = "${password}" ]

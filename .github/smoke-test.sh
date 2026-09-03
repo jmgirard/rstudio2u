@@ -30,6 +30,7 @@ MIRROR_PKG="${SMOKE_MIRROR_PKG:-praise}"
 NAME="rstudio2u-smoke-$$"
 SMOKE_OK=0
 
+# shellcheck disable=SC2329  # invoked via the EXIT trap below, not by name
 cleanup() {
   # Dump recent container logs on failure to make CI triage possible, then
   # always remove the container.
@@ -82,7 +83,7 @@ done
 # (b) landed as an apt binary (r-cran-<pkg>). The dpkg check is what proves the
 # r2u/bspm *binary* path worked rather than a silent source-compile fallback —
 # fast binary install is the whole point of the image (IP1).
-apt_pkg="r-cran-$(printf '%s' "$PKG" | tr 'A-Z' 'a-z')"
+apt_pkg="r-cran-$(printf '%s' "$PKG" | tr '[:upper:]' '[:lower:]')"
 echo "==> [1/2] bspm binary install ($PKG -> $apt_pkg)"
 if ! docker exec "$NAME" Rscript -e "install.packages('$PKG'); library($PKG)"; then
   echo "FAIL: bspm install/load of $PKG failed"; exit 1

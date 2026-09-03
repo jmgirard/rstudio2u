@@ -191,7 +191,7 @@ for /f "usebackq delims=" %%I in (`docker compose config --images 2^>nul`) do (
     call :trim_image
     if defined IMAGE (
         docker image inspect "!IMAGE!" >nul 2>&1
-        rem MUTATION (temporary): inspect result ignored
+        if errorlevel 1 exit /b 1
         set "IMAGES_FOUND=1"
     )
 )

@@ -1,12 +1,12 @@
 # M11: Shell lint in CI
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
-- **Branch/PR:** —
+- **Branch/PR:** m011-shell-lint-ci
 
 ## Goal
 
@@ -48,7 +48,7 @@ trigger the image build).
 
 ## Tasks
 
-- [ ] T1: Write `.github/workflows/lint.yml`: `pull_request` on the AC3
+- [x] T1: Write `.github/workflows/lint.yml`: `pull_request` on the AC3
       paths; install a pinned shellcheck release (download the exact version's
       tarball, not the runner's apt package); run it over the `git ls-files`
       enumeration, `-S warning` or stricter, external-sources enabled so the
@@ -66,7 +66,10 @@ trigger the image build).
 - 2026-09-03: created by /milestone-plan.
 - 2026-09-03: criteria audit ran in reduced mode ([O] fresh reader); returned: AC2 ended in a work-log recording clause (moved to T3), `launcher_common.sh` redundant in the pathspec (dropped).
 - 2026-09-03: plan gate chose a separate `lint.yml` over a job in `pr-ci.yml` because pr-ci's path filter would then pull the image build into launcher-only PRs; falsified by GitHub Actions gaining per-job path filters.
+- 2026-09-03: T1 done — `.github/workflows/lint.yml` written: tarball download of v0.11.0 verified by sha256, `-x -S warning` over the `git ls-files` list, list asserted non-empty; gate picked 0.11.0 and the warning floor.
 
 ## Decisions
+
+- 2026-09-03: shellcheck pinned at 0.11.0, severity floor `-S warning` (gate). Promoted to D-002.
 
 ## Review

@@ -1,6 +1,6 @@
 # M11: Shell lint in CI
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -57,7 +57,7 @@ trigger the image build).
       finding, or add a `# shellcheck disable=SCnnnn` with a one-line reason.
       `.github/smoke-test.sh` and the launchers have never been linted, so
       expect findings there.
-- [ ] T3: Discrimination check: plant an SC2086 in one enumerated file on the
+- [x] T3: Discrimination check: plant an SC2086 in one enumerated file on the
       branch, observe the step fail in CI (or the identical command locally at
       the pinned version), remove it; record the run in the work log.
 
@@ -71,6 +71,7 @@ trigger the image build).
 - 2026-09-03: T3 planted SC2086 in `scripts/retry.sh` under bash at the warning floor: exit 0 — the floor cannot catch it; first T3 attempt under the zsh tool shell failed for an unrelated reason (zsh does not word-split `$files`), discarded.
 - 2026-09-03: T2 continued at the info floor: 7 findings — fixed SC2018/SC2019 (`tr` classes) in smoke-test.sh and SC2012 ×2 in install_pandoc.sh (glob loop replaces `ls | head`, glob branch simulated found/none); disabled with reasons SC2329 (trap-invoked), SC2153 (env-var contract), SC2016 (literal `${CUSTOM}` under test). Lint exit 0 over 24 files; launcher harness and pandoc parser tests pass. Local `docker build` (verify slot, build-context change) running.
 - 2026-09-03: T3 at the info floor: planted SC2086 → exit 1 naming SC2086 at retry.sh:49; reverted; clean tree exit 0.
+- 2026-09-03: local `docker build` (noble, arm64) exit 0; the built image's pandoc resolves via the rewritten glob branch (`.../tools/aarch64/pandoc`), so the SC2012 fix took the path it replaced. hadolint not run locally (not installed; Dockerfile unchanged, pr-ci.yml lints it). Status → review.
 
 ## Decisions
 

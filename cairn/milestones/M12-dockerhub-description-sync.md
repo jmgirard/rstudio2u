@@ -1,12 +1,12 @@
 # M12: Docker Hub description sync
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP2
 - **Resolves:** —
-- **Branch/PR:** —
+- **Branch/PR:** m012-dockerhub-description-sync
 
 ## Goal
 
@@ -44,7 +44,7 @@ GitHub README is the single source); image publishing.
 
 ## Tasks
 
-- [ ] T1: Credential check. Docker Hub has historically rejected personal
+- [x] T1: Credential check. Docker Hub has historically rejected personal
       access tokens for description edits and the action's README says so;
       read the action's current README and Hub docs. If a token cannot, the
       user creates a `DOCKERHUB_PASSWORD` secret (a secret is a user action;
@@ -66,6 +66,10 @@ GitHub README is the single source); image publishing.
 - 2026-09-03: criteria audit ran in full mode ([O] fresh reader); returned: the credential may lack authority (now T1, gate-approved fallback), byte-identity against Hub state was unverifiable pre-merge and a process clause rode in the criterion (dropped; post-merge check is T3).
 - 2026-09-03: plan gate chose "plan now with a password-secret fallback" over "hold as candidate until the token is confirmed" because the check is one task and the fallback is a single secret; falsified by Hub refusing description edits from any non-interactive credential.
 
+- 2026-09-03: implement gate: credential = new `DOCKERHUB_PASSWORD` secret (user creates it before merge); pin = commit SHA + `# v5.0.0` comment (D-004). Action README read 2026-09-03: token needs read/write/delete scope; T1 done.
+
 ## Decisions
+
+- 2026-09-03: The workflow authenticates with a new `DOCKERHUB_PASSWORD` secret (account password), not the existing `DOCKERHUB_TOKEN`. The action's README now accepts a personal access token, but only one with read, write, and delete permission; the existing token's permissions are not readable from the repo. The user chose the password secret at the implement gate over reusing the token and over pausing to check its scope. If Hub later accepts a token verified to carry all three permissions, the secret reference is the only change.
 
 ## Review

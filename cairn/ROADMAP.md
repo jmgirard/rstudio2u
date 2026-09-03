@@ -7,7 +7,7 @@ _Last hygiene check: 2026-09-03 (M11 done and archived; M06 row pruned; LESSONS 
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M12 | Docker Hub description sync | planned | — | normal | milestones/M12-dockerhub-description-sync.md |
+| M12 | Docker Hub description sync | in-progress | — | normal | milestones/M12-dockerhub-description-sync.md |
 | M13 | Weekly rebuild failure alert | planned | — | normal | milestones/M13-rebuild-failure-alert.md |
 | M11 | Shell lint in CI | done | — | normal | milestones/archive/M11-shell-lint-ci.md |
 | M10 | Launcher offline fallback | done | — | normal | milestones/archive/M10-launcher-offline-fallback.md |

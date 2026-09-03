@@ -6,7 +6,7 @@
 - **Driving RR:** —
 - **Principles touched:** GP4
 - **Resolves:** —
-- **Branch/PR:** m011-shell-lint-ci
+- **Branch/PR:** m011-shell-lint-ci · https://github.com/jmgirard/rstudio2u/pull/18
 
 ## Goal
 
@@ -29,14 +29,14 @@ trigger the image build).
 
 ## Acceptance criteria
 
-- [ ] AC1: A pull-request workflow runs shellcheck over every tracked file
+- [x] AC1: A pull-request workflow runs shellcheck over every tracked file
       `git ls-files '*.sh' '*.command'` enumerates, and that step passes on
       the milestone branch.
-- [ ] AC2: The step exits non-zero when a file the AC1 enumeration lists
+- [x] AC2: The step exits non-zero when a file the AC1 enumeration lists
       contains an unquoted variable expansion (SC2086).
-- [ ] AC3: The workflow's `paths` trigger lists `**.sh` and `**.command` and
+- [x] AC3: The workflow's `paths` trigger lists `**.sh` and `**.command` and
       its own file, so a change to any enumerated file runs the lint.
-- [ ] AC4: The shellcheck version is pinned to an exact version in the
+- [x] AC4: The shellcheck version is pinned to an exact version in the
       workflow, never a floating `latest`.
 
 ## Coverage
@@ -79,3 +79,11 @@ trigger the image build).
 - 2026-09-03: floor moved to `-S info` (mini gate) because SC2086 is info-level and the warning floor passed a planted SC2086; D-002's floor superseded by D-003.
 
 ## Review
+
+_2026-09-03, PR #18, branch head 6d0c2eb; main not moved since cut._
+
+- AC1: `.github/workflows/lint.yml` runs `shellcheck -x -S info` over `git ls-files '*.sh' '*.command'` (24 files, asserted non-empty). Local run at 0.11.0: exit 0. CI `shellcheck` job on PR #18: pass (run 33815790449). ✔
+- AC2: planted `echo $v` in `launcher_common.sh`; identical command exits 1 reporting SC2086 at launcher_common.sh:163; reverted, clean tree exit 0. ✔
+- AC3: parsed `paths` = `**.sh`, `**.command`, `.github/workflows/lint.yml`; every enumerated file ends in `.sh` or `.command`. ✔
+- AC4: `SHELLCHECK_VERSION: "0.11.0"` with a sha256 for the tarball; the only `latest` in the file is `ubuntu-latest` (runner label). ✔
+- Gate: `cairn_validate` exit 0 (one pre-existing advisory: `.gitignore` `cairn/references/pdf/` naming); hadolint v2.12.0 (container) clean; Dockerfile unchanged on the branch; local noble build of this tree exit 0 (image created after the last script commit); base image `rocker/r2u:${UBUNTU_VERSION}` with the version passed by build-arg; no secrets in Dockerfile; `.dockerignore` present excluding `.git`, `cairn`, tests; CHANGELOG untouched — judged no user-visible change (the launcher `cd` guard only converts a continue-after-failed-cd into exit 1).

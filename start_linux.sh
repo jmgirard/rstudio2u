@@ -42,15 +42,20 @@ fi
 # instead of a port-binding error.
 launcher_check_port "$(launcher_requested_port)" || exit 1
 
-# A pull failure is a different problem from a slow or unhealthy start.
+# A pull failure is a different problem from a slow or unhealthy start. If a
+# copy is already downloaded, start it with a warning rather than refuse.
 if ! docker compose pull; then
-    echo ""
-    echo "❌ Could not download the latest image."
-    echo "   Check your internet connection and that you can reach Docker Hub,"
-    echo "   then try again."
-    echo ""
-    launcher_pause
-    exit 1
+    if launcher_images_present; then
+        launcher_warn_offline
+    else
+        echo ""
+        echo "❌ Could not download the latest image."
+        echo "   Check your internet connection and that you can reach Docker Hub,"
+        echo "   then try again."
+        echo ""
+        launcher_pause
+        exit 1
+    fi
 fi
 
 # Start the server and wait until it is healthy

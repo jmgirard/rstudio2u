@@ -70,15 +70,24 @@ if errorlevel 1 (
 
 :: Get the latest image. A pull failure is a different problem from a slow or
 :: unhealthy start, so report it as its own thing instead of blaming a timeout.
+:: If a copy is already downloaded, start it with a warning rather than refuse.
 docker compose pull
 if errorlevel 1 (
+    call :images_present
+    if errorlevel 1 (
+        echo.
+        echo [X] Could not download the latest image.
+        echo     Check your internet connection and that you can reach Docker Hub,
+        echo     then try again.
+        echo.
+        call :wait
+        exit /b 1
+    )
     echo.
-    echo [X] Could not download the latest image.
-    echo     Check your internet connection and that you can reach Docker Hub,
-    echo     then try again.
+    echo [i] Could not download the latest image, so the update was skipped.
+    echo     Starting the copy already on this computer instead. To get the
+    echo     latest version, connect to the internet and run this again later.
     echo.
-    call :wait
-    exit /b 1
 )
 
 :: Start the server and wait until it reports healthy.
@@ -168,6 +177,37 @@ if "!RS_PORT_REQUESTED:~0,1!"==" " (
 if "!RS_PORT_REQUESTED:~-1!"==" " (
     set "RS_PORT_REQUESTED=!RS_PORT_REQUESTED:~0,-1!"
     goto :clean_trim
+)
+goto :eof
+
+:: Is every image the Compose file references already on this machine? Mirrors
+:: launcher_images_present in launcher_common.sh: ask Compose for the list, then
+:: inspect each. Any failure -- an unsupported `config --images` (empty loop),
+:: a missing image -- exits non-zero so the caller keeps its hard error.
+:images_present
+set "IMAGES_FOUND="
+for /f "usebackq delims=" %%I in (`docker compose config --images 2^>nul`) do (
+    set "IMAGE=%%I"
+    call :trim_image
+    if defined IMAGE (
+        docker image inspect "!IMAGE!" >nul 2>&1
+        if errorlevel 1 exit /b 1
+        set "IMAGES_FOUND=1"
+    )
+)
+if not defined IMAGES_FOUND exit /b 1
+exit /b 0
+
+:: Trim spaces from both ends of IMAGE (`for /f` trims the left only).
+:trim_image
+if not defined IMAGE goto :eof
+if "!IMAGE:~0,1!"==" " (
+    set "IMAGE=!IMAGE:~1!"
+    goto :trim_image
+)
+if "!IMAGE:~-1!"==" " (
+    set "IMAGE=!IMAGE:~0,-1!"
+    goto :trim_image
 )
 goto :eof
 

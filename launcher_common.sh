@@ -25,6 +25,32 @@ launcher_pause() {
     read -n 1 -s -r -p "Press any key to close..."
 }
 
+# Is every image the Compose file references already on this machine? Asking
+# Compose for the list keeps this in step with whatever override or .env is in
+# play. Any failure -- an unsupported `config --images`, an empty list, a
+# missing image -- returns non-zero so the caller keeps its hard error.
+launcher_images_present() {
+    local images image found=0
+    images=$(docker compose config --images 2>/dev/null) || return 1
+    while IFS= read -r image || [ -n "$image" ]; do
+        image=${image//$'\r'/}
+        [ -n "$image" ] || continue
+        docker image inspect "$image" >/dev/null 2>&1 || return 1
+        found=1
+    done <<< "$images"
+    [ "$found" = 1 ]
+}
+
+# Print the warning for a pull that failed while a downloaded copy exists.
+# Callers then fall through to `compose up`.
+launcher_warn_offline() {
+    echo ""
+    echo "⚠️  Could not download the latest image, so the update was skipped."
+    echo "   Starting the copy already on this computer instead. To get the"
+    echo "   latest version, connect to the internet and run this again later."
+    echo ""
+}
+
 # The port the user asked for, resolved the way Compose resolves it: the RS_PORT
 # environment variable wins, else a RS_PORT line in .env, else empty (meaning
 # "the 8787 default"). Used only for the pre-flight check and as a fallback --

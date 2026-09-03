@@ -48,9 +48,36 @@ stub="$work/stub"
 mkdir -p "$stub"
 cat > "$stub/docker" <<'STUB'
 #!/bin/sh
+# Every call is appended to $STUB_CALLS so a scenario can assert which
+# subcommands ran (e.g. that `compose up` never ran after a failed pull).
+[ -n "${STUB_CALLS:-}" ] && printf '%s\n' "$*" >> "$STUB_CALLS"
 if [ "${1:-}" = "info" ]; then
     [ "${STUB_INFO_FAIL:-}" = "1" ] && exit 1
     exit 0
+fi
+# The image list the Compose file references, as the launcher asks for it.
+# Fixed on purpose: what is under test is whether the launcher checks the
+# images, not how Compose resolves them. Two images, so a launcher that stops
+# after the first is caught, and the first line carries a CR, so a launcher
+# that fails to strip it inspects a name the stub does not know.
+# STUB_CONFIG_EMPTY=1 models a Compose that lists nothing.
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "config" ] && [ "${3:-}" = "--images" ]; then
+    [ "${STUB_CONFIG_FAIL:-}" = "1" ] && exit 1
+    [ "${STUB_CONFIG_EMPTY:-}" = "1" ] && exit 0
+    printf 'jmgirard/rstudio2u:latest\r\nbusybox:stable\n'
+    exit 0
+fi
+# `image inspect <name>` succeeds only for a name the config list carries, so
+# a launcher inspecting a hardcoded or unstripped name gets "absent".
+# STUB_IMAGE_ABSENT=1 makes every image absent; STUB_IMAGE_ABSENT=<name>
+# makes only that one absent.
+if [ "${1:-}" = "image" ] && [ "${2:-}" = "inspect" ]; then
+    [ "${STUB_IMAGE_ABSENT:-}" = "1" ] && exit 1
+    [ "${STUB_IMAGE_ABSENT:-}" = "${3:-}" ] && exit 1
+    case "${3:-}" in
+        jmgirard/rstudio2u:latest|busybox:stable) exit 0 ;;
+    esac
+    exit 1
 fi
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "pull" ]; then
     [ "${STUB_PULL_FAIL:-}" = "1" ] && exit 1
@@ -100,6 +127,22 @@ bash_bin=$(command -v bash) || { echo "bash not found"; exit 1; }
 
 # Set before a run_scenario call to seed the sandbox .env; cleared after each.
 DOTENV=""
+# Set before a run_scenario call to assert a docker subcommand did / did not
+# run (a prefix of the stub's argv line, e.g. "compose up"); cleared after each.
+EXPECT_CALL=""
+FORBID_CALL=""
+# Set before a run_scenario call to assert a substring is absent from the
+# launcher's output; cleared after each.
+FORBID_TEXT=""
+calls="$work/calls"
+
+# The offline warning must appear only when the pull failed AND the fallback
+# ran; every scenario whose stubbed pull succeeds asserts it is absent, and the
+# hard-error scenarios forbid it explicitly.
+OFFLINE_WARNING='the update was skipped'
+# The hard error's own second line -- its first line is a prefix of the
+# warning, so it cannot tell the two branches apart.
+HARD_ERROR='Check your internet connection'
 
 # run_scenario <name> <launcher> <PATH> <expected-exit> <env-assignments> <expected-substring>...
 run_scenario() {
@@ -107,17 +150,49 @@ run_scenario() {
     shift 5
     local out code ok=1
 
-    rm -f "$sandbox/.env"
+    rm -f "$sandbox/.env" "$calls"
     [ -n "$DOTENV" ] && printf '%s\n' "$DOTENV" > "$sandbox/.env"
 
     # shellcheck disable=SC2086  # $envs is a controlled list of VAR=VAL pairs
     out=$(cd "$sandbox" && env -i PATH="$pathv" HOME="$HOME" TERM=dumb \
-            RS_LAUNCHER_NONINTERACTIVE=1 $envs \
+            RS_LAUNCHER_NONINTERACTIVE=1 STUB_CALLS="$calls" $envs \
             "$bash_bin" "./$launcher" 2>&1)
     code=$?
+    local called
+    called=$(cat "$calls" 2>/dev/null)
+    local expect_call=$EXPECT_CALL forbid_call=$FORBID_CALL forbid_text=$FORBID_TEXT
 
-    rm -f "$sandbox/.env"
+    rm -f "$sandbox/.env" "$calls"
     DOTENV=""
+    EXPECT_CALL=""
+    FORBID_CALL=""
+    FORBID_TEXT=""
+
+    if [ -n "$expect_call" ] && ! grep -q "^$expect_call" <<< "$called"; then
+        ok=0
+        echo "FAIL: $name - docker '$expect_call' was not called"
+    fi
+    if [ -n "$forbid_call" ] && grep -q "^$forbid_call" <<< "$called"; then
+        ok=0
+        echo "FAIL: $name - docker '$forbid_call' was called"
+    fi
+    if [ -n "$forbid_text" ]; then
+        case "$out" in
+            *"$forbid_text"*)
+                ok=0
+                echo "FAIL: $name - output contains forbidden '$forbid_text'" ;;
+        esac
+    fi
+    case " $envs " in
+        *" STUB_PULL_FAIL=1 "*) ;;
+        *)
+            case "$out" in
+                *"$OFFLINE_WARNING"*)
+                    ok=0
+                    echo "FAIL: $name - offline warning printed although the pull succeeded" ;;
+            esac
+            ;;
+    esac
 
     if [ "$code" != "$expect" ]; then
         ok=0
@@ -156,8 +231,40 @@ for launcher in start_mac.command start_linux.sh; do
     run_scenario "$launcher/docker-not-running" "$launcher" "$stub_path" 1 \
         'STUB_INFO_FAIL=1' 'installed but not running'
 
+    # A failed pull with no local copy is still a hard stop, and the server
+    # must not be started.
+    FORBID_CALL="compose up"
+    FORBID_TEXT="$OFFLINE_WARNING"
     run_scenario "$launcher/pull-failure" "$launcher" "$stub_path" 1 \
-        'STUB_PULL_FAIL=1' 'Could not download the latest image'
+        'STUB_PULL_FAIL=1 STUB_IMAGE_ABSENT=1' "$HARD_ERROR"
+
+    # --- offline fallback -----------------------------------------------------
+    # A failed pull with every image already downloaded starts that copy, with
+    # a warning that the update was skipped and no hard error.
+    EXPECT_CALL="compose up"
+    FORBID_TEXT="$HARD_ERROR"
+    run_scenario "$launcher/offline-fallback" "$launcher" "$stub_path" 0 \
+        'STUB_PULL_FAIL=1' "$OFFLINE_WARNING" 'RStudio Server is running'
+
+    # Only the second listed image is missing: the launcher must check every
+    # image, not just the first.
+    FORBID_CALL="compose up"
+    FORBID_TEXT="$OFFLINE_WARNING"
+    run_scenario "$launcher/offline-second-image-absent" "$launcher" "$stub_path" 1 \
+        'STUB_PULL_FAIL=1 STUB_IMAGE_ABSENT=busybox:stable' "$HARD_ERROR"
+
+    # If Compose cannot even list its images, keep the hard error rather than
+    # guess.
+    FORBID_CALL="compose up"
+    FORBID_TEXT="$OFFLINE_WARNING"
+    run_scenario "$launcher/offline-config-unsupported" "$launcher" "$stub_path" 1 \
+        'STUB_PULL_FAIL=1 STUB_CONFIG_FAIL=1' "$HARD_ERROR"
+
+    # A Compose that lists no images at all is treated the same way.
+    FORBID_CALL="compose up"
+    FORBID_TEXT="$OFFLINE_WARNING"
+    run_scenario "$launcher/offline-config-empty" "$launcher" "$stub_path" 1 \
+        'STUB_PULL_FAIL=1 STUB_CONFIG_EMPTY=1' "$HARD_ERROR"
 
     # The timeout message must name the port override, on every launcher.
     run_scenario "$launcher/health-timeout" "$launcher" "$stub_path" 1 \

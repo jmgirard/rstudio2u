@@ -52,6 +52,21 @@ if [ "${1:-}" = "info" ]; then
     [ "${STUB_INFO_FAIL:-}" = "1" ] && exit 1
     exit 0
 fi
+# Every call is appended to $STUB_CALLS so a scenario can assert which
+# subcommands ran (e.g. that `compose up` never ran after a failed pull).
+[ -n "${STUB_CALLS:-}" ] && printf '%s\n' "$*" >> "$STUB_CALLS"
+# The image list the Compose file references, as the launcher asks for it.
+# Fixed on purpose: what is under test is whether the launcher checks the
+# images, not how Compose resolves them.
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "config" ] && [ "${3:-}" = "--images" ]; then
+    [ "${STUB_CONFIG_FAIL:-}" = "1" ] && exit 1
+    printf 'jmgirard/rstudio2u:latest\n'
+    exit 0
+fi
+if [ "${1:-}" = "image" ] && [ "${2:-}" = "inspect" ]; then
+    [ "${STUB_IMAGE_ABSENT:-}" = "1" ] && exit 1
+    exit 0
+fi
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "pull" ]; then
     [ "${STUB_PULL_FAIL:-}" = "1" ] && exit 1
     exit 0
@@ -100,6 +115,15 @@ bash_bin=$(command -v bash) || { echo "bash not found"; exit 1; }
 
 # Set before a run_scenario call to seed the sandbox .env; cleared after each.
 DOTENV=""
+# Set before a run_scenario call to assert a docker subcommand did / did not
+# run (a prefix of the stub's argv line, e.g. "compose up"); cleared after each.
+EXPECT_CALL=""
+FORBID_CALL=""
+calls="$work/calls"
+
+# The offline warning must appear only when the pull failed; every scenario
+# whose stubbed pull succeeds asserts it is absent.
+OFFLINE_WARNING='the update was skipped'
 
 # run_scenario <name> <launcher> <PATH> <expected-exit> <env-assignments> <expected-substring>...
 run_scenario() {
@@ -107,17 +131,41 @@ run_scenario() {
     shift 5
     local out code ok=1
 
-    rm -f "$sandbox/.env"
+    rm -f "$sandbox/.env" "$calls"
     [ -n "$DOTENV" ] && printf '%s\n' "$DOTENV" > "$sandbox/.env"
 
     # shellcheck disable=SC2086  # $envs is a controlled list of VAR=VAL pairs
     out=$(cd "$sandbox" && env -i PATH="$pathv" HOME="$HOME" TERM=dumb \
-            RS_LAUNCHER_NONINTERACTIVE=1 $envs \
+            RS_LAUNCHER_NONINTERACTIVE=1 STUB_CALLS="$calls" $envs \
             "$bash_bin" "./$launcher" 2>&1)
     code=$?
+    local called
+    called=$(cat "$calls" 2>/dev/null)
+    local expect_call=$EXPECT_CALL forbid_call=$FORBID_CALL
 
-    rm -f "$sandbox/.env"
+    rm -f "$sandbox/.env" "$calls"
     DOTENV=""
+    EXPECT_CALL=""
+    FORBID_CALL=""
+
+    if [ -n "$expect_call" ] && ! grep -q "^$expect_call" <<< "$called"; then
+        ok=0
+        echo "FAIL: $name - docker '$expect_call' was not called"
+    fi
+    if [ -n "$forbid_call" ] && grep -q "^$forbid_call" <<< "$called"; then
+        ok=0
+        echo "FAIL: $name - docker '$forbid_call' was called"
+    fi
+    case " $envs " in
+        *" STUB_PULL_FAIL=1 "*) ;;
+        *)
+            case "$out" in
+                *"$OFFLINE_WARNING"*)
+                    ok=0
+                    echo "FAIL: $name - offline warning printed although the pull succeeded" ;;
+            esac
+            ;;
+    esac
 
     if [ "$code" != "$expect" ]; then
         ok=0
@@ -156,8 +204,24 @@ for launcher in start_mac.command start_linux.sh; do
     run_scenario "$launcher/docker-not-running" "$launcher" "$stub_path" 1 \
         'STUB_INFO_FAIL=1' 'installed but not running'
 
+    # A failed pull with no local copy is still a hard stop, and the server
+    # must not be started.
+    FORBID_CALL="compose up"
     run_scenario "$launcher/pull-failure" "$launcher" "$stub_path" 1 \
-        'STUB_PULL_FAIL=1' 'Could not download the latest image'
+        'STUB_PULL_FAIL=1 STUB_IMAGE_ABSENT=1' 'Could not download the latest image'
+
+    # --- offline fallback -----------------------------------------------------
+    # A failed pull with the image already downloaded starts that copy, with a
+    # warning that the update was skipped.
+    EXPECT_CALL="compose up"
+    run_scenario "$launcher/offline-fallback" "$launcher" "$stub_path" 0 \
+        'STUB_PULL_FAIL=1' "$OFFLINE_WARNING" 'RStudio Server is running'
+
+    # If Compose cannot even list its images, keep the hard error rather than
+    # guess.
+    FORBID_CALL="compose up"
+    run_scenario "$launcher/offline-config-unsupported" "$launcher" "$stub_path" 1 \
+        'STUB_PULL_FAIL=1 STUB_CONFIG_FAIL=1' 'Could not download the latest image'
 
     # The timeout message must name the port override, on every launcher.
     run_scenario "$launcher/health-timeout" "$launcher" "$stub_path" 1 \

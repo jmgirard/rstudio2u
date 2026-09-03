@@ -57,7 +57,7 @@ scripts (they never pull).
 
 ## Tasks
 
-- [ ] T1: POSIX: add `launcher_images_present` to `launcher_common.sh` — list
+- [x] T1: POSIX: add `launcher_images_present` to `launcher_common.sh` — list
       images with `docker compose config --images`, `docker image inspect`
       each; any failure (including an unsupported flag) returns non-zero so
       the existing hard error stays the fallback. Rework the pull block in
@@ -84,8 +84,8 @@ scripts (they never pull).
 - 2026-09-03: criteria audit ran in full mode ([O] fresh reader); returned: AC1 named a Compose flag rather than behavior, AC2 and AC3 stated harness properties, AC3 quantified over all successful runs while enumerating only pre-existing scenarios — all three fixed at the gate as written above.
 - 2026-09-03: plan gate chose "check image presence, then fall through to `compose up`" over "on pull failure just attempt `compose up`" because an absent image would then surface as a misleading "did not become ready" timeout; falsified by evidence that Compose reports a missing image distinctly before the health wait.
 - 2026-09-03: plan gate chose "ask Compose for the image list (`config --images`)" over "hardcode `jmgirard/rstudio2u:latest`" because the M09 lesson is that Compose is the authority over every override mechanism; falsified by a supported student Docker Desktop whose Compose lacks the flag.
-
 - 2026-09-03: /milestone-implement started; branch m010-launcher-offline-fallback cut from pushed main; question gate skipped (no open choices beyond wording).
+- 2026-09-03: T1 done — `launcher_images_present` + `launcher_warn_offline` in launcher_common.sh; both POSIX launchers fall through to `compose up` on pull failure when images are present; POSIX harness gained a stub call log, `offline-fallback` and `offline-config-unsupported` scenarios, `up`-never-ran assertion on `pull-failure`, and a warning-absent check on every pull-success run; mutation (inspect skipped) turned `pull-failure` red on both launchers.
 
 ## Decisions
 

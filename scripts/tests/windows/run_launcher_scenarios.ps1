@@ -68,7 +68,20 @@ class DockerStub {
         return string.IsNullOrEmpty(p) ? "8787" : p;
     }
     static int Main(string[] a) {
+        // Every call is appended to STUB_CALLS so a scenario can assert which
+        // subcommands ran (e.g. that `compose up` never ran after a failed pull).
+        string log = Environment.GetEnvironmentVariable("STUB_CALLS");
+        if (!string.IsNullOrEmpty(log)) File.AppendAllText(log, string.Join(" ", a) + "\n");
         if (a.Length >= 1 && a[0] == "info") return Fail("STUB_INFO_FAIL");
+        // The image list the Compose file references. Fixed on purpose: what is
+        // under test is whether the launcher checks the images, not how Compose
+        // resolves them.
+        if (a.Length >= 3 && a[0] == "compose" && a[1] == "config" && a[2] == "--images") {
+            if (Fail("STUB_CONFIG_FAIL") == 1) return 1;
+            Console.WriteLine("jmgirard/rstudio2u:latest");
+            return 0;
+        }
+        if (a.Length >= 2 && a[0] == "image" && a[1] == "inspect") return Fail("STUB_IMAGE_ABSENT");
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "pull") return Fail("STUB_PULL_FAIL");
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "up") return Fail("STUB_UP_FAIL");
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "port") {
@@ -99,7 +112,12 @@ Copy-Item "$env:WINDIR\System32\chcp.com"  $nodockDir -Force
 $sysPath  = "$env:WINDIR\System32;$env:WINDIR"
 $stubPath = "$stubDir;$sysPath"
 $wrapper  = Join-Path $work 'run.cmd'
+$callsPath = Join-Path $work 'calls.txt'
 $fails = 0
+
+# The offline warning must appear only when the pull failed; every scenario
+# whose stubbed pull succeeds asserts it is absent.
+$offlineWarning = 'the update was skipped'
 
 function Invoke-Scenario {
     param(
@@ -108,14 +126,20 @@ function Invoke-Scenario {
         [hashtable]$ExtraEnv,
         [int]      $ExpectExit,
         [string[]] $ExpectText,
-        [string]   $DotEnv
+        [string]   $DotEnv,
+        # A prefix of a stub argv line (e.g. 'compose up') that must / must not
+        # have been called.
+        [string]   $ExpectCall,
+        [string]   $ForbidCall
     )
     # Seed (or clear) the sandbox .env for this scenario.
     if (Test-Path $dotenvPath) { Remove-Item $dotenvPath -Force }
     if ($DotEnv) { Set-Content -Path $dotenvPath -Value $DotEnv -Encoding Ascii }
+    if (Test-Path $callsPath) { Remove-Item $callsPath -Force }
     # Generate a wrapper that sets PATH + env in the child shell itself, then
     # calls the launcher and forwards its exit code.
-    $lines = @('@echo off', "set `"PATH=$PathValue`"", 'set "RS_LAUNCHER_NONINTERACTIVE=1"')
+    $lines = @('@echo off', "set `"PATH=$PathValue`"", 'set "RS_LAUNCHER_NONINTERACTIVE=1"',
+               "set `"STUB_CALLS=$callsPath`"")
     foreach ($k in $ExtraEnv.Keys) { $lines += "set `"$k=$($ExtraEnv[$k])`"" }
     $lines += "call `"$launcher`""
     $lines += 'exit /b %errorlevel%'
@@ -135,6 +159,20 @@ function Invoke-Scenario {
             Write-Host "FAIL: $Name - output missing '$t'"
         }
     }
+    $called = @()
+    if (Test-Path $callsPath) { $called = Get-Content $callsPath }
+    if ($ExpectCall -and -not ($called | Where-Object { $_.StartsWith($ExpectCall) })) {
+        $ok = $false
+        Write-Host "FAIL: $Name - docker '$ExpectCall' was not called"
+    }
+    if ($ForbidCall -and ($called | Where-Object { $_.StartsWith($ForbidCall) })) {
+        $ok = $false
+        Write-Host "FAIL: $Name - docker '$ForbidCall' was called"
+    }
+    if ($ExtraEnv['STUB_PULL_FAIL'] -ne '1' -and $out -match [regex]::Escape($offlineWarning)) {
+        $ok = $false
+        Write-Host "FAIL: $Name - offline warning printed although the pull succeeded"
+    }
     if ($ok) { Write-Host "ok: $Name (exit $code)" }
     else {
         Write-Host "----- $Name output -----"
@@ -150,8 +188,22 @@ Invoke-Scenario -Name 'docker-not-installed' -PathValue $nodockDir -ExtraEnv @{}
 Invoke-Scenario -Name 'docker-not-running'   -PathValue $stubPath -ExtraEnv @{ STUB_INFO_FAIL = '1' } `
     -ExpectExit 1 -ExpectText @('installed but not running')
 
-Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
-    -ExpectExit 1 -ExpectText @('Could not download the latest image')
+# A failed pull with no local copy is still a hard stop, and the server must
+# not be started.
+Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_IMAGE_ABSENT = '1' } `
+    -ExpectExit 1 -ExpectText @('Could not download the latest image') -ForbidCall 'compose up'
+
+# --- offline fallback --------------------------------------------------------
+# A failed pull with the image already downloaded starts that copy, with a
+# warning that the update was skipped.
+Invoke-Scenario -Name 'offline-fallback'     -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
+    -ExpectExit 0 -ExpectText @($offlineWarning, 'RStudio Server is running') -ExpectCall 'compose up'
+
+# If Compose cannot even list its images, keep the hard error rather than guess.
+Invoke-Scenario -Name 'offline-config-unsupported' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_CONFIG_FAIL = '1' } `
+    -ExpectExit 1 -ExpectText @('Could not download the latest image') -ForbidCall 'compose up'
 
 # The timeout message must name the port override, including the .env form a
 # double-clicking user can actually use.

@@ -64,7 +64,7 @@ scripts (they never pull).
       `start_linux.sh:46` and `start_mac.command:52`: on pull failure call it;
       present → print the warning and fall through to `compose up`; absent →
       existing message, exit 1.
-- [ ] T2: Windows: same logic in `start_windows.bat:73` (batch `for /f` over
+- [x] T2: Windows: same logic in `start_windows.bat:73` (batch `for /f` over
       `docker compose config --images`, `docker image inspect` per line; M09
       lesson: trim both ends of each token).
 - [ ] T3: Harnesses: extend both stubs with `STUB_IMAGE_ABSENT=1` for
@@ -86,6 +86,7 @@ scripts (they never pull).
 - 2026-09-03: plan gate chose "ask Compose for the image list (`config --images`)" over "hardcode `jmgirard/rstudio2u:latest`" because the M09 lesson is that Compose is the authority over every override mechanism; falsified by a supported student Docker Desktop whose Compose lacks the flag.
 - 2026-09-03: /milestone-implement started; branch m010-launcher-offline-fallback cut from pushed main; question gate skipped (no open choices beyond wording).
 - 2026-09-03: T1 done — `launcher_images_present` + `launcher_warn_offline` in launcher_common.sh; both POSIX launchers fall through to `compose up` on pull failure when images are present; POSIX harness gained a stub call log, `offline-fallback` and `offline-config-unsupported` scenarios, `up`-never-ran assertion on `pull-failure`, and a warning-absent check on every pull-success run; mutation (inspect skipped) turned `pull-failure` red on both launchers.
+- 2026-09-03: T2 done — start_windows.bat gains `:images_present` (`for /f` over `docker compose config --images`, `docker image inspect` each, both-ends trim) and the same fall-through; PowerShell harness mirrors T1 (stub call log, `offline-fallback`, `offline-config-unsupported`, `up`-never-ran on `pull-failure`, warning-absent on pull-success); CRLF blob verified; runs only in CI (windows-latest).
 
 ## Decisions
 

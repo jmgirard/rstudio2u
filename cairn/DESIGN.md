@@ -115,5 +115,8 @@ _Warts confirmed in the 2026-07-17 interview:_
   shape, so a format change fails the build loudly instead of mis-tagging
   (M03) — the scrape still depends on that endpoint's format.
 - The Windows launcher path sees the least real-world testing.
+- The launchers' offline fallback needs a Compose with `config --images`; an
+  older Compose still gets the hard download error even with an image on disk
+  (accepted at M10 review: the launchers target current Docker Desktop).
 - `scripts/` is a fork of rocker_scripts: upstream fixes do not flow in
   automatically (accepted cost of the owned-fork posture).

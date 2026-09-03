@@ -39,6 +39,7 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M09): a stub that resolves the same config as the code under test
   gives false coverage — the assertion passes on the stub's parse whatever the
   code does. Force the code's own parse to reach the output, then mutate to confirm.
+  A stub answering a query the code loops over must be argument-sensitive and multi-item (M10).
 - 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv`
   parameter silently shadows a script-scope `$dotenv`.
 - 2026-07-18 (M09): batch `for /f "tokens=* delims= "` is trim-LEFT only; trim

@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 # Sourcing a sibling file means a user who copied only this launcher out of the
 # folder would otherwise get a bare "No such file or directory".

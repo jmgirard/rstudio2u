@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 # Allow future double-clicking without macOS Gatekeeper re-prompting
 xattr -c "$0" 2>/dev/null

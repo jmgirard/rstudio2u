@@ -53,7 +53,7 @@ trigger the image build).
       tarball, not the runner's apt package); run it over the `git ls-files`
       enumeration, `-S warning` or stricter, external-sources enabled so the
       `# shellcheck source=` directives in the launchers resolve.
-- [ ] T2: Run the same command locally on every enumerated file; fix each
+- [x] T2: Run the same command locally on every enumerated file; fix each
       finding, or add a `# shellcheck disable=SCnnnn` with a one-line reason.
       `.github/smoke-test.sh` and the launchers have never been linted, so
       expect findings there.
@@ -67,6 +67,7 @@ trigger the image build).
 - 2026-09-03: criteria audit ran in reduced mode ([O] fresh reader); returned: AC2 ended in a work-log recording clause (moved to T3), `launcher_common.sh` redundant in the pathspec (dropped).
 - 2026-09-03: plan gate chose a separate `lint.yml` over a job in `pr-ci.yml` because pr-ci's path filter would then pull the image build into launcher-only PRs; falsified by GitHub Actions gaining per-job path filters.
 - 2026-09-03: T1 done — `.github/workflows/lint.yml` written: tarball download of v0.11.0 verified by sha256, `-x -S warning` over the `git ls-files` list, list asserted non-empty; gate picked 0.11.0 and the warning floor.
+- 2026-09-03: T2 done — 4 findings at the warning floor, all SC2164 (`cd "$(dirname "$0")"` unguarded) in the four launchers; fixed with `|| exit 1`; lint exit 0 over 24 files; POSIX launcher harness and CRLF guard pass.
 
 ## Decisions
 

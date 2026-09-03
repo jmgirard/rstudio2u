@@ -70,10 +70,12 @@ GitHub README is the single source); image publishing.
 - 2026-09-03: T2 done: `.github/workflows/dockerhub-description.yml` (push to main on README.md, workflow_dispatch; SHA-pinned action; `DOCKERHUB_PASSWORD`). actionlint 1.7.7 (docker `rhysd/actionlint:1.7.7`) clean; discrimination: a planted bad job key and an unclosed expression both reported. `docker.yml` diff against main: 0 lines.
 - 2026-09-03: CHANGELOG Unreleased/Changed entry added. T3 stays unchecked: it is the post-merge dispatch owned by /milestone-review's hygiene step per the plan. Status → review. Pre-merge user action: create the `DOCKERHUB_PASSWORD` repository secret.
 - 2026-09-03: user reports the existing `DOCKERHUB_TOKEN` is read+write only and created a new token with read, write, and delete; workflow now reads `DOCKERHUB_DESCRIPTION_TOKEN` (supersedes the password-secret choice; see Decisions). actionlint re-run clean. User still to add the secret under that name.
+- 2026-09-03: user deleted the old read+write token that `DOCKERHUB_TOKEN` held (image pushes in docker.yml fail until the secret is updated). Workflow now reads `DOCKERHUB_TOKEN`; user to update that secret with the new read/write/delete token. No second secret. actionlint clean.
 
 ## Decisions
 
 - 2026-09-03: The workflow authenticates with a new `DOCKERHUB_PASSWORD` secret (account password), not the existing `DOCKERHUB_TOKEN`. The action's README now accepts a personal access token, but only one with read, write, and delete permission; the existing token's permissions are not readable from the repo. The user chose the password secret at the implement gate over reusing the token and over pausing to check its scope. If Hub later accepts a token verified to carry all three permissions, the secret reference is the only change.
 - 2026-09-03: Supersedes the entry above. The user confirmed `DOCKERHUB_TOKEN` has read and write permission only, and created a new token with read, write, and delete. The workflow reads it as `DOCKERHUB_DESCRIPTION_TOKEN`; no account password is stored in GitHub. `docker.yml` keeps using `DOCKERHUB_TOKEN`.
+- 2026-09-03: Supersedes the two entries above. One token, one secret: `DOCKERHUB_TOKEN` holds a token with read, write, and delete permission and serves both `docker.yml` (image pushes) and the description workflow. The old read+write token was deleted by the user, so the secret must be updated to the new token before any push to main.
 
 ## Review

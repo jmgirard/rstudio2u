@@ -2,9 +2,9 @@ name: Docker Hub description
 
 # Copies README.md to the Docker Hub page for jmgirard/rstudio2u whenever the
 # README changes on main, or on manual dispatch. Builds and pushes no image:
-# docker.yml owns publishing. Authenticates with DOCKERHUB_DESCRIPTION_TOKEN,
-# an access token with read, write, and delete permission; the action requires
-# all three, and DOCKERHUB_TOKEN (used by docker.yml) is read and write only.
+# docker.yml owns publishing. Authenticates with DOCKERHUB_TOKEN, the same
+# access token docker.yml pushes with; the action requires a token with read,
+# write, and delete permission, so that token must keep all three.
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
         with:
           username: jmgirard
-          password: ${{ secrets.DOCKERHUB_DESCRIPTION_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: jmgirard/rstudio2u
           short-description: "RStudio Server on rocker/r2u: fast binary R packages via bspm"
           readme-filepath: ./README.md

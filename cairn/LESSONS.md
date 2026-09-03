@@ -17,9 +17,6 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M05): boot-check an arm64-only image with a single-platform
   `load:true` build + `docker run` under QEMU binfmt (multi-arch images can't be
   --load'ed); a native-arm64 host verifies the real arch without emulation.
-- 2026-07-18 (M06): offline-test a parser of a local command's `--version` by
-  piping fixture text on stdin — no env seam needed (simpler than M03's
-  RS_UPDATE_RESPONSE network seam, since there is no fetch to intercept).
 - 2026-07-18 (M07): simulate an r2u mirror outage in the container smoke by
   blackholing non-Ubuntu apt hosts (`/etc/hosts` → 127.0.0.1) and pointing
   `options(repos=)` at a dead port to kill bspm's source fallback; apt's
@@ -47,3 +44,4 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   every override mechanism.
 - 2026-09-03 (M11): a shellcheck severity floor can pass the defect it is meant to
   catch (SC2086 is info, not warning) — plant it and see red before trusting `-S`.
+- 2026-09-03 (M12): `gh secret list` prints each secret's update time — verify a rotation with it.

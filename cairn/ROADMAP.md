@@ -1,19 +1,18 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-03 (M11 done and archived; M06 row pruned; LESSONS M09 stub lesson compressed to fit the cap)_
+_Last hygiene check: 2026-09-03 (M12 done and archived; M07 row pruned; LESSONS M06 stdin-fixture line pruned for the cap)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M12 | Docker Hub description sync | review | — | normal | milestones/M12-dockerhub-description-sync.md |
 | M13 | Weekly rebuild failure alert | planned | — | normal | milestones/M13-rebuild-failure-alert.md |
+| M12 | Docker Hub description sync | done | — | normal | milestones/archive/M12-dockerhub-description-sync.md |
 | M11 | Shell lint in CI | done | — | normal | milestones/archive/M11-shell-lint-ci.md |
 | M10 | Launcher offline fallback | done | — | normal | milestones/archive/M10-launcher-offline-fallback.md |
 | M09 | Launcher port consistency | done | — | normal | milestones/archive/M09-launcher-port-consistency.md |
 | M08 | Windows launcher hardening | done | — | normal | milestones/archive/M08-windows-launcher-hardening.md |
-| M07 | bspm mirror-failure UX | done | — | normal | milestones/archive/M07-bspm-mirror-ux.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 5 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 

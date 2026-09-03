@@ -118,5 +118,8 @@ _Warts confirmed in the 2026-07-17 interview:_
 - The launchers' offline fallback needs a Compose with `config --images`; an
   older Compose still gets the hard download error even with an image on disk
   (accepted at M10 review: the launchers target current Docker Desktop).
+- The Docker Hub page mirrors the GitHub README verbatim (M12); a few lines
+  read oddly there (the GitHub "Code" button, "Cite this repository",
+  `<http://localhost:8787>` autolinks). Accepted: one README, no Hub variant.
 - `scripts/` is a fork of rocker_scripts: upstream fixes do not flow in
   automatically (accepted cost of the owned-fork posture).

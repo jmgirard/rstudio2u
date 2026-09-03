@@ -1,12 +1,12 @@
 # M10: Launcher offline fallback
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP3, IP4
 - **Resolves:** —
-- **Branch/PR:** —
+- **Branch/PR:** m010-launcher-offline-fallback
 
 ## Goal
 
@@ -84,6 +84,8 @@ scripts (they never pull).
 - 2026-09-03: criteria audit ran in full mode ([O] fresh reader); returned: AC1 named a Compose flag rather than behavior, AC2 and AC3 stated harness properties, AC3 quantified over all successful runs while enumerating only pre-existing scenarios — all three fixed at the gate as written above.
 - 2026-09-03: plan gate chose "check image presence, then fall through to `compose up`" over "on pull failure just attempt `compose up`" because an absent image would then surface as a misleading "did not become ready" timeout; falsified by evidence that Compose reports a missing image distinctly before the health wait.
 - 2026-09-03: plan gate chose "ask Compose for the image list (`config --images`)" over "hardcode `jmgirard/rstudio2u:latest`" because the M09 lesson is that Compose is the authority over every override mechanism; falsified by a supported student Docker Desktop whose Compose lacks the flag.
+
+- 2026-09-03: /milestone-implement started; branch m010-launcher-offline-fallback cut from pushed main; question gate skipped (no open choices beyond wording).
 
 ## Decisions
 

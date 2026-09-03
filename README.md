@@ -203,6 +203,8 @@ change the mapping to `-p 8888:8787` instead. If the launcher reports the server
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
 `docker pull jmgirard/rstudio2u`. Your work in the home volume is preserved.
+A launcher started without internet access reuses the last downloaded image
+and says the update was skipped; run it again once you are online to update.
 
 **How do I reset everything / reclaim disk space?**
 `docker compose down -v` removes the container and its home volume (this deletes

@@ -75,7 +75,7 @@ scripts (they never pull).
       warning-absent assertion to every pull-success scenario. Mutate the
       launcher (skip the inspect) once to confirm the new scenario goes red
       (M09 lesson: the stub must not decide the outcome the code is tested for).
-- [ ] T4: README FAQ ([README.md:203](../../README.md)) and CHANGELOG
+- [x] T4: README FAQ ([README.md:203](../../README.md)) and CHANGELOG
       `## Unreleased` → `### Changed`.
 
 ## Work log
@@ -88,6 +88,7 @@ scripts (they never pull).
 - 2026-09-03: T1 done — `launcher_images_present` + `launcher_warn_offline` in launcher_common.sh; both POSIX launchers fall through to `compose up` on pull failure when images are present; POSIX harness gained a stub call log, `offline-fallback` and `offline-config-unsupported` scenarios, `up`-never-ran assertion on `pull-failure`, and a warning-absent check on every pull-success run; mutation (inspect skipped) turned `pull-failure` red on both launchers.
 - 2026-09-03: T2 done — start_windows.bat gains `:images_present` (`for /f` over `docker compose config --images`, `docker image inspect` each, both-ends trim) and the same fall-through; PowerShell harness mirrors T1 (stub call log, `offline-fallback`, `offline-config-unsupported`, `up`-never-ran on `pull-failure`, warning-absent on pull-success); CRLF blob verified; runs only in CI (windows-latest).
 - 2026-09-03: T3 done — harness work landed with T1/T2; Windows mutation (inspect result ignored) pushed as a temporary commit on draft PR #17: CI run 33813231700 turned only `pull-failure` red ("compose up was called", exit 0 not 1) with all 25 other scenarios green; mutation reverted (git revert, kept in branch history).
+- 2026-09-03: T4 done — README update FAQ says an offline launcher reuses the last downloaded image; CHANGELOG `## Unreleased` → `### Changed` entry, no milestone number.
 
 ## Decisions
 

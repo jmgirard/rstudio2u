@@ -20,6 +20,11 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ### Changed
 
+- The double-click launchers now start the last downloaded image when the
+  update cannot be downloaded (no internet, or Docker Hub unreachable), with a
+  warning that the update was skipped. Previously they refused to start. If no
+  image has ever been downloaded, they still stop with the download error.
+
 - You can change the port the launchers use by putting `RS_PORT=8888` in a file
   named `.env` next to the launcher. This works when double-clicking, which
   setting an environment variable does not — previously the only documented way

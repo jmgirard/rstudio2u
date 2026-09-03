@@ -31,7 +31,7 @@ jobs:
           curl -sSL -o shellcheck.tar.xz "$url"
           echo "${SHELLCHECK_SHA256}  shellcheck.tar.xz" | sha256sum -c -
           tar -xJf shellcheck.tar.xz
-          install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          sudo install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
           shellcheck --version
 
       # -x follows `# shellcheck source=` directives (the launchers source
@@ -42,8 +42,7 @@ jobs:
       - name: shellcheck tracked shell files
         run: |
           set -euo pipefail
-          files=$(git ls-files '*.sh' '*.command')
-          [ -n "$files" ] || { echo "no shell files enumerated"; exit 1; }
-          echo "$files"
-          # shellcheck disable=SC2086  # $files is a newline-separated list of tracked paths
-          shellcheck -x -S info $files
+          n=$(git ls-files -z '*.sh' '*.command' | tr -dc '\0' | wc -c)
+          [ "$n" -gt 0 ] || { echo "no shell files enumerated"; exit 1; }
+          echo "linting $n files"
+          git ls-files -z '*.sh' '*.command' | xargs -0 shellcheck -x -S info

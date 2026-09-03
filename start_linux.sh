@@ -1,5 +1,9 @@
 #!/bin/bash
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "$0")" || {
+    echo "❌ Could not open the folder this launcher lives in: $(dirname "$0")"
+    [ -n "${RS_LAUNCHER_NONINTERACTIVE:-}" ] || read -n 1 -s -r -p "Press any key to close..."
+    exit 1
+}
 
 # Sourcing a sibling file means a user who copied only this launcher out of the
 # folder would otherwise get a bare "No such file or directory".

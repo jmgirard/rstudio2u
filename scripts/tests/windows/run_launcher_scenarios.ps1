@@ -75,13 +75,26 @@ class DockerStub {
         if (a.Length >= 1 && a[0] == "info") return Fail("STUB_INFO_FAIL");
         // The image list the Compose file references. Fixed on purpose: what is
         // under test is whether the launcher checks the images, not how Compose
-        // resolves them.
+        // resolves them. Two images, so a launcher that stops after the first
+        // is caught, and the first is padded with spaces, so a launcher that
+        // does not trim both ends inspects a name the stub does not know.
+        // STUB_CONFIG_EMPTY=1 models a Compose that lists nothing.
         if (a.Length >= 3 && a[0] == "compose" && a[1] == "config" && a[2] == "--images") {
             if (Fail("STUB_CONFIG_FAIL") == 1) return 1;
-            Console.WriteLine("jmgirard/rstudio2u:latest");
+            if (Fail("STUB_CONFIG_EMPTY") == 1) return 0;
+            Console.WriteLine("  jmgirard/rstudio2u:latest  ");
+            Console.WriteLine("busybox:stable");
             return 0;
         }
-        if (a.Length >= 2 && a[0] == "image" && a[1] == "inspect") return Fail("STUB_IMAGE_ABSENT");
+        // `image inspect <name>` succeeds only for a name the config list
+        // carries. STUB_IMAGE_ABSENT=1 makes every image absent;
+        // STUB_IMAGE_ABSENT=<name> makes only that one absent.
+        if (a.Length >= 2 && a[0] == "image" && a[1] == "inspect") {
+            if (Fail("STUB_IMAGE_ABSENT") == 1) return 1;
+            string name = a.Length >= 3 ? a[2] : "";
+            if (Environment.GetEnvironmentVariable("STUB_IMAGE_ABSENT") == name) return 1;
+            return (name == "jmgirard/rstudio2u:latest" || name == "busybox:stable") ? 0 : 1;
+        }
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "pull") return Fail("STUB_PULL_FAIL");
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "up") return Fail("STUB_UP_FAIL");
         if (a.Length >= 2 && a[0] == "compose" && a[1] == "port") {
@@ -115,9 +128,13 @@ $wrapper  = Join-Path $work 'run.cmd'
 $callsPath = Join-Path $work 'calls.txt'
 $fails = 0
 
-# The offline warning must appear only when the pull failed; every scenario
-# whose stubbed pull succeeds asserts it is absent.
+# The offline warning must appear only when the pull failed AND the fallback
+# ran; every scenario whose stubbed pull succeeds asserts it is absent, and the
+# hard-error scenarios forbid it explicitly.
 $offlineWarning = 'the update was skipped'
+# The hard error's own second line -- its first line is a prefix of the warning,
+# so it cannot tell the two branches apart.
+$hardError = 'Check your internet connection'
 
 function Invoke-Scenario {
     param(
@@ -130,7 +147,9 @@ function Invoke-Scenario {
         # A prefix of a stub argv line (e.g. 'compose up') that must / must not
         # have been called.
         [string]   $ExpectCall,
-        [string]   $ForbidCall
+        [string]   $ForbidCall,
+        # A substring that must be absent from the launcher's output.
+        [string]   $ForbidText
     )
     # Seed (or clear) the sandbox .env for this scenario.
     if (Test-Path $dotenvPath) { Remove-Item $dotenvPath -Force }
@@ -169,6 +188,10 @@ function Invoke-Scenario {
         $ok = $false
         Write-Host "FAIL: $Name - docker '$ForbidCall' was called"
     }
+    if ($ForbidText -and $out -match [regex]::Escape($ForbidText)) {
+        $ok = $false
+        Write-Host "FAIL: $Name - output contains forbidden '$ForbidText'"
+    }
     if ($ExtraEnv['STUB_PULL_FAIL'] -ne '1' -and $out -match [regex]::Escape($offlineWarning)) {
         $ok = $false
         Write-Host "FAIL: $Name - offline warning printed although the pull succeeded"
@@ -192,18 +215,30 @@ Invoke-Scenario -Name 'docker-not-running'   -PathValue $stubPath -ExtraEnv @{ S
 # not be started.
 Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath `
     -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_IMAGE_ABSENT = '1' } `
-    -ExpectExit 1 -ExpectText @('Could not download the latest image') -ForbidCall 'compose up'
+    -ExpectExit 1 -ExpectText @($hardError) -ForbidCall 'compose up' -ForbidText $offlineWarning
 
 # --- offline fallback --------------------------------------------------------
-# A failed pull with the image already downloaded starts that copy, with a
-# warning that the update was skipped.
+# A failed pull with every image already downloaded starts that copy, with a
+# warning that the update was skipped and no hard error.
 Invoke-Scenario -Name 'offline-fallback'     -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
-    -ExpectExit 0 -ExpectText @($offlineWarning, 'RStudio Server is running') -ExpectCall 'compose up'
+    -ExpectExit 0 -ExpectText @($offlineWarning, 'RStudio Server is running') `
+    -ExpectCall 'compose up' -ForbidText $hardError
+
+# Only the second listed image is missing: the launcher must check every image,
+# not just the first.
+Invoke-Scenario -Name 'offline-second-image-absent' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_IMAGE_ABSENT = 'busybox:stable' } `
+    -ExpectExit 1 -ExpectText @($hardError) -ForbidCall 'compose up' -ForbidText $offlineWarning
 
 # If Compose cannot even list its images, keep the hard error rather than guess.
 Invoke-Scenario -Name 'offline-config-unsupported' -PathValue $stubPath `
     -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_CONFIG_FAIL = '1' } `
-    -ExpectExit 1 -ExpectText @('Could not download the latest image') -ForbidCall 'compose up'
+    -ExpectExit 1 -ExpectText @($hardError) -ForbidCall 'compose up' -ForbidText $offlineWarning
+
+# A Compose that lists no images at all is treated the same way.
+Invoke-Scenario -Name 'offline-config-empty' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_CONFIG_EMPTY = '1' } `
+    -ExpectExit 1 -ExpectText @($hardError) -ForbidCall 'compose up' -ForbidText $offlineWarning
 
 # The timeout message must name the port override, including the .env form a
 # double-clicking user can actually use.

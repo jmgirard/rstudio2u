@@ -1,0 +1,7 @@
+# Keep the GitHub Actions this repo pins by major version current.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

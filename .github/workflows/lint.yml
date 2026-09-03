@@ -1,0 +1,48 @@
+name: Shell lint
+
+# Runs shellcheck over every tracked shell file (the `git ls-files` list below)
+# on pull requests that touch one. Kept separate from pr-ci.yml so a
+# launcher-only edit does not drag in the image build. The shellcheck version
+# is pinned to an exact release tarball (not the runner's apt package, which
+# floats with the Ubuntu image) so a new shellcheck release cannot turn this
+# check red on its own.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.sh"
+      - "**.command"
+      - ".github/workflows/lint.yml"
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    env:
+      SHELLCHECK_VERSION: "0.11.0"
+      SHELLCHECK_SHA256: "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pinned shellcheck
+        run: |
+          set -euo pipefail
+          url="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -sSL -o shellcheck.tar.xz "$url"
+          echo "${SHELLCHECK_SHA256}  shellcheck.tar.xz" | sha256sum -c -
+          tar -xJf shellcheck.tar.xz
+          sudo install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version
+
+      # -x follows `# shellcheck source=` directives (the launchers source
+      # launcher_common.sh); -S info fails on error, warning, and info findings
+      # (SC2086, the unquoted-expansion check, is info-level).
+      # The enumeration is asserted non-empty so a broken pathspec cannot pass
+      # by linting nothing.
+      - name: shellcheck tracked shell files
+        run: |
+          set -euo pipefail
+          n=$(git ls-files -z '*.sh' '*.command' | tr -dc '\0' | wc -c)
+          [ "$n" -gt 0 ] || { echo "no shell files enumerated"; exit 1; }
+          echo "linting $n files"
+          git ls-files -z '*.sh' '*.command' | xargs -0 shellcheck -x -S info

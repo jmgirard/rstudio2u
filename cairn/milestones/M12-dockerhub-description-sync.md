@@ -50,7 +50,7 @@ GitHub README is the single source); image publishing.
       user creates a `DOCKERHUB_PASSWORD` secret (a secret is a user action;
       the plan gate approved this route) and the workflow uses it; if the
       existing `DOCKERHUB_TOKEN` can, use that. Record which in the work log.
-- [ ] T2: Write the workflow: `push` to the default branch with `paths:
+- [x] T2: Write the workflow: `push` to the default branch with `paths:
       README.md`, plus `workflow_dispatch`; `peter-evans/dockerhub-description`
       pinned to an exact version; `short-description` set to "RStudio Server
       on rocker/r2u: fast binary R packages via bspm"; run `actionlint`.
@@ -67,6 +67,7 @@ GitHub README is the single source); image publishing.
 - 2026-09-03: plan gate chose "plan now with a password-secret fallback" over "hold as candidate until the token is confirmed" because the check is one task and the fallback is a single secret; falsified by Hub refusing description edits from any non-interactive credential.
 
 - 2026-09-03: implement gate: credential = new `DOCKERHUB_PASSWORD` secret (user creates it before merge); pin = commit SHA + `# v5.0.0` comment (D-004). Action README read 2026-09-03: token needs read/write/delete scope; T1 done.
+- 2026-09-03: T2 done: `.github/workflows/dockerhub-description.yml` (push to main on README.md, workflow_dispatch; SHA-pinned action; `DOCKERHUB_PASSWORD`). actionlint 1.7.7 (docker `rhysd/actionlint:1.7.7`) clean; discrimination: a planted bad job key and an unclosed expression both reported. `docker.yml` diff against main: 0 lines.
 
 ## Decisions
 

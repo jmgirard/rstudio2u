@@ -1,6 +1,6 @@
 # M13: Weekly rebuild failure alert
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -62,14 +62,14 @@ email or chat notifications.
       every call; assert which subcommand ran and with which issue number
       (identity, not counts). Wire into `pr-ci.yml` beside the resolver tests
       and add both paths to its filter.
-- [ ] T3: Add the `notify` job to `docker.yml`: `needs: build`,
+- [x] T3: Add the `notify` job to `docker.yml`: `needs: build`,
       `if: always() && github.event_name == 'schedule'`,
       `permissions: issues: write`, passes `needs.build.result` and
       `github.server_url/.../actions/runs/github.run_id`. Note the matrix
       job's result is `failure` if any variant failed; the variant names come
       from a matrix-output step, or the issue names the run and the summary
       names the variant.
-- [ ] T4: After the branch's `docker.yml` change is reviewed, the AC3 skip
+- [x] T4: After the branch's `docker.yml` change is reviewed, the AC3 skip
       is shown by a manual dispatch post-merge (dispatch runs the default
       branch's file); pre-merge, `actionlint` and a read of the `if:` stand in.
 
@@ -81,6 +81,8 @@ email or chat notifications.
 
 - 2026-09-03: implement gate chose "query the run's jobs with gh run view" for the failed-variant names over matrix outputs (undocumented empty-output overwrite behavior) and over naming only the run.
 - 2026-09-03: T1+T2 done: script + stubbed-gh test (4 branches, plus cancelled-stays-silent and usage error); planted defects (no close; comment on newest not oldest) turned the test red; mapfile replaced by a read loop for macOS bash 3.2; pinned shellcheck 0.11.0 (docker) clean; pr-ci runs the test and lists the script path (the test file is under the existing scripts/** entry).
+- 2026-09-03: T3 done: `notify` job appended to docker.yml (needs: build; if: always() && schedule; permissions issues:write + actions:read); build legs named `build (<variant>)` so `gh run view --json jobs` maps failed legs to variant names; actionlint (docker rhysd/actionlint, includes shellcheck on run blocks) clean; the jq filter checked against a synthetic jobs payload; CHANGELOG untouched.
+- 2026-09-03: T4 pre-merge half done (actionlint + the `if:` read); the post-merge manual dispatch showing the job skipped is left to /milestone-review. Profile verify (hadolint + docker build) not run: no Dockerfile or build-context change on the branch.
 ## Decisions
 
 ## Review

@@ -19,6 +19,7 @@ env:
 
 jobs:
   build:
+    name: build (${{ matrix.variant }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -165,3 +166,37 @@ jobs:
           push: true
           provenance: false
           cache-from: type=gha,scope=${{ matrix.variant }}
+
+  # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
+  # opens (or updates) a ci-failure issue and the next green run closes it
+  # (GP7). Push and dispatch runs have a person behind them and skip this job.
+  # always() is required: without it a failed build job would skip the very
+  # job that reports the failure.
+  notify:
+    needs: build
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The failed variant names come from this run's own job list (the build
+      # legs are named "build (<variant>)" above); the build job's aggregate
+      # result decides whether the issue is opened or closed.
+      - name: Open, update, or close the ci-failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          failed=()
+          while IFS= read -r v; do
+            [ -n "$v" ] && failed+=("$v")
+          done < <(gh run view "${{ github.run_id }}" --json jobs \
+            --jq '.jobs[] | select(.name | startswith("build (")) | select(.conclusion == "failure") | .name | ltrimstr("build (") | rtrimstr(")")')
+          bash ./.github/ci-failure-issue.sh "$BUILD_RESULT" "$RUN_URL" ${failed[@]+"${failed[@]}"}

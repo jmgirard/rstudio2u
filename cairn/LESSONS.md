@@ -21,10 +21,9 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   piping fixture text on stdin — no env seam needed (simpler than M03's
   RS_UPDATE_RESPONSE network seam, since there is no fetch to intercept).
 - 2026-07-18 (M07): simulate an r2u mirror outage in the container smoke by
-  blackholing the non-Ubuntu apt hosts (`/etc/hosts` → 127.0.0.1, refused fast)
-  and pointing `options(repos=)` at a dead port to kill bspm's source fallback;
-  apt's `Acquire::Retries` shows as repeated `Ign:/Err:` lines during the
-  `apt-get update` bspm runs first, so retry count is assertable there.
+  blackholing non-Ubuntu apt hosts (`/etc/hosts` → 127.0.0.1) and pointing
+  `options(repos=)` at a dead port to kill bspm's source fallback; apt's
+  `Acquire::Retries` shows as repeated `Ign:/Err:` lines in bspm's `apt-get update`.
 - 2026-07-18 (M07): to add a friendly hint on install failure, key on
   post-install state (is the package still missing?) + a scoped reachability
   probe, not apt-error text — and scope the probe to the R package mirrors
@@ -36,10 +35,9 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M08): to run a Windows `.bat` in CI, stub `docker` as a real `.exe`
   (bare `docker`→`.cmd` chains via goto, never returns), set PATH inside a
   wrapper `.cmd`, fake "not installed" with a tool-only dir (real docker.exe is on the runner's System32).
-- 2026-07-18 (M09): a stub that resolves the same config as the code under test
-  gives false coverage — the assertion passes on the stub's parse whatever the
-  code does. Force the code's own parse to reach the output, then mutate to confirm.
-  A stub answering a query the code loops over must be argument-sensitive and multi-item (M10).
+- 2026-07-18 (M09): a stub resolving the same config as the code under test gives
+  false coverage; force the code's own parse to reach the output, then mutate to
+  confirm. A stub answering a looped query must be argument-sensitive, multi-item (M10).
 - 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv`
   parameter silently shadows a script-scope `$dotenv`.
 - 2026-07-18 (M09): batch `for /f "tokens=* delims= "` is trim-LEFT only; trim
@@ -47,3 +45,5 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M09): ask `docker compose port <svc> <port>` for the real host
   binding instead of re-deriving it from RS_PORT/.env — authoritative across
   every override mechanism.
+- 2026-09-03 (M11): a shellcheck severity floor can pass the defect it is meant to
+  catch (SC2086 is info, not warning) — plant it and see red before trusting `-S`.

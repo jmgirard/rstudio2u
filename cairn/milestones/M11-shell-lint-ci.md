@@ -73,6 +73,8 @@ trigger the image build).
 - 2026-09-03: T3 at the info floor: planted SC2086 → exit 1 naming SC2086 at retry.sh:49; reverted; clean tree exit 0.
 - 2026-09-03: local `docker build` (noble, arm64) exit 0; the built image's pandoc resolves via the rewritten glob branch (`.../tools/aarch64/pandoc`), so the SC2012 fix took the path it replaced. hadolint not run locally (not installed; Dockerfile unchanged, pr-ci.yml lints it). Status → review.
 
+- 2026-09-03: step-7 approval: PR #18 approved for merge.
+
 ## Decisions
 
 - 2026-09-03: shellcheck pinned at 0.11.0, severity floor `-S warning` (gate). Promoted to D-002.

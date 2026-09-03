@@ -1,12 +1,12 @@
 # M13: Weekly rebuild failure alert
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP7
 - **Resolves:** —
-- **Branch/PR:** —
+- **Branch/PR:** m013-rebuild-failure-alert
 
 ## Goal
 

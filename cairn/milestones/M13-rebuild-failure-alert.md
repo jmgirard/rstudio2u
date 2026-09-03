@@ -53,11 +53,11 @@ email or chat notifications.
 
 ## Tasks
 
-- [ ] T1: Write `.github/ci-failure-issue.sh` (args: result, run URL,
+- [x] T1: Write `.github/ci-failure-issue.sh` (args: result, run URL,
       variant list; needs `GH_TOKEN`): the four branches in AC1. Create the
       `ci-failure` label if missing (`gh label create` is idempotent with
       `--force`).
-- [ ] T2: Write `scripts/tests/test_ci_failure_issue.sh` with a stub `gh` on
+- [x] T2: Write `scripts/tests/test_ci_failure_issue.sh` with a stub `gh` on
       PATH that returns canned `issue list` output per scenario and logs
       every call; assert which subcommand ran and with which issue number
       (identity, not counts). Wire into `pr-ci.yml` beside the resolver tests
@@ -79,6 +79,8 @@ email or chat notifications.
 - 2026-09-03: criteria audit ran in reduced mode ([O] fresh reader); returned: the job condition lacked `always()` and would be skipped on the very failure it alerts on (fixed in AC3), "every open issue" exceeded what the test enumerates (narrowed to the script's own `--limit 100` listing), the script path was outside pr-ci's filter (AC2).
 - 2026-09-03: plan gate chose "scheduled runs only, one reused issue, auto-close on green" over "every failed run" because push and dispatch failures already have a person watching; falsified by a push-triggered publish failure going unnoticed for a week.
 
+- 2026-09-03: implement gate chose "query the run's jobs with gh run view" for the failed-variant names over matrix outputs (undocumented empty-output overwrite behavior) and over naming only the run.
+- 2026-09-03: T1+T2 done: script + stubbed-gh test (4 branches, plus cancelled-stays-silent and usage error); planted defects (no close; comment on newest not oldest) turned the test red; mapfile replaced by a read loop for macOS bash 3.2; pinned shellcheck 0.11.0 (docker) clean; pr-ci runs the test and lists the script path (the test file is under the existing scripts/** entry).
 ## Decisions
 
 ## Review

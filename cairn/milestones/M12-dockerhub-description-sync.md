@@ -1,6 +1,6 @@
 # M12: Docker Hub description sync
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -68,6 +68,7 @@ GitHub README is the single source); image publishing.
 
 - 2026-09-03: implement gate: credential = new `DOCKERHUB_PASSWORD` secret (user creates it before merge); pin = commit SHA + `# v5.0.0` comment (D-004). Action README read 2026-09-03: token needs read/write/delete scope; T1 done.
 - 2026-09-03: T2 done: `.github/workflows/dockerhub-description.yml` (push to main on README.md, workflow_dispatch; SHA-pinned action; `DOCKERHUB_PASSWORD`). actionlint 1.7.7 (docker `rhysd/actionlint:1.7.7`) clean; discrimination: a planted bad job key and an unclosed expression both reported. `docker.yml` diff against main: 0 lines.
+- 2026-09-03: CHANGELOG Unreleased/Changed entry added. T3 stays unchecked: it is the post-merge dispatch owned by /milestone-review's hygiene step per the plan. Status → review. Pre-merge user action: create the `DOCKERHUB_PASSWORD` repository secret.
 
 ## Decisions
 

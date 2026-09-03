@@ -20,6 +20,10 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ### Changed
 
+- The Docker Hub page for `jmgirard/rstudio2u` now shows this repository's
+  README, updated automatically whenever the README changes on the default
+  branch.
+
 - The double-click launchers now start the last downloaded image when the
   update cannot be downloaded (no internet, or Docker Hub unreachable), with a
   warning that the update was skipped. Previously they refused to start. If no

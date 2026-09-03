@@ -1,12 +1,12 @@
 # M10: Launcher offline fallback
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP3, IP4
 - **Resolves:** —
-- **Branch/PR:** m010-launcher-offline-fallback
+- **Branch/PR:** m010-launcher-offline-fallback · https://github.com/jmgirard/rstudio2u/pull/17 (draft)
 
 ## Goal
 
@@ -89,6 +89,7 @@ scripts (they never pull).
 - 2026-09-03: T2 done — start_windows.bat gains `:images_present` (`for /f` over `docker compose config --images`, `docker image inspect` each, both-ends trim) and the same fall-through; PowerShell harness mirrors T1 (stub call log, `offline-fallback`, `offline-config-unsupported`, `up`-never-ran on `pull-failure`, warning-absent on pull-success); CRLF blob verified; runs only in CI (windows-latest).
 - 2026-09-03: T3 done — harness work landed with T1/T2; Windows mutation (inspect result ignored) pushed as a temporary commit on draft PR #17: CI run 33813231700 turned only `pull-failure` red ("compose up was called", exit 0 not 1) with all 25 other scenarios green; mutation reverted (git revert, kept in branch history).
 - 2026-09-03: T4 done — README update FAQ says an offline launcher reuses the last downloaded image; CHANGELOG `## Unreleased` → `### Changed` entry, no milestone number.
+- 2026-09-03: all tasks done; POSIX harness + CRLF guard green locally; status → review; draft PR #17 carries the CI runs.
 
 ## Decisions
 

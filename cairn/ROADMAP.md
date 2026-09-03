@@ -7,7 +7,7 @@ _Last hygiene check: 2026-09-03 (M10–M13 planned; keepalive candidate added)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M10 | Launcher offline fallback | in-progress | — | normal | milestones/M10-launcher-offline-fallback.md |
+| M10 | Launcher offline fallback | review | — | normal | milestones/M10-launcher-offline-fallback.md |
 | M11 | Shell lint in CI | planned | — | normal | milestones/M11-shell-lint-ci.md |
 | M12 | Docker Hub description sync | planned | — | normal | milestones/M12-dockerhub-description-sync.md |
 | M13 | Weekly rebuild failure alert | planned | — | normal | milestones/M13-rebuild-failure-alert.md |

@@ -6,7 +6,7 @@
 - **Driving RR:** —
 - **Principles touched:** GP1, GP2
 - **Resolves:** —
-- **Branch/PR:** m012-dockerhub-description-sync
+- **Branch/PR:** m012-dockerhub-description-sync · https://github.com/jmgirard/rstudio2u/pull/19
 
 ## Goal
 
@@ -27,14 +27,14 @@ GitHub README is the single source); image publishing.
 
 ## Acceptance criteria
 
-- [ ] AC1: A workflow triggered by a push to the default branch that changes
+- [x] AC1: A workflow triggered by a push to the default branch that changes
       `README.md`, and by manual dispatch, updates the Hub full description
       from `README.md` and the short description from a fixed string, using a
       pinned `peter-evans/dockerhub-description` step.
-- [ ] AC2: The workflow contains no image build or push step (no
+- [x] AC2: The workflow contains no image build or push step (no
       `docker/build-push-action`, no `docker push`), and `docker.yml` is
       byte-identical to its state on the default branch at branch time.
-- [ ] AC3: The workflow file passes `actionlint`.
+- [x] AC3: The workflow file passes `actionlint`.
 
 ## Coverage
 
@@ -79,3 +79,11 @@ GitHub README is the single source); image publishing.
 - 2026-09-03: Supersedes the two entries above. One token, one secret: `DOCKERHUB_TOKEN` holds a token with read, write, and delete permission and serves both `docker.yml` (image pushes) and the description workflow. The old read+write token was deleted by the user, so the secret must be updated to the new token before any push to main.
 
 ## Review
+
+- 2026-09-03 AC1: `.github/workflows/dockerhub-description.yml` triggers on `push` to `main` with `paths: [README.md]` and on `workflow_dispatch`; the step is `peter-evans/dockerhub-description@1b9a80c0…` (commit pinned; `gh api …/git/ref/tags/v5.0.0` resolves to the same SHA), `readme-filepath: ./README.md`, `short-description` a fixed string. Verified by reading the file on the branch head. Live Hub update itself is T3, post-merge. ✔
+- 2026-09-03 AC2: `grep -n 'build-push-action\|docker push'` over the workflow matches nothing (exit 1); `git diff origin/main HEAD -- .github/workflows/docker.yml` is 0 lines. ✔
+- 2026-09-03 AC3: `rhysd/actionlint:1.7.7` (docker) over the workflow file: exit 0, no output. Discrimination: the same command over the file with `runs-on` renamed `runs_on` reports two syntax-check errors, exit 1. ✔
+
+- 2026-09-03 gate: `cairn_validate.py` exit 0 (one pre-existing advisory: `.gitignore` `cairn/references/pdf/` entry superseded; not from this milestone). No principle changed → `cairn_impact` skipped. Toolchain (docker-image slot): Dockerfile untouched by the diff; `hadolint/hadolint:v2.12.0` over `Dockerfile` exit 0; base image `rocker/r2u:${UBUNTU_VERSION}` with `ARG UBUNTU_VERSION=24.04` (explicit tag); no credentials in `ENV`/`COPY`; `.dockerignore` present (excludes `.git`, `.github`, launchers); CHANGELOG Unreleased/Changed entry present, no milestone number in it. `docker build` evidence: PR CI `build-smoke` on PR #19 (recorded below when it finishes).
+- 2026-09-03 gate (cont.): PR #19 `build-smoke` (hadolint + amd64 build + boot smoke) passed in 3m5s — the slot's `docker build` evidence.
+- 2026-09-03 review fan-out (three lenses; findings ranked by each reviewer, verbatim in chat at the gate). Prior-review lens: no prior-review evidence (archive `## Review` sections searched; PR-comment probe empty). History lens: (S1) the shared `DOCKERHUB_TOKEN` must be rotated before the Monday cron in `docker.yml` — verified: `gh secret list` shows `DOCKERHUB_TOKEN` updated 2026-09-03T23:27:48Z, after the token swap commit; resolved. (S2) commit `11ef521` (2026-07-05) dropped an equivalent job on a PAT 403 — accepted risk, exercised live by T3 post-merge; a 403 is a hotfix-tier follow-up as the plan states. (S3) the dropped job's `continue-on-error: true` is not carried over — rejected: the workflow is isolated from image publishing, so a failed sync should show red. (S4) secret naming churn across commits — no action, recorded in Decisions. Diff lens: (O1) relative README links dead on Hub — fixed now, `enable-url-completion: true`. (O2) `paths` omitted the workflow file, so a short-description edit never re-synced — fixed now. (O3) merge alone does not populate the page (README unchanged) — accepted: T3's dispatch runs in the hygiene step. (O4) Review edits uncommitted — checkpoint commit, this step. (O5) secret rotation — see S1. (O6) `actions/checkout@v4` movable tag beside a rwd credential — rejected: repo-wide convention for first-party `actions/*` (`docker.yml` uses `login-action@v3` with the same secret); D-004's pin covers the third-party action only. (O7) dispatch from a non-default branch would publish that branch's README — fixed now, job `if: github.ref == 'refs/heads/main'`. (O8) no concurrency group, so two quick README pushes could race — fixed now. (O9) README lines that read oddly on Hub ("green Code button", "Cite this repository", `<http://localhost:8787>` autolinks) — accepted limitation, Hub variant is out of scope; Known issues entry at hygiene. (O10) CHANGELOG entry under Changed rather than Added — fixed now. (O11) no `timeout-minutes` — rejected, repo convention. AC3 re-run after the fixes: actionlint exit 0.

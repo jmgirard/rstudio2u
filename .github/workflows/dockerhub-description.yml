@@ -9,14 +9,20 @@ name: Docker Hub description
 on:
   push:
     branches: [main]
-    paths: [README.md]
+    paths: [README.md, .github/workflows/dockerhub-description.yml]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: dockerhub-description
+  cancel-in-progress: true
+
 jobs:
   sync:
+    # A dispatch from any other branch would publish that branch's README.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,3 +36,6 @@ jobs:
           repository: jmgirard/rstudio2u
           short-description: "RStudio Server on rocker/r2u: fast binary R packages via bspm"
           readme-filepath: ./README.md
+          # Rewrite relative links (LICENSE, Dockerfile, CITATION.cff) to GitHub
+          # URLs; on the Hub page they would otherwise 404.
+          enable-url-completion: true

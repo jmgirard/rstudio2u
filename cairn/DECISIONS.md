@@ -40,3 +40,19 @@ expansions are the defect class worth catching in launchers that take user
 input.
 **Consequences:** Info-level findings fail the check; each must be fixed or
 disabled inline with a one-line reason.
+
+### D-004 (2026-09-03): Add peter-evans/dockerhub-description, SHA-pinned, for the Hub description sync
+
+**Context:** M12 publishes `README.md` as the Docker Hub description for
+`jmgirard/rstudio2u`. The Hub has no first-party GitHub Action for this.
+**Decision:** Use `peter-evans/dockerhub-description` in
+`.github/workflows/dockerhub-description.yml`, pinned to commit
+`1b9a80c056b620d92cedb9d9b5a223409c68ddfa` (release v5.0.0) with the version
+in a trailing comment. Considered a hand-written `curl` against the Hub API;
+rejected — the action already handles login, the 25,000-byte README limit,
+and the 100-byte short-description limit. Considered a major tag (`@v5`, the
+repo's style for other actions); rejected at the implement gate — a movable
+tag runs unreviewed code with a Hub credential. Bumping the pin is a
+dependency change: question gate plus a superseding entry.
+**Consequences:** The workflow's credential choice is milestone-local
+(M12 Decisions); only the action and its pin are decided here.

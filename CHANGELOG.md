@@ -5,6 +5,12 @@ Notable user-visible changes to the rstudio2u image. Format follows
 
 ## Unreleased
 
+### Added
+
+- The Docker Hub page for `jmgirard/rstudio2u` now shows this repository's
+  README, updated automatically whenever the README changes on the default
+  branch.
+
 ### Fixed
 
 - The ARM64 image (Apple Silicon, ARM servers) now builds reliably. The build

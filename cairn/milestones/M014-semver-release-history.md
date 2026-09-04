@@ -1,6 +1,6 @@
 # M014: Semver release history
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -64,8 +64,8 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - [x] T4: `gh release create <tag> --title <tag> --notes-file <body-file>` for each, oldest first, `--latest` only for v2.2.0; verify AC2 and AC3 by command.
 - [x] T5: On branch `m014-semver-release-history`: `git rm CHANGELOG.md` and drop the `CHANGELOG.md` line from `.dockerignore`; PROFILE `## changelog` → none as a file with notes in the release body (rocker-bayes `cairn/PROFILE.md` lines 112–117 as the model), release-walk bullets rewritten so the version decision and notes come from the milestone's user-visible changes and the handoff creates the annotated tag and release; README paragraph after the Reproducibility tag table (rocker-bayes README 196–201 as the model, adapted: R/RStudio/Pandoc/Quarto bumps are rebuilds, not releases); DESIGN Conventions line; D-005 in DECISIONS.md; ROADMAP header line `_Released 2.2.0 …_`; run `cairn_validate`.
 
-- [ ] T6: Amend AC3 through the step-6 gate to permit retargeting the `**Full changelog:**` compare link in the v2.1.0 and v2.2.0 bodies to the recreated tags; then edit both release bodies and recreate both tags (`--cleanup=verbatim`, same commits and dates) with `compare/v2.0.0...v2.1.0` (former v1.2 is v2.0.0) and `compare/v2.1.0...v2.2.0`; re-verify AC2 and the amended AC3 by command (review finding 1).
-- [ ] T7: Rewrite the v1.1.0 body from `8a2e30b` (localhost bind, the `127.0.0.1:2222:22` SSH mapping, the hardcoded 8787 port replacing `${RS_PORT}`; no-password was pre-existing) and the v1.1.2 body from `0e3715b` (sudo granted with `usermod -aG sudo` instead of `adduser`; not about `USERID`); recreate both tags and edit both releases; re-verify AC1 and AC2 (review findings 2, 3).
+- [x] T6: Amend AC3 through the step-6 gate to permit retargeting the `**Full changelog:**` compare link in the v2.1.0 and v2.2.0 bodies to the recreated tags; then edit both release bodies and recreate both tags (`--cleanup=verbatim`, same commits and dates) with `compare/v2.0.0...v2.1.0` (former v1.2 is v2.0.0) and `compare/v2.1.0...v2.2.0`; re-verify AC2 and the amended AC3 by command (review finding 1).
+- [x] T7: Rewrite the v1.1.0 body from `8a2e30b` (localhost bind, the `127.0.0.1:2222:22` SSH mapping, the hardcoded 8787 port replacing `${RS_PORT}`; no-password was pre-existing) and the v1.1.2 body from `0e3715b` (sudo granted with `usermod -aG sudo` instead of `adduser`; not about `USERID`); recreate both tags and edit both releases; re-verify AC1 and AC2 (review findings 2, 3).
 
 ## Work log
 
@@ -88,6 +88,7 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - 2026-09-04: re-audit: AC3 (full) — nothing on the wording; two adjacent notes, both handled: T6 and the return line still named `v1.2.0` (T6 reconciled; the return line stands as the record of what was returned), and D-005's "bodies unchanged" now overstates AC3 (milestone Decisions entry below).
 - 2026-09-04: T6 (partial): v2.1.0 and v2.2.0 annotated tags recreated (`--cleanup=verbatim`, same commits and taggerdates) with the retargeted links and force-pushed. `gh release edit` for both bodies was blocked by the session's command classifier; the two release-body edits are pending the user, after which AC2 and AC3 are re-verified by command.
 - 2026-09-04: T7 (partial): v1.1.0 body rewritten from `8a2e30b` (localhost bind, fixed host port 8787 replacing `${RS_PORT}`, `127.0.0.1:2222:22` SSH mapping; no-password not credited) and v1.1.2 from `0e3715b` (sudo via `usermod -aG sudo` when `ROOT=true`, not about `USERID`); both annotated tags recreated locally at the same commits and taggerdates. The tag force-push and both `gh release edit` calls were blocked by the classifier; pending the user, then AC1 and AC2 re-verified by command.
+- 2026-09-04: T6/T7 done: the user ran the pending `gh release edit` calls and the v1.1.0/v1.1.2 tag push between sessions (local and remote tag objects identical). The v2.1.0/v2.2.0 bodies were one trailing newline short of the substituted captures; re-edited here from the capture minus jq's final newline (`gh release view` appends one). Re-verified by command: AC1 (ten remote tags, type `tag`, map commits and taggerdates), AC2 (all ten bodies equal tag messages after CR-strip and trailing-blank trim), AC3 (v2.0.0 `cmp` identical to the v1.2 capture; v2.1.0/v2.2.0 identical to the v1.3/v1.4 captures after the compare-link `sed`). `cairn_validate` all checks passed; no Dockerfile or build-context change, so lint/build not rerun. Status → review.
 
 ## Decisions
 

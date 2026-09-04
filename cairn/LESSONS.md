@@ -45,3 +45,5 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-09-03 (M11): a shellcheck severity floor can pass the defect it is meant to
   catch (SC2086 is info, not warning) — plant it and see red before trusting `-S`.
 - 2026-09-03 (M12): `gh secret list` prints each secret's update time — verify a rotation with it.
+- 2026-09-04 (M13): cancelling a workflow run cancels its downstream jobs before their `if:` runs, so a cancelled run shows `cancelled`, never `skipped` — a skip needs a run that completes.
+- 2026-09-04 (M13): a matrix `include` leg with several keys is named `job (k1, k2, k3)`; set `name: job (${{ matrix.variant }})` when a script parses job names.

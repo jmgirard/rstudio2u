@@ -1,6 +1,6 @@
 # M014: Semver release history
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -64,6 +64,9 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - [x] T4: `gh release create <tag> --title <tag> --notes-file <body-file>` for each, oldest first, `--latest` only for v2.2.0; verify AC2 and AC3 by command.
 - [x] T5: On branch `m014-semver-release-history`: `git rm CHANGELOG.md` and drop the `CHANGELOG.md` line from `.dockerignore`; PROFILE `## changelog` → none as a file with notes in the release body (rocker-bayes `cairn/PROFILE.md` lines 112–117 as the model), release-walk bullets rewritten so the version decision and notes come from the milestone's user-visible changes and the handoff creates the annotated tag and release; README paragraph after the Reproducibility tag table (rocker-bayes README 196–201 as the model, adapted: R/RStudio/Pandoc/Quarto bumps are rebuilds, not releases); DESIGN Conventions line; D-005 in DECISIONS.md; ROADMAP header line `_Released 2.2.0 …_`; run `cairn_validate`.
 
+- [ ] T6: Amend AC3 through the step-6 gate to permit retargeting the `**Full changelog:**` compare link in the v2.1.0 and v2.2.0 bodies to the recreated tags; then edit both release bodies and recreate both tags (`--cleanup=verbatim`, same commits and dates) with `compare/v1.2.0...v2.1.0` and `compare/v2.1.0...v2.2.0`; re-verify AC2 and the amended AC3 by command (review finding 1).
+- [ ] T7: Rewrite the v1.1.0 body from `8a2e30b` (localhost bind, the `127.0.0.1:2222:22` SSH mapping, the hardcoded 8787 port replacing `${RS_PORT}`; no-password was pre-existing) and the v1.1.2 body from `0e3715b` (sudo granted with `usermod -aG sudo` instead of `adduser`; not about `USERID`); recreate both tags and edit both releases; re-verify AC1 and AC2 (review findings 2, 3).
+
 ## Work log
 
 - 2026-09-04: created by /milestone-plan.
@@ -78,6 +81,9 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - 2026-09-04: T5: removed `CHANGELOG.md` and its `.dockerignore` line; PROFILE changelog slot → none, release-walk and consistency-gate bullets rewritten around the release body; README Reproducibility paragraph; DESIGN Conventions line (and the existing "never reference milestone numbers" convention reworded to "project-tracking IDs" so the AC5 grep over Conventions is empty); D-005; ROADMAP release line. hadolint is not installed locally and no Dockerfile or build-context content changed, so the verify slot's lint/build was not run here; CI lint runs on the PR.
 - 2026-09-04: T5 pushed PROFILE to 128 lines (cap <120); compressed the release-walk and changelog slots in one pass to 119. `cairn_validate` all checks passed; AC4–AC6 greps by command as written. Status → review.
 
+- 2026-09-04: review: PR #21 opened as draft; AC1–AC6 verified by command; consistency gate clean (hadolint 2.12.0, cached build). Three-lens review: [O] 10 findings, [S] history none, [S] prior-review "no prior-review evidence". Triage at the gate: 1 fix (amendment), 2–4 fix, 5–6 rejected, 7 logged, 8–10 noted (Review section).
+- 2026-09-04: amendment return: AC3 — "The release bodies of v2.0.0, v2.1.0, v2.2.0 are the former v1.2, v1.3, v1.4 bodies unchanged except that the `**Full changelog:**` compare link in v2.1.0 and v2.2.0 is retargeted to `compare/v1.2.0...v2.1.0` and `compare/v2.1.0...v2.2.0`: `gh release view <new> --json body -q .body` is byte-identical to the T1 capture after that one line's substitution (`sed` over the capture), the captures committed under `cairn/milestones/M014-bodies/` and deleted at archive time." Status → in-progress for the amendment (T6) plus fix-now T7; finding 4 fixed on the branch here. Amendment-return count for AC3: 1.
+
 ## Decisions
 
 ## Review
@@ -89,3 +95,4 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - 2026-09-04 AC5: README Reproducibility paragraph states date tags = builds, releases = recipe changes, gives major/minor/patch, links `/releases`; DESIGN Conventions "Two version records" line says the same; both greps for milestone IDs return nothing. Pass.
 - 2026-09-04 AC6: D-005 present, names the fourteen deleted tags and the ten recreated ones, records release body as notes of record with no changelog file; ROADMAP header `_Released 2.2.0 …_`. Pass.
 - 2026-09-04 consistency gate: `cairn_validate` exit 0; no IP/GP principle text changed (`cairn_impact` skipped); diff is markdown plus one `.dockerignore` line, no Dockerfile or build-context change; `docker build` succeeds (fully cached, exit 0); base image `rocker/r2u:${UBUNTU_VERSION}` with default 24.04 (pre-existing); no credentials in ENV/COPY/ARG; `.dockerignore` present and excludes `.git`, `cairn`, tests. hadolint: CI's pinned 2.12.0 is clean; local 2.15.1 adds DL3025 (HEALTHCHECK CMD shell form, line 68, unchanged since 2026-07-17) — pre-existing, not introduced here.
+- 2026-09-04 findings triage (user at the gate): (1) dead compare links in v2.1.0/v2.2.0 bodies — fix via AC3 amendment, T6; (2) v1.1.2 body causal claim unsupported by 0e3715b — fix now, T7; (3) v1.1.0 body credits pre-existing no-password, omits hardcoded port — fix now, T7; (4) PROFILE release-walk said every merge publishes an image — fixed on the branch (paths-gated wording); (5) D-005 enumerations vs the D-entry rule — rejected: AC6 required the enumeration and D-entries are append-only; (6) ROADMAP stamp/date — rejected: step 9 rewrites the stamp, the release line names the publish date; (7) DESIGN convention widened to "project-tracking IDs" — logged as a deliberate superset, kept; (8) v1.1.3 folds 368cf74 — noted, per D-005 folding; (9) v1.0.0 at a README-only commit — noted, matches old v0.1; (10) `.dockerignore` — noted, harmless. History lens: no conflicts (its two flags — implement skipped local lint/build, convention rewording — covered by this review's gate run and finding 7). Prior-review lens: no prior-review evidence.

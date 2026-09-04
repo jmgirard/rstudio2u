@@ -76,10 +76,10 @@ Followed by `/cairn-release` — a container-registry release (never self-pushes
 - Release notes: drafted from the milestone's user-visible changes into a
   notes file that becomes the annotated tag message and, unchanged, the
   GitHub release body. No file in the repo is edited for a release.
-- Full local verification: `hadolint` clean and `docker build` succeeds; run the
-  scan / structure test if wired. Images are CI-built and pushed to Docker Hub
-  `jmgirard/rstudio2u` (`linux/amd64,linux/arm64`, `.github/workflows/docker.yml`)
-  on merge to main, so there is no local image build or push.
+- Full local verification: `hadolint` clean and `docker build` succeeds; scan /
+  structure test if wired. No local image build or push: `docker.yml` builds and
+  pushes `jmgirard/rstudio2u` (amd64+arm64) when a merge to main touches the
+  Dockerfile, `scripts/`, the smoke test, or itself; else the weekly rebuild does.
 - Handoff (user runs, on the merged commit): `git tag -a --cleanup=verbatim
   v<version> <commit> -F <notes>` (verbatim keeps Markdown `#` headings),
   `git push origin v<version>`, `gh release create v<version> --title

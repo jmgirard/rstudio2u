@@ -35,8 +35,7 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M09): a stub resolving the same config as the code under test gives
   false coverage; force the code's own parse to reach the output, then mutate to
   confirm. A stub answering a looped query must be argument-sensitive, multi-item (M10).
-- 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv`
-  parameter silently shadows a script-scope `$dotenv`.
+- 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv` parameter silently shadows a script-scope `$dotenv`.
 - 2026-07-18 (M09): batch `for /f "tokens=* delims= "` is trim-LEFT only; trim
   both ends with a `:~0,1` / `:~-1` loop.
 - 2026-07-18 (M09): ask `docker compose port <svc> <port>` for the real host
@@ -47,3 +46,4 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-09-03 (M12): `gh secret list` prints each secret's update time — verify a rotation with it.
 - 2026-09-04 (M13): cancelling a workflow run cancels its downstream jobs before their `if:` runs, so a cancelled run shows `cancelled`, never `skipped` — a skip needs a run that completes.
 - 2026-09-04 (M13): a matrix `include` leg with several keys is named `job (k1, k2, k3)`; set `name: job (${{ matrix.variant }})` when a script parses job names.
+- 2026-09-04 (M014): `gh release view --json body -q .body` appends a newline the body lacks, and `git tag -F` drops `#` heading lines unless `--cleanup=verbatim` — byte-compare bodies only through one identical extraction on both sides.

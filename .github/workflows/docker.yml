@@ -19,6 +19,9 @@ env:
 
 jobs:
   build:
+    # The notify job's jq filter parses this name ("build (<variant>)") to
+    # recover the failed variant names; keep the two in step.
+    name: build (${{ matrix.variant }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -165,3 +168,42 @@ jobs:
           push: true
           provenance: false
           cache-from: type=gha,scope=${{ matrix.variant }}
+
+  # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
+  # opens (or updates) a ci-failure issue and the next green run closes it
+  # (GP7). Push and dispatch runs have a person behind them and skip this job.
+  # always() is required: without it a failed build job would skip the very
+  # job that reports the failure.
+  notify:
+    needs: build
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The failed variant names come from this run's own job list (the build
+      # legs are named "build (<variant>)" above); the build job's aggregate
+      # result decides whether the issue is opened or closed.
+      - name: Open, update, or close the ci-failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # A failed job listing must not block the alert itself: warn and
+          # fall back to the script's generic "see the run summary" text.
+          jobs_json=$(gh run view "$GITHUB_RUN_ID" --json jobs) || {
+            echo "::warning::gh run view failed; the issue will not name the failed variants"
+            jobs_json='{"jobs":[]}'
+          }
+          failed=()
+          while IFS= read -r v; do
+            [ -n "$v" ] && failed+=("$v")
+          done < <(jq -r '.jobs[] | select(.name | startswith("build (")) | select(.conclusion == "failure") | .name | ltrimstr("build (") | rtrimstr(")")' <<<"$jobs_json")
+          bash ./.github/ci-failure-issue.sh "$BUILD_RESULT" "$RUN_URL" ${failed[@]+"${failed[@]}"}

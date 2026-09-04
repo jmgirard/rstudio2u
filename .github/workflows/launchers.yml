@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Launcher CRLF-in-blob guard
         run: bash scripts/tests/test_launcher_line_endings.sh
 
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Run POSIX launcher branches (stubbed docker)
         run: bash scripts/tests/posix/run_launcher_scenarios.sh
 
@@ -40,7 +40,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Run start_windows.bat branches (stubbed docker)
         shell: pwsh
         run: ./scripts/tests/windows/run_launcher_scenarios.ps1

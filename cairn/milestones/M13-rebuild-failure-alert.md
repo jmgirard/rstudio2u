@@ -38,7 +38,7 @@ email or chat notifications.
       against a stubbed `gh` that records its invocations.
 - [x] AC2: `pr-ci.yml` runs that test, and its `paths` filter includes
       `.github/ci-failure-issue.sh` and the test file.
-- [ ] AC3: `docker.yml` has a final job that `needs` the matrix job, whose
+- [x] AC3: `docker.yml` has a final job that `needs` the matrix job, whose
       condition is `always() && github.event_name == 'schedule'`, and which
       calls the script with the matrix job's result; a manual dispatch of the
       workflow shows that job skipped in the run summary.
@@ -85,6 +85,7 @@ email or chat notifications.
 - 2026-09-03: T4 pre-merge half done (actionlint + the `if:` read); the post-merge manual dispatch showing the job skipped is left to /milestone-review. Profile verify (hadolint + docker build) not run: no Dockerfile or build-context change on the branch.
 - 2026-09-03: review fix-now (reviewer findings): notify step captures `gh run view` output and warns instead of silently dropping variant names on a listing error; `$GITHUB_RUN_ID` replaces the inline expression; a comment ties the build job name to the notify jq filter; the test asserts `--limit 100`, adds the no-variant fallback-title scenario, and fails loudly without jq.
 - 2026-09-03: step-7 approval: PR #20 approved for merge; AC1 wording finding rejection accepted; AC3 dispatch clause to be evidenced post-merge on main; noble QEMU build failure to extend the existing candidate row.
+- 2026-09-04: resume: PR #20 merged 2026-09-04T00:14:51Z; post-merge dispatch on main (run 33821023680) completed with both builds green and `notify` skipped, the merge-push run (33821005213, noble failed) shows `notify` skipped too; AC3 ticked.
 
 ## Decisions
 
@@ -94,7 +95,7 @@ email or chat notifications.
 
 - AC1: `bash scripts/tests/test_ci_failure_issue.sh` green on macOS bash 3.2 (create / comment-on-oldest / comment+close each / no writes, plus cancelled-silent, usage error, and the review-added no-variant fallback); the script's listing sorts ascending so "the first returned issue" is the oldest open one (#41 in the fixture), and the test asserts identity, not counts. Reviewer mutation probes: dropping `--force`, dropping `gh issue close`, reversing the sort, and the wrong issue number all turn the suite red. → ticked.
 - AC2: `pr-ci.yml` runs the test (line 34) and its `paths` filter lists `.github/ci-failure-issue.sh` (line 16); the test file matches the pre-existing `scripts/**` entry (line 13), and PR #20's push triggered pr-ci. → ticked.
-- AC3: `docker.yml` `notify` job: `needs: build`, `if: always() && github.event_name == 'schedule'`, calls the script with `needs.build.result`; actionlint clean. Manual dispatch on the branch (run 33819236280) was cancelled before its publish step, which cancelled `notify` before its condition was evaluated, so the run-summary skip is not yet shown; T4 places that dispatch post-merge (it publishes images). → not ticked pending the post-merge dispatch.
+- AC3: `docker.yml` `notify` job: `needs: build`, `if: always() && github.event_name == 'schedule'`, calls the script with `needs.build.result`; actionlint clean. Manual dispatch on the branch (run 33819236280) was cancelled before its publish step, which cancelled `notify` before its condition was evaluated, so the run-summary skip is not yet shown; T4 places that dispatch post-merge (it publishes images). → post-merge: manual dispatch on main (run 33821023680, 2026-09-04) completed green with `notify: skipped`; the merge-push run (33821005213, noble failed under QEMU) also shows `notify: skipped`. → ticked.
 - AC4: `git diff origin/main..HEAD --name-only -- CHANGELOG.md` empty. → ticked.
 
 Consistency gate: `cairn_validate.py` all checks pass (one pre-existing scaffold-deprecation advisory on the `.gitignore` references entry). Toolchain: local `docker build --build-arg UBUNTU_VERSION=24.04` succeeds (arm64 host, no cache); hadolint 2.12.0 (CI's pin) clean, hadolint latest reports the pre-existing DL3025 on Dockerfile:68; base image `rocker/r2u:${UBUNTU_VERSION}` tag-pinned; no credentials in Dockerfile; `.dockerignore` present (excludes `.git`, `.github`, `cairn`, `scripts/tests`); CHANGELOG entry not required (internal tier, AC4). No DESIGN principle changed.

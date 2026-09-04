@@ -1,6 +1,6 @@
 # M014: Semver release history
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -76,6 +76,7 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - 2026-09-04: implement gate approved the remote operations (delete-then-create) and the seven plain-sentence bodies as drafted. T2: `gh release delete --cleanup-tag` removed all 14 releases and tags (`git ls-remote --tags origin` empty afterwards; the old tags had never been fetched locally, so `git tag -d` had nothing to remove); ten annotated tags created with `GIT_COMMITTER_DATE=<date> 12:00:00` and pushed. T3: remote lists exactly the ten map tags; each is type `tag`, points at the map commit, and carries the map taggerdate (AC1 by command).
 - 2026-09-04: T4: ten releases created oldest-first, `--latest` only on v2.2.0. First pass failed AC2/AC3 for v2.0.0–v2.2.0: `git tag -F` stripped the `### …` heading lines as comments, and the notes file carried the trailing newline jq adds at capture. Those three tags were recreated with `--cleanup=verbatim` (same commits and dates), force-pushed, and their releases re-edited from the capture minus that one byte. Re-verified: all ten bodies equal their tag message after CR-strip and trailing-blank trim (AC2); v2.0.0/v2.1.0/v2.2.0 bodies `cmp` byte-identical to the v1.2/v1.3/v1.4 captures (AC3).
 - 2026-09-04: T5: removed `CHANGELOG.md` and its `.dockerignore` line; PROFILE changelog slot → none, release-walk and consistency-gate bullets rewritten around the release body; README Reproducibility paragraph; DESIGN Conventions line (and the existing "never reference milestone numbers" convention reworded to "project-tracking IDs" so the AC5 grep over Conventions is empty); D-005; ROADMAP release line. hadolint is not installed locally and no Dockerfile or build-context content changed, so the verify slot's lint/build was not run here; CI lint runs on the PR.
+- 2026-09-04: T5 pushed PROFILE to 128 lines (cap <120); compressed the release-walk and changelog slots in one pass to 119. `cairn_validate` all checks passed; AC4–AC6 greps by command as written. Status → review.
 
 ## Decisions
 

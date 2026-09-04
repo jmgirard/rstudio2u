@@ -1,13 +1,14 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-04 (M13 done and archived; M08 row pruned; QEMU candidate row extended with the noble build-install failures)_
+_Last hygiene check: 2026-09-04 (M014 planned)_
 _Released 1.4 2026-09-04 (tag v1.4)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M014 | Semver release history | planned | — | normal | milestones/M014-semver-release-history.md |
 | M13 | Weekly rebuild failure alert | done | — | normal | milestones/archive/M13-rebuild-failure-alert.md |
 | M12 | Docker Hub description sync | done | — | normal | milestones/archive/M12-dockerhub-description-sync.md |
 | M11 | Shell lint in CI | done | — | normal | milestones/archive/M11-shell-lint-ci.md |

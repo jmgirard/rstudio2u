@@ -19,8 +19,7 @@ the major/minor/patch rule; ROADMAP header names the 2.2.0 release.
 D-006 (the one exception: v2.1.0/v2.2.0 compare links retargeted to the new tags).
 
 **Review:** three-lens fan-out, two rounds. Round 1: AC3 amendment return (compare
-links retargeted), v1.1.0 and v1.1.2 bodies rewritten from their commits, PROFILE
-publish wording fixed; D-005 enumeration and ROADMAP stamp findings rejected.
-Round 2: D-006 written; v1.0.0/v1.1.3 fold notes and the body captures noted.
-History and prior-review lenses clean both rounds. PR reported no checks (path
-filters); merged on local green. `M014-bodies/` captures deleted at archive.
+links retargeted), v1.1.0/v1.1.2 bodies rewritten from their commits, PROFILE publish
+wording fixed; D-005 enumeration and ROADMAP stamp findings rejected. Round 2: D-006
+written; v1.0.0/v1.1.3 fold notes and the body captures noted. History and prior-review
+lenses clean both rounds. No PR checks (path filters); merged on local green.

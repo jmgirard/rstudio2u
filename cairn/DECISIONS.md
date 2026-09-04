@@ -87,3 +87,17 @@ release (PROFILE release-walk); the consistency gate reads the archive
 summary, not a file entry. A tag message carrying Markdown headings is
 created with `git tag --cleanup=verbatim`, or git strips the `#` lines as
 comments.
+
+### D-006 (2026-09-04): One exception to D-005's "bodies unchanged" — the compare links, annotating D-005
+
+**Context:** D-005 states the v2.0.0, v2.1.0, v2.2.0 release bodies are the
+former v1.2, v1.3, v1.4 bodies unchanged. After it was written the M014 review
+found the `**Full changelog:**` compare links in v2.1.0 and v2.2.0 pointed at
+the deleted `v1.2`/`v1.3`/`v1.4` tags.
+**Decision:** Those two links were retargeted to
+`compare/v2.0.0...v2.1.0` and `compare/v2.1.0...v2.2.0` (former v1.2 is
+v2.0.0). Everything else in the three bodies is byte-identical to the
+pre-deletion captures. D-005 otherwise stands.
+**Consequences:** A recreated body may be edited only to repair a reference
+to a tag that no longer exists; any other change is a new release, not an
+edit.

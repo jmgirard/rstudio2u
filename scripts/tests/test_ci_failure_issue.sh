@@ -11,6 +11,8 @@
 #
 set -uo pipefail
 
+command -v jq >/dev/null || { echo "FAIL: jq is required (the gh stub applies the script's --jq filter)"; exit 1; }
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT="$HERE/../../.github/ci-failure-issue.sh"
 RUN_URL="https://github.com/o/r/actions/runs/123"
@@ -114,10 +116,15 @@ assert_no_call "success/open creates nothing"                 '^issue create '
 # 4. success, no open issue -> reads the list, writes nothing
 rc=$(run_script success "$NONE")
 assert_rc      "success/none exits 0" 0 "$rc"
-assert_call    "success/none lists open ci-failure issues"    '^issue list .*--label ci-failure .*--state open'
+assert_call    "success/none lists open ci-failure issues"    '^issue list .*--label ci-failure .*--state open .*--limit 100'
 assert_no_call "success/none creates nothing"                 '^issue create '
 assert_no_call "success/none comments on nothing"             '^issue comment '
 assert_no_call "success/none closes nothing"                  '^issue close '
+
+# 5. failure, no open issue, no variant names -> the title carries the fallback
+rc=$(run_script failure "$NONE")
+assert_rc      "failure/none/no-variants exits 0" 0 "$rc"
+assert_call    "failure/none/no-variants creates an issue with the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO")

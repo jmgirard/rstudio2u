@@ -6,7 +6,7 @@
 - **Driving RR:** —
 - **Principles touched:** GP7
 - **Resolves:** —
-- **Branch/PR:** m013-rebuild-failure-alert
+- **Branch/PR:** m013-rebuild-failure-alert · https://github.com/jmgirard/rstudio2u/pull/20
 
 ## Goal
 
@@ -83,6 +83,8 @@ email or chat notifications.
 - 2026-09-03: T1+T2 done: script + stubbed-gh test (4 branches, plus cancelled-stays-silent and usage error); planted defects (no close; comment on newest not oldest) turned the test red; mapfile replaced by a read loop for macOS bash 3.2; pinned shellcheck 0.11.0 (docker) clean; pr-ci runs the test and lists the script path (the test file is under the existing scripts/** entry).
 - 2026-09-03: T3 done: `notify` job appended to docker.yml (needs: build; if: always() && schedule; permissions issues:write + actions:read); build legs named `build (<variant>)` so `gh run view --json jobs` maps failed legs to variant names; actionlint (docker rhysd/actionlint, includes shellcheck on run blocks) clean; the jq filter checked against a synthetic jobs payload; CHANGELOG untouched.
 - 2026-09-03: T4 pre-merge half done (actionlint + the `if:` read); the post-merge manual dispatch showing the job skipped is left to /milestone-review. Profile verify (hadolint + docker build) not run: no Dockerfile or build-context change on the branch.
+- 2026-09-03: review fix-now (reviewer findings): notify step captures `gh run view` output and warns instead of silently dropping variant names on a listing error; `$GITHUB_RUN_ID` replaces the inline expression; a comment ties the build job name to the notify jq filter; the test asserts `--limit 100`, adds the no-variant fallback-title scenario, and fails loudly without jq.
+
 ## Decisions
 
 ## Review

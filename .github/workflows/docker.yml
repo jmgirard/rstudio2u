@@ -19,6 +19,8 @@ env:
 
 jobs:
   build:
+    # The notify job's jq filter parses this name ("build (<variant>)") to
+    # recover the failed variant names; keep the two in step.
     name: build (${{ matrix.variant }})
     runs-on: ubuntu-latest
     strategy:
@@ -194,9 +196,14 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
+          # A failed job listing must not block the alert itself: warn and
+          # fall back to the script's generic "see the run summary" text.
+          jobs_json=$(gh run view "$GITHUB_RUN_ID" --json jobs) || {
+            echo "::warning::gh run view failed; the issue will not name the failed variants"
+            jobs_json='{"jobs":[]}'
+          }
           failed=()
           while IFS= read -r v; do
             [ -n "$v" ] && failed+=("$v")
-          done < <(gh run view "${{ github.run_id }}" --json jobs \
-            --jq '.jobs[] | select(.name | startswith("build (")) | select(.conclusion == "failure") | .name | ltrimstr("build (") | rtrimstr(")")')
+          done < <(jq -r '.jobs[] | select(.name | startswith("build (")) | select(.conclusion == "failure") | .name | ltrimstr("build (") | rtrimstr(")")' <<<"$jobs_json")
           bash ./.github/ci-failure-issue.sh "$BUILD_RESULT" "$RUN_URL" ${failed[@]+"${failed[@]}"}

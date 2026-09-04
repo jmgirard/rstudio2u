@@ -2,6 +2,7 @@
 
 _The only authority on milestone status. Grouped by status, not ID._
 _Last hygiene check: 2026-09-04 (M13 done and archived; M08 row pruned; QEMU candidate row extended with the noble build-install failures)_
+_Released 1.4 2026-09-04 (tag v1.4)_
 
 ## Milestones
 

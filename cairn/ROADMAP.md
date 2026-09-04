@@ -8,7 +8,7 @@ _Released 1.4 2026-09-04 (tag v1.4)_
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M014 | Semver release history | planned | — | normal | milestones/M014-semver-release-history.md |
+| M014 | Semver release history | in-progress | — | normal | milestones/M014-semver-release-history.md |
 | M13 | Weekly rebuild failure alert | done | — | normal | milestones/archive/M13-rebuild-failure-alert.md |
 | M12 | Docker Hub description sync | done | — | normal | milestones/archive/M12-dockerhub-description-sync.md |
 | M11 | Shell lint in CI | done | — | normal | milestones/archive/M11-shell-lint-ci.md |

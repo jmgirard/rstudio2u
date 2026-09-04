@@ -1,13 +1,13 @@
 # M014: Semver release history
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — public GitHub releases and the README's versioning text
-- **Branch/PR:** —
+- **Branch/PR:** `m014-semver-release-history`
 
 ## Goal
 
@@ -58,7 +58,7 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 
 ## Tasks
 
-- [ ] T1: Capture the pre-deletion state: every release body via `gh release view <tag> --json body -q .body > cairn/milestones/M014-bodies/<tag>.md` (all 14, committed on the branch), plus the tag→commit list in the work log. Draft the seven short bodies for v1.0.0–v1.2.0 from `git show <commit>`.
+- [x] T1: Capture the pre-deletion state: every release body via `gh release view <tag> --json body -q .body > cairn/milestones/M014-bodies/<tag>.md` (all 14, committed on the branch), plus the tag→commit list in the work log. Draft the seven short bodies for v1.0.0–v1.2.0 from `git show <commit>`.
 - [ ] T2: Delete the 14 old releases and tags first (`gh release delete <tag> --cleanup-tag --yes` for each, `git tag -d` locally; confirm `git ls-remote --tags origin` is empty), then create the ten annotated tags with `GIT_COMMITTER_DATE="<date> 12:00:00" git tag -a <tag> <commit> -F <body-file>` and push them (`git push origin <tag>…`). (Direct remote operation, approved at the pre-implementation gate; the T1 captured bodies make it recoverable.)
 - [ ] T3: Verify the tag set after T2 (AC1 by command): `git ls-remote --tags origin | grep -v '\^{}'` shows ten refs, each `git cat-file -t` prints `tag`, dates and commits match the map.
 - [ ] T4: `gh release create <tag> --title <tag> --notes-file <body-file>` for each, oldest first, `--latest` only for v2.2.0; verify AC2 and AC3 by command.
@@ -71,6 +71,7 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 - 2026-09-04: plan gate chose one release v2.2.0 at e0893aa carrying the whole former v1.4 body over splitting a v2.2.0 at dac1119 (2026-07-21) plus v2.3.0, because the v1.4 body covers both spans and splitting it would rewrite preserved notes; falsified by a reader needing the July and September changes dated separately.
 - 2026-09-04: plan chose the release body as the notes of record (changelog file removed) over keeping CHANGELOG.md, because the 1.4 body already duplicated the file and rocker-bayes D-002 has the same shape; falsified by a consumer needing notes inside the repo checkout (the annotated tag message carries them).
 
+- 2026-09-04: T1: captured all 14 release bodies under `cairn/milestones/M014-bodies/` (v0.1–v1.1 bodies carry CRLF, normalized to LF by git at commit; v1.2–v1.4, the AC3 bodies, carry none); pre-deletion tag→commit: v0.1→f48e0be, v0.2→8b0d8f9, v0.3→867f786, v0.4→6244d5c, v0.5→3ef2e7c, v0.6→375cd98, v0.7→17297c6, v0.8→1b60ada, v0.9→e4db9a9, v1.0→0230e8e, v1.1→36e36f6, v1.2→98f3a44, v1.3→11ef521, v1.4→e0893aa (only v1.4 was an annotated tag). Seven short bodies drafted from the commit diffs; shown at the implement gate.
 - 2026-09-04: plan gate chose delete-old-then-create-new over create-new-then-delete-old (user choice: a clean slate); the captured bodies bound the recovery cost. Release window declared by the user at the gate ("create them now"); old bodies committed on the branch under `cairn/milestones/M014-bodies/`, deleted at archive.
 
 ## Decisions

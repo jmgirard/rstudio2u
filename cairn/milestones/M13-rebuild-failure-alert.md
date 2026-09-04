@@ -84,6 +84,7 @@ email or chat notifications.
 - 2026-09-03: T3 done: `notify` job appended to docker.yml (needs: build; if: always() && schedule; permissions issues:write + actions:read); build legs named `build (<variant>)` so `gh run view --json jobs` maps failed legs to variant names; actionlint (docker rhysd/actionlint, includes shellcheck on run blocks) clean; the jq filter checked against a synthetic jobs payload; CHANGELOG untouched.
 - 2026-09-03: T4 pre-merge half done (actionlint + the `if:` read); the post-merge manual dispatch showing the job skipped is left to /milestone-review. Profile verify (hadolint + docker build) not run: no Dockerfile or build-context change on the branch.
 - 2026-09-03: review fix-now (reviewer findings): notify step captures `gh run view` output and warns instead of silently dropping variant names on a listing error; `$GITHUB_RUN_ID` replaces the inline expression; a comment ties the build job name to the notify jq filter; the test asserts `--limit 100`, adds the no-variant fallback-title scenario, and fails loudly without jq.
+- 2026-09-03: step-7 approval: PR #20 approved for merge; AC1 wording finding rejection accepted; AC3 dispatch clause to be evidenced post-merge on main; noble QEMU build failure to extend the existing candidate row.
 
 ## Decisions
 

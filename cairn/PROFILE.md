@@ -38,8 +38,9 @@ cairn-file checks (`cairn_validate`, coverage completeness, `cairn_impact`):
   image), never `--build-arg` (visible in `docker history`) or committed files.
 - A `.dockerignore` is present and excludes build-context noise (`.git`, local
   caches) — stray context is drift.
-- The declared changelog (`## changelog` slot) has an entry for this milestone's
-  user-visible changes (no milestone numbers in user-facing text).
+- The `## changelog` slot declares none as a file: the milestone's user-visible
+  changes are stated in its archive summary so the next release's notes can be
+  drafted from it (no milestone numbers in user-facing text).
 
 ## test-doctrine
 Container-mechanical test expectations layered on the universal "What gets a
@@ -68,22 +69,21 @@ but the image itself is checked at the image level:
 
 ## release-walk
 Followed by `/cairn-release` — a container-registry release (never self-pushes):
-- Version decision (patch/minor/major) from the declared changelog; pre-1.0
-  conventions per DESIGN.md.
-- Changelog consolidation (the declared file): retitle the dev heading to the
-  version; group entries; prune noise.
+- Version decision (patch/minor/major) from the milestone's user-visible
+  changes under D-005: major = the environment changes under users; minor =
+  something added or upgraded; patch = a fix. Docs, refactors, and rebuilds
+  (R/RStudio/Pandoc/Quarto bumps included) get no release.
+- Release notes: drafted from the milestone's user-visible changes into a
+  notes file that becomes the annotated tag message and, unchanged, the
+  GitHub release body. No file in the repo is edited for a release.
 - Full local verification: `hadolint` clean and `docker build` succeeds; run the
-  scan / structure test if wired.
-- Build the release image and tag it `v<version>` (and the moving `:latest` if
-  the repo publishes one); a multi-arch repo builds with `docker buildx
-  --platform`.
-- Handoff checklist (user runs): `docker push <registry>/<image>:v<version>`
-  (GHCR / Docker Hub / the declared registry), confirm the pushed tag, then tag
-  the git commit `v<version>` and cut the GitHub release. cairn pushes nothing.
-- This repo: registry is Docker Hub (`jmgirard/rstudio2u`), multi-arch
-  (`linux/amd64,linux/arm64` via buildx). CI (`.github/workflows/docker.yml`)
-  builds and pushes both variants on push to main and weekly — image publishing
-  is CI-driven, so the release-walk's push handoff is normally a merge to main.
+  scan / structure test if wired. Images are CI-built and pushed to Docker Hub
+  `jmgirard/rstudio2u` (`linux/amd64,linux/arm64`, `.github/workflows/docker.yml`)
+  on merge to main, so there is no local image build or push.
+- Handoff (user runs, on the merged commit): `git tag -a --cleanup=verbatim
+  v<version> <commit> -F <notes>` (verbatim keeps Markdown `#` headings),
+  `git push origin v<version>`, `gh release create v<version> --title
+  v<version> --notes-file <notes> --latest`. cairn pushes nothing.
 
 ## init-detection
 Recognized by `cairn-init` when a **`Dockerfile`** is present at the repo root
@@ -115,4 +115,5 @@ universal layer, so they are not repeated here.
 
 ## changelog
 The repo's changelog file, read by `/hotfix`, the release-walk, and the
-consistency-gate: **`CHANGELOG.md`**.
+consistency-gate: **none** as a file. Release notes live in the GitHub release
+body of each `v<major>.<minor>.<patch>` tag, equal to the tag message (D-005).

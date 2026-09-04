@@ -2,7 +2,7 @@
 
 _The only authority on milestone status. Grouped by status, not ID._
 _Last hygiene check: 2026-09-04 (M014 planned)_
-_Released 1.4 2026-09-04 (tag v1.4)_
+_Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 

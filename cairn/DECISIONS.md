@@ -56,3 +56,34 @@ tag runs unreviewed code with a Hub credential. Bumping the pin is a
 dependency change: question gate plus a superseding entry.
 **Consequences:** The workflow's credential choice is milestone-local
 (M12 Decisions); only the action and its pin are decided here.
+
+### D-005 (2026-09-04): Docker tags record builds; semver git releases record recipe changes
+
+**Context:** The fourteen git tags and GitHub releases v0.1, v0.2, v0.3,
+v0.4, v0.5, v0.6, v0.7, v0.8, v0.9, v1.0, v1.1, v1.2, v1.3, v1.4 carried no
+consistent meaning: v0.2, v0.3, v0.5, and v0.7 pointed at README edits, and
+most of the rest marked RStudio version bumps that the weekly rebuild now
+performs with no release. `CHANGELOG.md` duplicated the v1.4 release body.
+rocker-bayes settled the same question as its D-002.
+**Decision:** Two records with distinct meanings. The immutable
+`<variant>-<date>` and `<variant>-<rstudio>` Docker tags CI publishes on every
+build are the *build* record. Annotated git tags `v<major>.<minor>.<patch>`,
+each with a GitHub release whose body equals the tag message, are the
+*recipe* record: major when the environment changes under users (base image
+family, Docker tag scheme, runtime interface); minor when something is added
+or upgraded (variant, launcher feature, bundled tool, script behavior); patch
+for a fix. Docs, refactors, and rebuilds with no recipe change get no release;
+unreleased changes fold into the next one. Release notes live in the release
+body; there is no changelog file (PROFILE `## changelog` slot: none). The
+fourteen tags and releases above were deleted and the history re-released as
+v1.0.0, v1.0.1, v1.1.0, v1.1.1, v1.1.2, v1.1.3, v1.2.0, v2.0.0, v2.1.0,
+v2.2.0 — annotated tags backdated to their commits, the v2.x bodies being the
+former v1.2, v1.3, v1.4 bodies unchanged. Considered keeping `CHANGELOG.md`
+beside the releases; rejected — it duplicated the release body, and the
+weekly toolchain bumps would either clutter it or go unrecorded either way.
+**Consequences:** `/cairn-release` decides the version and drafts the notes
+from the milestone's user-visible changes and hands off creating the tag and
+release (PROFILE release-walk); the consistency gate reads the archive
+summary, not a file entry. A tag message carrying Markdown headings is
+created with `git tag --cleanup=verbatim`, or git strips the `#` lines as
+comments.

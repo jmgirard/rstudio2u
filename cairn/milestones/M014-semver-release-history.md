@@ -7,7 +7,7 @@
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — public GitHub releases and the README's versioning text
-- **Branch/PR:** `m014-semver-release-history`
+- **Branch/PR:** `m014-semver-release-history` · https://github.com/jmgirard/rstudio2u/pull/21
 
 ## Goal
 
@@ -40,12 +40,12 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 
 ## Acceptance criteria
 
-- [ ] AC1: `git ls-remote --tags origin | grep -v '\^{}'` lists exactly the ten tags in the Release map and no others; for each, `git cat-file -t` prints `tag`, `git log -1 --format=%H <tag>^{commit}` starts with the map's commit, and `git for-each-ref --format='%(taggerdate:short)' refs/tags/<tag>` prints the map's date.
-- [ ] AC2: `gh release list --limit 50` lists exactly those ten releases with `v2.2.0` marked Latest, and for each the release body (`gh release view <tag> --json body -q .body`) equals the tag message (`git tag -l --format='%(contents)' <tag>`) after both are passed through `sed -e 's/\r$//'` and trailing blank lines are trimmed.
-- [ ] AC3: The release bodies of v2.0.0, v2.1.0, v2.2.0 are the former v1.2, v1.3, v1.4 bodies unchanged: `gh release view <new> --json body -q .body` is byte-identical to the file T1 captured from `gh release view <old> --json body -q .body` before deletion (the three captured files are committed under `cairn/milestones/M014-bodies/` as the evidence artifact and deleted at archive time).
-- [ ] AC4: `CHANGELOG.md` is absent from the tree; `git grep -il changelog HEAD --` on the branch head matches only `cairn/PROFILE.md`, `cairn/DECISIONS.md`, and paths under `cairn/milestones/`; the PROFILE `## changelog` slot declares none as a file; `python3 "$CAIRN/scripts/cairn_validate.py"` (the plugin script, `CAIRN=/Users/jmgirard/.claude/skills/cairn`) passes.
-- [ ] AC5: README's Reproducibility section carries a paragraph stating that Docker date tags record builds and GitHub releases record recipe changes, giving the major/minor/patch rule from Scope and linking `https://github.com/jmgirard/rstudio2u/releases`; DESIGN Conventions state the same in one line; `grep -nE '\bM[0-9]+\b|[Mm]ilestone' README.md` and the same grep over the DESIGN Conventions section both return nothing.
-- [ ] AC6: `cairn/DECISIONS.md` gains a D-entry stating the rule in Scope, naming the fourteen deleted tags `v0.1`–`v1.4` and the ten recreated tags, and recording that release notes live in the release body with no changelog file; the ROADMAP header release line names v2.2.0.
+- [x] AC1: `git ls-remote --tags origin | grep -v '\^{}'` lists exactly the ten tags in the Release map and no others; for each, `git cat-file -t` prints `tag`, `git log -1 --format=%H <tag>^{commit}` starts with the map's commit, and `git for-each-ref --format='%(taggerdate:short)' refs/tags/<tag>` prints the map's date.
+- [x] AC2: `gh release list --limit 50` lists exactly those ten releases with `v2.2.0` marked Latest, and for each the release body (`gh release view <tag> --json body -q .body`) equals the tag message (`git tag -l --format='%(contents)' <tag>`) after both are passed through `sed -e 's/\r$//'` and trailing blank lines are trimmed.
+- [x] AC3: The release bodies of v2.0.0, v2.1.0, v2.2.0 are the former v1.2, v1.3, v1.4 bodies unchanged: `gh release view <new> --json body -q .body` is byte-identical to the file T1 captured from `gh release view <old> --json body -q .body` before deletion (the three captured files are committed under `cairn/milestones/M014-bodies/` as the evidence artifact and deleted at archive time).
+- [x] AC4: `CHANGELOG.md` is absent from the tree; `git grep -il changelog HEAD --` on the branch head matches only `cairn/PROFILE.md`, `cairn/DECISIONS.md`, and paths under `cairn/milestones/`; the PROFILE `## changelog` slot declares none as a file; `python3 "$CAIRN/scripts/cairn_validate.py"` (the plugin script, `CAIRN=/Users/jmgirard/.claude/skills/cairn`) passes.
+- [x] AC5: README's Reproducibility section carries a paragraph stating that Docker date tags record builds and GitHub releases record recipe changes, giving the major/minor/patch rule from Scope and linking `https://github.com/jmgirard/rstudio2u/releases`; DESIGN Conventions state the same in one line; `grep -nE '\bM[0-9]+\b|[Mm]ilestone' README.md` and the same grep over the DESIGN Conventions section both return nothing.
+- [x] AC6: `cairn/DECISIONS.md` gains a D-entry stating the rule in Scope, naming the fourteen deleted tags `v0.1`–`v1.4` and the ten recreated tags, and recording that release notes live in the release body with no changelog file; the ROADMAP header release line names v2.2.0.
 
 ## Coverage
 
@@ -81,3 +81,11 @@ Skipped by rule: the seven RStudio-version-bump-only commits (2025-06-29 … 202
 ## Decisions
 
 ## Review
+
+- 2026-09-04 AC1: `git ls-remote --tags origin` lists exactly the ten map tags; each `cat-file -t` prints `tag`, points at the map commit (f48e0be … e0893aa), and carries the map taggerdate (2025-03-24 … 2026-09-03). Pass.
+- 2026-09-04 AC2: `gh release list --limit 50` shows the ten releases, v2.2.0 Latest; all ten bodies equal their tag message after CR-strip and trailing-blank trim (`cmp` clean). Pass.
+- 2026-09-04 AC3: v2.0.0/v2.1.0/v2.2.0 bodies `cmp` byte-identical to `M014-bodies/v1.2.md`, `v1.3.md`, `v1.4.md` (2288, 1038, 4123 bytes). Pass.
+- 2026-09-04 AC4: `CHANGELOG.md` absent; `git grep -il changelog HEAD --` matches only PROFILE, DECISIONS, and `cairn/milestones/` paths; PROFILE `## changelog` slot reads none as a file; `cairn_validate` all checks passed (one pre-existing scaffold-deprecation advisory). Pass.
+- 2026-09-04 AC5: README Reproducibility paragraph states date tags = builds, releases = recipe changes, gives major/minor/patch, links `/releases`; DESIGN Conventions "Two version records" line says the same; both greps for milestone IDs return nothing. Pass.
+- 2026-09-04 AC6: D-005 present, names the fourteen deleted tags and the ten recreated ones, records release body as notes of record with no changelog file; ROADMAP header `_Released 2.2.0 …_`. Pass.
+- 2026-09-04 consistency gate: `cairn_validate` exit 0; no IP/GP principle text changed (`cairn_impact` skipped); diff is markdown plus one `.dockerignore` line, no Dockerfile or build-context change; `docker build` succeeds (fully cached, exit 0); base image `rocker/r2u:${UBUNTU_VERSION}` with default 24.04 (pre-existing); no credentials in ENV/COPY/ARG; `.dockerignore` present and excludes `.git`, `cairn`, tests. hadolint: CI's pinned 2.12.0 is clean; local 2.15.1 adds DL3025 (HEALTHCHECK CMD shell form, line 68, unchanged since 2026-07-17) — pre-existing, not introduced here.

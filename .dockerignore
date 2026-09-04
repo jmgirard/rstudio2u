@@ -16,7 +16,6 @@ CITATION.cff
 .DS_Store
 cairn
 CLAUDE.md
-CHANGELOG.md
 
 # Test harnesses are run from the repo, never from inside the image.
 scripts/tests

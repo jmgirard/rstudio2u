@@ -55,7 +55,13 @@ reproducibility.
   auth is disabled.
 - CI (`.github/workflows/docker.yml`) builds both variants for
   `linux/amd64,linux/arm64` on push to main and weekly.
-- User-facing docs (README) never reference milestone numbers.
+- **Two version records:** immutable Docker tags record *builds*; annotated
+  git tags `v<major>.<minor>.<patch>` with matching GitHub releases record
+  *recipe changes* under semver (D-005: major = the environment changes under
+  users, minor = something added or upgraded, patch = a fix; docs, refactors,
+  and rebuilds get none); release notes live in the release body, not in a
+  file in the repo.
+- User-facing docs (README) never reference project-tracking IDs.
 
 ## Design Principles
 

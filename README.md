@@ -143,6 +143,15 @@ Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
 derivative image and it will not change under you. Browse the
 [available tags](https://hub.docker.com/r/jmgirard/rstudio2u/tags) on Docker Hub.
 
+The image is rebuilt weekly by CI, so the Docker date tags are the record of
+*builds*. The [GitHub releases](https://github.com/jmgirard/rstudio2u/releases)
+are the record of changes to the *recipe*: a new base image family, tag scheme,
+or runtime interface (port, user, volume, environment variables) is a major
+version; a new variant, launcher feature, bundled tool, or script behavior is a
+minor version; a fix is a patch. New R, RStudio, Pandoc, or Quarto versions
+arrive through the weekly rebuild and get no release, and neither do docs or
+refactors.
+
 For project-level reproducibility, [renv](https://rstudio.github.io/renv/) works
 well inside the container: `renv::init()` records exact package versions in a
 lockfile you can commit, and `renv::restore()` rebuilds them — quickly, since

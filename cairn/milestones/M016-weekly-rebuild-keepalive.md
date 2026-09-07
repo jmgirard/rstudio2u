@@ -1,13 +1,13 @@
 # M016: Keep the weekly rebuild alive
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — it protects the moving tags' always-fresh commitment and adds commits to the repo's public history
-- **Branch/PR:** —
+- **Branch/PR:** `m016-weekly-rebuild-keepalive`
 
 ## Goal
 
@@ -70,7 +70,7 @@ issue by T6, and no criterion below claims it.
 
 ## Tasks
 
-- [ ] T1: Write `.github/keepalive.sh` — three positional arguments, per-argument
+- [x] T1: Write `.github/keepalive.sh` — three positional arguments, per-argument
       validation for each class AC1 names (each rejection naming the argument
       it rejected), the age comparison, and on the push branch a
       `git commit --allow-empty` with an identity and a message set in the
@@ -109,6 +109,8 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: plan gate chose an automated empty keepalive commit over a documented manual check because the manual check leaves the guarded failure dependent on recall; falsified by evidence that GitHub does not count a bot-pushed commit as repository activity.
 - 2026-09-06: plan gate chose an empty commit over a dated stamp file because the stamp file adds a tracked file existing only to be touched; falsified by evidence that tooling on this repo's path ignores empty commits.
 - 2026-09-06: plan gate chose a repository-scoped push credential over raising the repo-wide workflow write permission because the latter widens the ceiling for every present and future workflow; falsified by the credential proving unrenewable in practice.
+- 2026-09-06: implement gate chose a repository deploy key over a fine-grained account token (repo-scoped by construction, no expiry to lapse silently), and the `github-actions[bot]` identity for the commit.
+- 2026-09-06: T1 — `.github/keepalive.sh` written: three validated positional arguments, dates converted in shell arithmetic (no `date` flag portability, and an impossible date like 2026-02-30 is rejected, not only a mis-shaped one); stale means exactly `git commit --allow-empty` + `git push`, fresh means no git call.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

@@ -6,8 +6,8 @@
 #   2. Toolchain  — a bspm binary package installs via apt and loads, and Quarto
 #                   renders a document to HTML. These exercise the paths where
 #                   arm64 parity can silently diverge (bundled/symlinked Quarto,
-#                   the r2u binary install path), so the same checks run on the
-#                   emulated arm64 image on the publish path (GP3, Known issue #3).
+#                   the r2u binary install path), so CI runs the same checks on
+#                   the arm64 image, natively, before publishing (GP3).
 # Exits 0 only when both phases pass; non-zero if the container exits, reports
 # unhealthy, times out, or either toolchain check fails. This is the gate that
 # keeps an unattended rebuild from pushing a moving tag whose server won't start
@@ -97,7 +97,7 @@ echo "PASS: $PKG installed via bspm as $apt_pkg and loads"
 # Quarto render: render a chunk-free .qmd to HTML. No code engine (so no R/py
 # package is needed — IP1), which targets the Quarto CLI + Pandoc binary itself,
 # exactly the arch-sensitive surface that the arm64 bundled/symlinked fallback
-# can break (Known issue #3).
+# can break (GP3).
 echo "==> [2/2] quarto render to HTML"
 if ! docker exec "$NAME" bash -c '
   set -e
@@ -124,7 +124,7 @@ fi
 echo "PASS: quarto rendered .qmd to HTML"
 
 # --- Phase 3: mirror-failure UX ---------------------------------------------
-# Known issue #1: the r2u binary mirror is occasionally unreachable, and a raw
+# The r2u binary mirror is occasionally unreachable (a known issue), and a raw
 # apt failure is opaque to a classroom user. Prove three behaviours on the built
 # image: (a) an ordinary "package does not exist" error does NOT masquerade as a
 # mirror outage, (b) the hint wrapper does not mask or fabricate errors on odd

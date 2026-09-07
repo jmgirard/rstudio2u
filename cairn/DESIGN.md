@@ -53,8 +53,10 @@ reproducibility.
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while
   auth is disabled.
-- CI (`.github/workflows/docker.yml`) builds both variants for
-  `linux/amd64,linux/arm64` on push to main and weekly.
+- CI (`.github/workflows/docker.yml`) builds both variants for `linux/amd64`
+  and `linux/arm64` on push to main and weekly, each architecture on a runner
+  of that architecture — nothing is emulated (corrected M015). Every per-arch
+  image is booted and smoke-tested before its variant's tags are attached.
 - **Two version records:** immutable Docker tags record *builds*; annotated
   git tags `v<major>.<minor>.<patch>` with matching GitHub releases record
   *recipe changes* under semver (D-005: major = the environment changes under
@@ -129,3 +131,7 @@ _Warts confirmed in the 2026-07-17 interview:_
   `<http://localhost:8787>` autolinks). Accepted: one README, no Hub variant.
 - `scripts/` is a fork of rocker_scripts: upstream fixes do not flow in
   automatically (accepted cost of the owned-fork posture).
+- The arm64 half of every build depends on GitHub's hosted arm64 runners,
+  free only while the repo stays public and pinned to one Ubuntu version
+  (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
+  (added M015).

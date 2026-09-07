@@ -20,11 +20,13 @@ QUARTO_VERSION=${1:-${QUARTO_VERSION:-"default"}}
 # arm64 installs natively — Quarto has published linux-arm64 since 1.9.38.
 ARCH=$(dpkg --print-architecture)
 
-# Every `quarto …` invocation below runs Quarto's bundled Deno (V8), which
-# intermittently aborts with SIGILL (exit 132) under QEMU aarch64 emulation
-# during the arm64 image build — a re-run of the identical command succeeds. So
-# each Deno-invoking call is wrapped in retry.sh; a genuinely broken quarto
-# still fails every attempt and aborts the build.
+# Every `quarto …` invocation below runs Quarto's bundled Deno (V8), and each
+# Deno-invoking call is wrapped in retry.sh so a transient failure does not
+# abort the image build; a genuinely broken quarto still fails every attempt
+# and aborts it. The wrapper was added for a SIGILL (exit 132) crash Deno hit
+# under QEMU aarch64 emulation; CI now builds each architecture on a runner of
+# that architecture (D-007), so that crash class is gone and the retries are
+# kept for ordinary transients.
 
 # a function to install apt packages only if they are not installed
 function apt_install() {

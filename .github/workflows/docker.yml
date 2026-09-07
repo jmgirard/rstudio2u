@@ -71,10 +71,10 @@ jobs:
 
       # Resolve + validate the current stable RStudio version. The resolver
       # exits non-zero on an empty/HTML/format-changed scrape, so pipefail + -e
-      # abort the job here rather than building a mis-versioned image (Known
-      # issue #2 / GP2). --tag gives the '-' form used both for the immutable
-      # tag suffix (computed once in the publish job) and for the
-      # RSTUDIO_VERSION build-arg.
+      # abort the job here rather than building a mis-versioned image (the
+      # version-scrape known issue / GP2). --tag gives the '-' form used both
+      # for the immutable tag suffix (computed once in the publish job) and for
+      # the RSTUDIO_VERSION build-arg.
       - name: Resolve the RStudio version
         id: meta
         run: |
@@ -135,9 +135,8 @@ jobs:
       # A non-zero exit here fails this leg and, because the publish job
       # requires both of a variant's digests, blocks that variant's tags from
       # moving. The deepened smoke exercises the bundled/symlinked Quarto and
-      # r2u binary paths where arm64 can diverge from amd64 (GP3, Known issue
-      # #3); running on native hardware, arm64 needs no longer timeout than
-      # amd64.
+      # r2u binary paths where arm64 can diverge from amd64 (GP3); running on
+      # native hardware, arm64 needs no longer timeout than amd64.
       - name: Smoke-test ${{ matrix.variant }} (${{ matrix.arch }})
         env:
           SMOKE_TIMEOUT: "300"
@@ -223,9 +222,13 @@ jobs:
         env:
           TEST_MODE: ${{ inputs.test_mode }}
           TAGS: ${{ steps.tags.outputs.tags }}
-        working-directory: /tmp/digests
         run: |
           set -euo pipefail
+          # mkdir, not working-directory: download-artifact creates no directory
+          # when its pattern matches nothing (every leg of this variant failed),
+          # and that case must reach the explicit error below, not a cd failure.
+          mkdir -p /tmp/digests
+          cd /tmp/digests
           n=$(find . -type f | wc -l | tr -d ' ')
           if [ "$n" -ne 2 ]; then
             echo "::error::expected 2 verified digests for ${{ matrix.variant }}, found $n — a build leg failed or was skipped"

@@ -99,7 +99,7 @@ rows.
       `scripts/tests/test_ci_failure_issue.sh` with fixtures in the new
       matrix's job-name shape — M13's lesson: a matrix `include` leg with
       several keys is named `job (k1, k2, k3)`.
-- [ ] T4: Correct the prose that states the QEMU motivation as current —
+- [x] T4: Correct the prose that states the QEMU motivation as current —
       `scripts/install_quarto.sh:22-27`, `scripts/retry.sh:5-13`, and the
       `docker.yml` step comments — against what the merged workflow does;
       update `DESIGN.md` Conventions (the CI line) and Known issues; reword
@@ -114,6 +114,9 @@ rows.
 - 2026-09-06: T1/T2 minor amendment: T1 wording now says the leg pushes by digest and pulls that digest back to boot it, replacing the `load: true` phrasing, per the gate's push-then-pull choice.
 - 2026-09-06: T1+T2: `docker.yml` build job is now a 4-leg (variant x arch) matrix on native runners with one build step per leg, plus a per-variant `publish` job that assembles the manifest list from two verified digests and a `test_mode` dispatch input that stops at `imagetools create --dry-run`.
 - 2026-09-06: T3: `ci-failure-issue.sh` now takes the `gh run view --json jobs` document and extracts the failed variants itself (deduplicated); `docker.yml`'s inline jq is gone. Suite extended with six job-listing fixtures and proven to go red under three planted defects (dedup removed, job-name guard removed, variant field untrimmed).
+- 2026-09-06: T4: corrected the QEMU-as-current prose in `scripts/install_quarto.sh`, `scripts/retry.sh`, `scripts/tests/test_retry.sh`, `.github/smoke-test.sh`, the `docker.yml` comments, `DESIGN.md` Conventions (marked corrected M015) and the M05 LESSONS line (marked corrected M015, recompressed to keep the file at 49 lines); added a DESIGN Known issue for the hosted-arm64-runner dependency; reworded the pr-ci arm64 candidate row.
+- 2026-09-06: T4 also repointed `pr-ci.yml`'s `cache-from` to the new per-arch scope `noble-amd64` and corrected its comment; the old `scope=noble` no longer exists after T1.
+- 2026-09-06: verify: shellcheck 0.11.0 (-x -S info) clean over all tracked shell files; both shell suites pass; `hadolint` clean at 2.12.0, the version `hadolint/hadolint-action@v3.1.0` pins. Current hadolint (2.14) reports DL3025 on the Dockerfile's HEALTHCHECK — present identically on main, unrelated to this branch, filed as a [low] candidate row.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 
 ## Decisions

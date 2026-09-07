@@ -2,14 +2,15 @@
 #
 # Run a command with bounded retries, for commands that fail *transiently*.
 #
-# Motivating case: Quarto's bundled Deno (V8) intermittently aborts with SIGILL
-# (exit 132) when executed under QEMU aarch64 emulation during the multi-arch
-# image build — the identical invocation succeeds on a re-run. Wrapping the
-# Deno-invoking quarto commands in a bounded retry turns that flaky crash into a
-# reliable install (GP4-licensed hardening of the owned fork; the same
-# ride-out-a-transient-hiccup posture as the apt/bspm retries). A genuinely
-# broken command fails every attempt and still exits non-zero, so retrying
-# hardens against flakiness without masking a real failure.
+# Motivating case, since resolved: Quarto's bundled Deno (V8) intermittently
+# aborted with SIGILL (exit 132) when executed under QEMU aarch64 emulation
+# during the multi-arch image build. CI no longer emulates anything — each
+# architecture builds on a runner of that architecture (D-007) — so that crash
+# class is gone. The wrapper stays for the posture it encodes: ride out a
+# transient hiccup, the same as the apt/bspm retries (GP4-licensed hardening of
+# the owned fork). A genuinely broken command fails every attempt and still
+# exits non-zero, so retrying hardens against flakiness without masking a real
+# failure.
 #
 # Usage: retry.sh <max-attempts> <command> [args...]
 #   stdout/stderr of the command pass through untouched; retry diagnostics go to

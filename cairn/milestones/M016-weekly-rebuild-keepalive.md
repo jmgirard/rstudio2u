@@ -1,6 +1,6 @@
 # M016: Keep the weekly rebuild alive
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -91,7 +91,7 @@ issue by T6, and no criterion below claims it.
 - [x] T4: Run `scripts/tests/test_keepalive.sh` from `pr-ci.yml`'s unit-test
       step and add `.github/keepalive.sh` to that workflow's `paths` filter
       (`.github/workflows/**` already matches, the script does not).
-- [ ] T5: Hand the maintainer the exact steps to create a push credential
+- [x] T5: Hand the maintainer the exact steps to create a push credential
       scoped to this repository and store it as the secret T3 reads; the
       maintainer creates it — cairn never handles credentials — and the
       milestone waits on it before T7.
@@ -99,7 +99,7 @@ issue by T6, and no criterion below claims it.
       Known issues the exposure this does not remove: the mechanism rests on
       GitHub continuing to count a pushed commit as repository activity, which
       this repo cannot test.
-- [ ] T7: Run AC4's two dispatches from the milestone branch; record both run
+- [x] T7: Run AC4's two dispatches from the milestone branch; record both run
       URLs and both tip comparisons.
 
 ## Work log
@@ -119,6 +119,10 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: candidate row added — a failing `keepalive` job is not reported, because `notify` aggregates only meta/build/publish. Adding it there would change the ci-failure alert's shape, so it is deferred rather than folded in.
 - 2026-09-06: T5 handed to the maintainer — generate an ed25519 keypair, add the public half as a write-enabled deploy key titled `keepalive`, store the private half as the repository secret `KEEPALIVE_DEPLOY_KEY`. Confirmed beforehand: `main` is unprotected, the repo-wide Actions workflow permission is `read`, and no deploy key or such secret exists yet. T7 waits on it.
 - 2026-09-07: T7 first dispatch (run 34080941702) failed the keepalive job with `./.github/keepalive.sh: No such file or directory` — the job checked out only the default branch, which does not carry the script until this milestone merges. The offline suite cannot see this; AC4 is the criterion that caught it. Fixed by two checkouts: the workflow's own ref at the workspace root (rule read from there, `persist-credentials: false`) and the default branch under `default-branch/` with the deploy key (commit lands there). The deploy key and the SSH checkout worked on that run.
+- 2026-09-07: T5 done by the maintainer — deploy key `keepalive` (read-write, id 162497767) and repository secret `KEEPALIVE_DEPLOY_KEY` both present.
+- 2026-09-07: T7 threshold-0 dispatch, run https://github.com/jmgirard/rstudio2u/actions/runs/34081029032 — keepalive job green; `main` 8970ea5 -> 8f86753, one commit, `git diff 8f86753^ 8f86753` is 0 lines, subject `keepalive: empty commit to keep scheduled workflows enabled`, author and committer `github-actions[bot]`.
+- 2026-09-07: T7 threshold-unset dispatch, run https://github.com/jmgirard/rstudio2u/actions/runs/34081061782 — keepalive job green, log line `the newest commit is 0 day(s) old, below the 50-day threshold; no keepalive commit`; `main` 8f86753 before and 8f86753 after. Both runs' build legs were cancelled once the keepalive job finished (test mode, so no tag could move either way).
+- 2026-09-07: merged `origin/main` (the keepalive commit) into the branch; re-ran every suite green, shellcheck 0.11.0 `-S info` clean over all 28 tracked shell files, hadolint 2.12.0 clean. No Dockerfile or build-context change in this milestone (`.dockerignore` excludes `.github` and `scripts/tests`), so no image build was run.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

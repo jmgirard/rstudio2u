@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M016 | Keep the weekly rebuild alive | in-progress | — | normal | milestones/M016-weekly-rebuild-keepalive.md |
+| M016 | Keep the weekly rebuild alive | review | — | normal | milestones/M016-weekly-rebuild-keepalive.md |
 | M015 | Native arm64 runners for the image build | done | — | high | milestones/archive/M015-native-arm64-runners.md |
 | M014 | Semver release history | done | — | normal | milestones/archive/M014-semver-release-history.md |
 | M13 | Weekly rebuild failure alert | done | — | normal | milestones/archive/M13-rebuild-failure-alert.md |

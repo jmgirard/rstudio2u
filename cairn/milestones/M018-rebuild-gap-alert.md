@@ -83,7 +83,7 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - [x] T2: Add an optional subject argument to `.github/ci-failure-issue.sh`
       (default: today's wording), and cover both renderings in
       `scripts/tests/test_ci_failure_issue.sh`.
-- [ ] T3: Write `.github/rebuild-gap.sh`, reusing `keepalive.sh`'s
+- [x] T3: Write `.github/rebuild-gap.sh`, reusing `keepalive.sh`'s
       `days_from_civil` / `parse_date` / digit-width bound rather than
       re-deriving them. Suite green.
 - [ ] T4: Add the scheduled workflow: `gh run list --workflow docker.yml
@@ -105,6 +105,8 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 
 - 2026-09-07: minor amendment — T2 and T3 swapped, because the gap script's alert wording is what T2 (the subject argument) provides; Coverage renumbered with them (AC5 → T2, AC1/AC2 → T1, T3).
 - 2026-09-07: T2 — `.github/ci-failure-issue.sh` takes an optional fourth argument that replaces the failed-job wording in the title and in the lead line of both the body and the repeat comment; omitted, every rendering is byte-identical to before. Four cases added to `scripts/tests/test_ci_failure_issue.sh` and the no-subject body lead newly asserted; planting an appending-instead-of-replacing defect turned 6 assertions red, restoring it turned them green. Suite passes; pinned shellcheck 0.11.0 clean over the changed files.
+
+- 2026-09-07: T3 — `.github/rebuild-gap.sh` written; the date parsing, calendar check and threshold width bound moved to a new `.github/date-lib.sh` sourced by it and by `keepalive.sh`, whose suite stays green unchanged. The boundary is not shared: keepalive acts at or past its threshold, the gap check only past its own. Both `scripts/tests/test_rebuild_gap.sh` and `test_keepalive.sh` pass. Discrimination checked by planting three defects — the boundary off by one (3 red), a `curl` call on the deciding path (10 red), the unreadable-history sentinel claiming a measured gap (3 red) — each green again on restore. Pinned shellcheck 0.11.0 clean over every tracked shell file plus the two new ones.
 
 ## Decisions
 

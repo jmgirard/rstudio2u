@@ -62,6 +62,19 @@ reproducibility.
   other failed job: `docker.yml`'s `notify` job needs `keepalive` and names it
   in the `ci-failure` issue, so the guard against a silenced schedule cannot
   itself lapse unnoticed (added M017).
+- **A rebuild that stops running is reported too:** `docker.yml`'s `notify`
+  job can only speak about a run that happened, so a rebuild that stops
+  happening reports nothing. `rebuild-gap.yml` measures the thing directly:
+  weekly, it asks how long since a scheduled `docker.yml` run last succeeded
+  and raises the same `ci-failure` issue when that is more than 15 days —
+  whatever the cause, since a disabled schedule, a deleted workflow and a
+  month of red builds are one symptom. A history it cannot read is reported
+  as itself, never as a measured gap and never as silence. The rule lives in
+  `.github/rebuild-gap.sh`, never in the workflow, and shares its date
+  validation with `keepalive.sh` through `.github/date-lib.sh` (added M018).
+  Its bound: this check is itself on a schedule, so once GitHub has disabled
+  the repository's scheduled workflows it is disabled with them — that
+  failure mode belongs to the keepalive above, not here.
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while

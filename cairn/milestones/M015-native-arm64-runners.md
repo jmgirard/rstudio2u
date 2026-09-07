@@ -7,7 +7,7 @@
 - **Principles touched:** GP2, GP3, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — the deliverable is the lane that publishes the moving tags users pull
-- **Branch/PR:** m015-native-arm64-runners
+- **Branch/PR:** m015-native-arm64-runners — https://github.com/jmgirard/rstudio2u/pull/22
 
 ## Goal
 
@@ -36,32 +36,32 @@ rows.
 
 ## Acceptance criteria
 
-- [ ] AC1: A test-mode `workflow_dispatch` run of the branch's `docker.yml` —
+- [x] AC1: A test-mode `workflow_dispatch` run of the branch's `docker.yml` —
       layers pushed by digest, no tag attached — prints from
       `docker buildx imagetools create --dry-run` a noble manifest list naming
       both `linux/amd64` and `linux/arm64`, and prints the tag list it would
       apply, containing `latest`, `noble`, `noble-<UTC date>` and
       `noble-<rstudio version>` (GP2's escape hatch).
-- [ ] AC2: Reading every step of the merged `.github/workflows/docker.yml` top
+- [x] AC2: Reading every step of the merged `.github/workflows/docker.yml` top
       to bottom finds no `docker/setup-qemu-action` step, and finds each build
       step's `platforms:` value equal to the single native architecture of the
       runner its job declares.
-- [ ] AC3: In the AC1 run, the arm64 leg boots an image whose
+- [x] AC3: In the AC1 run, the arm64 leg boots an image whose
       `docker image inspect --format '{{.Architecture}}'` is `arm64` and whose
       container answers `aarch64` to `uname -m`, and `.github/smoke-test.sh`
       against that image logs `PASS: quarto rendered .qmd to HTML`.
-- [ ] AC4: `scripts/tests/test_ci_failure_issue.sh` exercises the shipped
+- [x] AC4: `scripts/tests/test_ci_failure_issue.sh` exercises the shipped
       failed-variant extraction — the merged `docker.yml` invokes it and keeps
       no second inline copy — over fixtures shaped like the new matrix's
       `gh run view --json jobs` output, covering (a) one variant's arm64 leg
       failing, where the issue body names that variant exactly once and does
       not name the all-green variant, and (b) every leg green, where the
       script closes the issue rather than opening one.
-- [ ] AC5: Reading every build step of the merged `docker.yml` finds `no-cache`
+- [x] AC5: Reading every build step of the merged `docker.yml` finds `no-cache`
       set for `schedule` and `workflow_dispatch` events, and the AC1 run's
       build logs show the RStudio/Pandoc/Quarto install layer executed rather
       than reported `CACHED`.
-- [ ] AC6: `hadolint Dockerfile` clean, `docker build` succeeds from a clean
+- [x] AC6: `hadolint Dockerfile` clean, `docker build` succeeds from a clean
       context, and `bash scripts/tests/test_ci_failure_issue.sh` and
       `bash scripts/tests/test_retry.sh` pass (PROFILE `verify`).
 
@@ -120,5 +120,146 @@ rows.
 - 2026-09-06: verify (T4, build-context change): `docker build` succeeds from a clean context on this arm64 host (exit 0, 849 MB); the built image reports `uname -m` = aarch64 and runs quarto 1.9.38, and the build log carries zero `retry:` diagnostics — the Deno-invoking quarto calls needed no retry when nothing is emulated.
 - 2026-09-06: pushed the branch and dispatched the test-mode run for AC1/AC3/AC5 evidence: https://github.com/jmgirard/rstudio2u/actions/runs/34075352828 . All four build legs picked up runners and are in progress, so `ubuntu-24.04-arm` resolves for this repo — the plan's stated falsifier for the native-runner choice does not fire. No watcher left armed; review re-derives the run state.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
+- 2026-09-06: review: PR #22 opened draft; all six criteria verified with fresh evidence from test-mode run 34075735235 (all green); consistency gate passes; three-lens review returned 13 findings, dispositions pending at the gate.
 
 ## Decisions
+
+## Review
+
+Evidence run: test-mode `workflow_dispatch` of the branch's `docker.yml`,
+https://github.com/jmgirard/rstudio2u/actions/runs/34075735235 (2026-09-07, all
+seven jobs green; `notify` skipped, as it is schedule-only). An earlier dispatch
+(34075352828) failed on `build (noble, amd64)` when the r2u mirror timed out
+mid-smoke-test — an external outage, not a branch defect; re-dispatched.
+
+- AC1 — met. `publish (noble)` in test mode printed from `imagetools create
+  --dry-run` an OCI image index with two manifests, `platform.architecture`
+  `arm64` and `amd64`, both `os: linux`; and the tag list it would apply:
+  `latest`, `noble`, `noble-2026-09-07`, `noble-2026.08.2-200`. No tag was
+  attached (the `--dry-run` branch is the only one test mode reaches).
+- AC2 — met. `grep -rn "setup-qemu" .github/` returns nothing. The build job
+  has one build step, `platforms: linux/${{ matrix.arch }}`, a single platform;
+  the matrix pairs `arch: amd64` with `runner: ubuntu-latest` and `arch: arm64`
+  with `runner: ubuntu-24.04-arm` for both variants, so each leg's platform is
+  its runner's own architecture. The evidence run confirms the pairing at
+  runtime: each leg's pull-back step printed `image is <arch> (<arch> /
+  <uname>)` matching its declared arch.
+- AC3 — met. `build (noble, arm64)` ran on runner image `ubuntu-24.04-arm` and
+  printed `image is arm64 (arm64 / aarch64)` — `docker image inspect
+  --format '{{.Architecture}}'` = `arm64`, `uname -m` = `aarch64`. Its smoke
+  test logged `PASS: quarto rendered .qmd to HTML`, along with `PASS: container
+  reported healthy` and the bspm/mirror-hint assertions. `build (resolute,
+  arm64)` printed the same architecture pair.
+- AC4 — met. `bash scripts/tests/test_ci_failure_issue.sh` exits 0 over 30
+  assertions against the shipped `.github/ci-failure-issue.sh`; `docker.yml`
+  contains no `jq` at all and calls `bash ./.github/ci-failure-issue.sh
+  "$result" "$RUN_URL" jobs.json`, so there is no second copy. (a) The
+  `noble arm64 + publish (noble)` failed / all-resolute-green fixture asserts
+  the created issue title matches `^issue create .*--title Weekly rebuild
+  failed: noble --body ` (anchored both sides, so a repeat or an extra name
+  fails) and asserts no `issue create` call mentioning `resolute`. (b) The
+  all-green fixture drives `success`, where the script comments on and closes
+  each open ci-failure issue and creates nothing.
+- AC5 — met. The one build step carries `no-cache: ${{ github.event_name ==
+  'schedule' || github.event_name == 'workflow_dispatch' }}`, true for both
+  named events. In the evidence run (a `workflow_dispatch`) all four legs
+  reported zero `CACHED` lines, and the RStudio/Pandoc/Quarto layer (`#12 RUN
+  chmod -R +x /rocker_scripts && /rocker_scripts/install_rstudio.sh &&
+  /rocker_scripts/install_pandoc.sh …`) executed in each: 32.1s (noble amd64),
+  35.4s (noble arm64), 33.5s (resolute amd64), 35.6s (resolute arm64).
+- AC6 — met. `docker build --pull --no-cache` from a clean context (`git
+  archive HEAD` unpacked to an empty directory) exits 0. `hadolint Dockerfile`
+  is clean (exit 0) at hadolint 2.12.0, the version `hadolint-action@v3.1.0`
+  pins and the PR lane runs; at hadolint `latest` it reports one DL3025 warning
+  on the HEALTHCHECK, present identically on the default branch and already a
+  `[low]` candidate row. `bash scripts/tests/test_ci_failure_issue.sh` and
+  `bash scripts/tests/test_retry.sh` both pass.
+
+### Consistency gate
+
+`cairn_validate.py` exits 0, every check PASS; one advisory WARN — the
+`.gitignore` entry `cairn/references/pdf/` is superseded by
+`cairn/references/sources/`. Advisory, not a gate failure, and unrelated to
+this milestone; filed as a candidate row. No IP/GP principle text changed
+(the DESIGN edits are a Conventions bullet and a Known issues entry), so
+`cairn_impact.py --changed` does not apply. Profile `docker-image`
+consistency-gate slot: clean-context `docker build` succeeds and `hadolint` is
+clean (AC6); the base image is pinned to an explicit version
+(`rocker/r2u:${UBUNTU_VERSION}`, default `24.04`, never bare `latest`); no
+secret is baked into a layer — `DOCKERHUB_TOKEN` reaches only
+`docker/login-action`, never an `ENV`, `COPY` or `--build-arg`;
+`.dockerignore` is present and excludes `.git`, `.github`, `cairn` and the
+launchers; the `changelog` slot declares none as a file, so the user-visible
+changes go in the archive summary.
+
+### Independent review
+
+Full three-lens fan-out (user-facing tier, executable diff). [O] diff-bug: 13
+candidate findings. [S] blame-history: 1 finding plus four
+verified-safe confirmations (the QEMU removal, the 900s->300s arm64 timeout
+drop, the `pr-ci.yml` cache-scope repoint, and the numbered-known-issue
+references converted to principle citations). [S] prior-review-record: no
+prior-review evidence — the probe found no real inline review comments and no
+archived `## Review` section touches these files; zero findings, clean no-op.
+
+Findings, ranked, deduplicated across lenses. Dispositions are recorded at the
+approval gate.
+
+- F1 The publish job re-scrapes the RStudio version and the UTC date
+  independently of the build legs, and nothing carries `steps.meta.outputs.rsver`
+  forward. On the default branch one `meta` step resolved both once per variant
+  and used the same value for the `RSTUDIO_VERSION` build-arg and for the tag
+  list; on this branch the four build legs each scrape it and the publish job
+  scrapes it again, roughly an hour later. A stable-release or a midnight-UTC
+  crossing in that window attaches `noble-<version>` or `noble-<date>` to an
+  image not built from it, and a release landing between the amd64 and arm64
+  legs puts two different `RSTUDIO_VERSION` values in one manifest list. Verified
+  against `git show origin/main:.github/workflows/docker.yml`.
+- F2 The `publish (` half of the failed-variant extraction is untested.
+  Replacing `^(build|publish) \(` with `^(build) \(` in both jq lines of
+  `.github/ci-failure-issue.sh` leaves the suite green — reproduced by planting
+  the mutation. Every fixture carrying a failed `publish (…)` leg also carries a
+  failed `build (…)` leg for the same variant, so the publish branch is never the
+  sole source of a name. A registry hiccup in `imagetools create` with all builds
+  green would fall back to the generic "see the run summary" text unnoticed.
+- F3 `notify`'s inline result aggregation falls through to
+  `result="$BUILD_RESULT"`, so `BUILD_RESULT=success` with `PUBLISH_RESULT`
+  anything but `success`/`failure` (cancelled, skipped) yields `success` — the
+  script then comments "succeeded; closing" and closes the open ci-failure issue
+  on a run where no tag moved. Raised by both the [O] and [S] lenses. It is also
+  a second copy of decision logic in YAML, the pattern T3 removed.
+- F4 `resolve-rstudio-version.sh` reaches the network from the publish job,
+  a new late failure point that can discard four completed builds; on the default
+  branch the scrape preceded every build. Subsumed by F1's fix.
+- F5 AC4(b)'s all-green fixture is inert: the success path never reads the
+  jobs document, so swapping the fixture for a different one leaves the suite
+  green. The criterion as written is met — the script does close on `success` —
+  but the fixture discriminates nothing.
+- F6 Nothing asserts the assembled manifest list carries both architectures.
+  The publish guard counts artifact files (`find . -type f | wc -l` = 2), not
+  platforms, and the non-test path runs `imagetools inspect` without reading its
+  output. AC1 is enforced by a human reading the log.
+- F7 Every run pushes four untagged manifests to Docker Hub before any smoke
+  test, and test-mode runs never tag any of them. There is no GC step and no
+  Known issues note.
+- F8 `printf '  %s\n' $TAGS` and `for t in $TAGS` are unquoted with
+  `cwd=/tmp/digests`, so they are exposed to pathname expansion as well as word
+  splitting, and `for f in *` matches directories while the guard above it
+  counted `find . -type f`. Nothing breaks today (tags carry no glob
+  metacharacters), but these inline blocks escape the repo's shellcheck lane.
+- F9 `extract_variants` sends all jq diagnostics to `/dev/null`, hiding jq
+  being absent or a `gh run view --json jobs` schema change as well as the
+  malformed-JSON case it intends to swallow; the alert degrades to generic text
+  with no warning.
+- F10 `pattern: digests-${{ matrix.variant }}-*` is prefix-based; a future
+  variant name extending an existing one (e.g. `noble-lts`) would have its
+  artifacts pulled into `noble`'s publish leg, surfacing as a count error rather
+  than a naming bug.
+- F11 `retention-days: 1` makes GitHub's "Re-run failed jobs" unusable after
+  24 hours: the re-run finds no digests and fails with "a build leg failed or was
+  skipped", which is misleading. Fails safe.
+- F12 The acceptance-criteria boxes were unticked at review entry. Not a
+  defect — ticking them against fresh evidence is this phase's job.
+- F13 `docker.yml`'s `push.paths` filter does not list
+  `.github/ci-failure-issue.sh`. Pre-existing on the default branch; this branch
+  made that file more load-bearing.

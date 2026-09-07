@@ -1,13 +1,13 @@
 # M018: Alert when no weekly rebuild has succeeded in too long
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M017
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** internal — CI alerting that reaches only the maintainer; no external consumer of the repo reads it
-- **Branch/PR:** —
+- **Branch/PR:** m018-rebuild-gap-alert
 
 ## Goal
 
@@ -76,7 +76,7 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 
 ## Tasks
 
-- [ ] T1: Write `scripts/tests/test_rebuild_gap.sh` first — the gap and no-gap
+- [x] T1: Write `scripts/tests/test_rebuild_gap.sh` first — the gap and no-gap
       outcomes, the five rejections, the over-wide threshold, and the
       zero-call assertions — against `gh`/`curl`/`wget` stubs modelled on
       `scripts/tests/test_keepalive.sh`'s call-logging `git` stub. Confirm red.
@@ -101,6 +101,7 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - 2026-09-07: plan gate chose workflow run history (`gh run list`) over the Docker Hub `<variant>-<date>` tag date as the gap oracle, because it is authoritative, needs no scrape, and reports a renamed or broken workflow as an empty result; falsified by a run that reports success without moving a tag. The tag-date oracle is carried as a candidate row.
 - 2026-09-07: plan gate chose reusing the `ci-failure` issue stream over a separate `rebuild-gap` label, because the next green scheduled rebuild is exactly the right close condition for a gap and one stream is one thing to watch; falsified by gap and build-failure alerts needing different close conditions.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned three findings on this milestone. Draft AC1's "no network call" and draft AC2's "every argument is validated" were unbounded promises over domains their named procedures could not enumerate; both were narrowed before writing — AC1 to three call-logging stubs, AC2 to its listed rejections. Draft AC4 required a live `workflow_dispatch` demonstration (a process/environment boundary the internal tier excludes) and bound an evidence-quotation act; posed at the gate, which chose the file-state promise and moved the dispatch run to T5.
+- 2026-09-07: T1 — wrote `scripts/tests/test_rebuild_gap.sh` against call-logging `gh`/`curl`/`wget` stubs; confirmed red (exit 127, no `.github/rebuild-gap.sh`). Gate chose: a fourth positional subject argument on `ci-failure-issue.sh`; a gap alert raised (not swallowed) when the run history cannot be read; a weekly Monday cadence a few hours after the rebuild.
 
 ## Decisions
 

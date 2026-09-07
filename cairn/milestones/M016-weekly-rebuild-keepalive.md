@@ -1,6 +1,6 @@
 # M016: Keep the weekly rebuild alive
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -30,7 +30,7 @@ issue by T6, and no criterion below claims it.
 
 ## Acceptance criteria
 
-- [x] AC1: `.github/keepalive.sh <commit-date> <current-date> <threshold-days>`
+- [ ] AC1: `.github/keepalive.sh <commit-date> <current-date> <threshold-days>`
       creates one empty commit on the default branch and pushes it when the
       commit date is the threshold's days or more before the current date, and
       makes no git call and reports that it skipped when it is fewer. An
@@ -125,6 +125,7 @@ issue by T6, and no criterion below claims it.
 - 2026-09-07: merged `origin/main` (the keepalive commit) into the branch; re-ran every suite green, shellcheck 0.11.0 `-S info` clean over all 28 tracked shell files, hadolint 2.12.0 clean. No Dockerfile or build-context change in this milestone (`.dockerignore` excludes `.github` and `scripts/tests`), so no image build was run.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 - 2026-09-07: review — all five criteria verified with fresh evidence (Review section); consistency gate clean, cairn_validate exit 0; PR #23 opened, CI green after one re-run of a build-smoke leg that failed on an r2u mirror outage.
+- 2026-09-07: review returned M016 to in-progress — defect return 1. AC1 fails inside its own domain: a 19-digit threshold (a non-negative integer AC1 does not reject) wraps in shell arithmetic, so `.github/keepalive.sh 2026-01-01 2026-02-19 9999999999999999999` commits and pushes where AC1 requires no git call. Four further repairs and four follow-ups recorded in the Review section; AC2-AC5 keep their evidence.
 
 ## Decisions
 
@@ -231,3 +232,115 @@ branch changed; `gh run rerun --failed` passed with no code change.
   `.dockerignore` is present and excludes `.git`, `.github`, `cairn`, and
   `scripts/tests`. The `changelog` slot declares none as a file, so this
   milestone's user-visible change is stated in its archive summary.
+
+### Independent review (three fresh-context lenses)
+
+`[O]` diff-bug, `[S]` blame-history and `[S]` prior-review record, spawned with
+distinct evidence bases, none having seen the implementation. Every reported
+finding and its disposition:
+
+**[O]-6 — RETURN. A threshold above 18 digits inverts the staleness rule.**
+`.github/keepalive.sh:95` accepts any `^[0-9]+$` with no bound and `:108`
+evaluates `10#$threshold` in 64-bit shell arithmetic. Reproduced here against a
+real git repository: `.github/keepalive.sh 2026-01-01 2026-02-19
+9999999999999999999` printed `the newest commit is 49 day(s) old, at or past the
+9999999999999999999-day threshold; committing`, made the commit and pushed it.
+`9999999999999999999` is a non-negative integer, so AC1's rejection clause does
+not cover it; the age (49) is fewer than the threshold, so AC1 requires no git
+call and a reported skip. The script committed and pushed instead. That is AC1
+failing inside its own domain, so this is a defect return under the review
+return floor. Repair: bound argument 3 to a value the arithmetic can hold and
+reject the rest, naming argument 3 — and drive it in the suite.
+
+**[O]-1 — follow-up (existing candidate row strengthened). A failed `keepalive`
+job on a scheduled run does not just go unreported; the run closes the ci-failure
+issue.** `.github/workflows/docker.yml:328-330`: `notify` has
+`needs: [meta, build, publish]` and passes only those three into `RESULTS`, so a
+scheduled run whose builds pass and whose keepalive fails collapses to all-success
+and closes the issue while the guard is broken. Confirmed by reading the job. The
+`[S]` blame lens reported the same gap independently. Already carried as a
+candidate row from implementation; the row is extended with the closing behaviour,
+which it did not state.
+
+**[O]-2 — fix on return. DESIGN overstates the margin the 50-day threshold buys.**
+`cairn/DESIGN.md` says the threshold leaves "two weekly runs of margin". The
+window in which a weekly run can fire and still commit is ages 50 through 59 —
+ten days — and ten consecutive days contain either one or two weekly runs
+depending on the phase, so the worst case is one, not two. The threshold itself is
+not in question; the claim about it is wrong and is fixed with the return.
+
+**[O]-7 — fix on return. The suite does not assert what the script claims.**
+`.github/keepalive.sh:29-30` says the stale path is "exactly two git calls", and
+`scripts/tests/test_keepalive.sh:99-102` asserts only that some logged call
+matches each regex — an added `git config` or a `push` issued before the `commit`
+would pass green. Either the assertion names the two calls in order or the comment
+stops claiming it.
+
+**[O]-8 — fix on return. The more-than-three-arguments rejection is untested.**
+`.github/keepalive.sh:85` exits 2 on a fourth argument; no case in the suite
+drives it and AC2's enumeration does not name it.
+
+**[O]-10 — fix on return. D-008's Consequences paragraph is stale.** It says the
+credential "must be renewed before it expires"; the implement gate chose a deploy
+key because it does not expire. Reported independently by the `[S]` prior-review
+lens. History is superseded, never edited: this takes a new D-entry annotating
+D-008.
+
+**[O]-3 — follow-up (new candidate row). The keepalive `git push` has no
+contention handling.** `.github/keepalive.sh:123` is a bare `git push` from a
+shallow checkout with no `concurrency:` group in `docker.yml`; a maintainer push
+landing between checkout and push fails non-fast-forward with no retry, and per
+[O]-1 no alarm. Real, but it fails safe — the next scheduled run retries — and it
+falsifies no criterion.
+
+**[O]-11 — follow-up (new candidate row). Only the dispatch path has ever run.**
+Both AC4 runs are dispatches; the scheduled path depends on `inputs` being null
+(falling back to `'50'`) and on `github.event.repository.default_branch` being
+populated in a schedule payload. AC4 asks for dispatches only, so this fails no
+criterion, but the first dispatch already caught one ref defect the offline suite
+could not see, and the first scheduled run is worth reading.
+
+**[O]-9 — follow-up (folded into the [O]-3 row). The git stub always exits 0**, so
+`scripts/tests/test_keepalive.sh:28-32` cannot exercise a failing `git commit` or
+`git push` — the failure mode [O]-3 describes.
+
+**[O]-4 — rejected.** A `workflow_dispatch` from any branch runs that branch's
+`keepalive.sh` against the default branch, where `dockerhub-description.yml:25`
+guards the analogous case with `if: github.ref == 'refs/heads/main'`. This is the
+two-checkout design the milestone planned, and it is what made T7's verification
+from the milestone branch possible at all; dispatching already requires write
+access to the repository, so it widens no trust boundary. An intentional change
+the plan called for.
+
+**[O]-5 — rejected.** `inputs.keepalive_threshold || '50'` turns an emptied
+dispatch field into 50 rather than AC1's "argument 3 is missing" rejection. The
+fallback is required for the scheduled run, where the `inputs` context is null;
+AC1's missing-argument branch is a property of the script and is driven by the
+suite, not by this caller.
+
+**[O]-12 — rejected.** Leading zeros in the threshold echo verbatim
+(`the 0050-day threshold`). Pure cosmetics; the comparison is unaffected.
+
+**[O]-13 — rejected, resolved.** AC5 could not be checked by the reviewer, which
+had no `shellcheck`. Verified here at the pinned 0.11.0 through
+`koalaman/shellcheck:v0.11.0`; see the AC5 evidence above.
+
+**[S] blame-history — no defects.** Its six items are confirmations rather than
+findings: the `notify` gap ([O]-1 above), the dispatch exposure ([O]-4 above), the
+second checkout's deliberate omission of `persist-credentials: false` (required
+for the push to authenticate), D-008 honoured precisely, the `pr-ci.yml` paths and
+test-step wiring following the `ci-failure-issue.sh` precedent, and `docker.yml`'s
+own `push.paths` correctly not listing a script that cannot affect the image.
+
+**[S] prior-review record — no findings.** No archived `## Review` finding on the
+touched files is reintroduced or contradicted; M02's "path filter omits its own
+harness script" lesson is honoured. The GitHub probe
+(`repos/jmgirard/rstudio2u/pulls/comments?per_page=1`) returned `[]`, so the
+per-PR walk was correctly skipped.
+
+### Gate outcome
+
+Returned to `in-progress` on [O]-6, which demonstrates AC1 failing inside its own
+domain. AC1's tick is removed; the other four criteria keep their evidence and
+their ticks. Not merged; PR #23 stays a draft. Defect returns for this milestone
+so far: 1.

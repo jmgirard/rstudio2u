@@ -93,7 +93,7 @@ rows.
       input that stops at `--dry-run` and prints the manifest and tag list
       instead of publishing. Keep `fail-fast: false` so a resolute failure
       never blocks noble (GP3 preview tier).
-- [ ] T3: Move the failed-leg → variant extraction out of the inline jq in
+- [x] T3: Move the failed-leg → variant extraction out of the inline jq in
       `docker.yml` into `.github/ci-failure-issue.sh` (deduplicating variants
       across a variant's two legs), and extend
       `scripts/tests/test_ci_failure_issue.sh` with fixtures in the new
@@ -113,6 +113,7 @@ rows.
 - 2026-09-06: implement gate chose `ubuntu-24.04-arm` (pinned) over a floating arm64 label, push-by-digest-then-pull-back over load-then-push (one build per leg; the tested bytes are the shipped bytes), and removing `docker/setup-qemu-action` outright (recorded as D-007).
 - 2026-09-06: T1/T2 minor amendment: T1 wording now says the leg pushes by digest and pulls that digest back to boot it, replacing the `load: true` phrasing, per the gate's push-then-pull choice.
 - 2026-09-06: T1+T2: `docker.yml` build job is now a 4-leg (variant x arch) matrix on native runners with one build step per leg, plus a per-variant `publish` job that assembles the manifest list from two verified digests and a `test_mode` dispatch input that stops at `imagetools create --dry-run`.
+- 2026-09-06: T3: `ci-failure-issue.sh` now takes the `gh run view --json jobs` document and extracts the failed variants itself (deduplicated); `docker.yml`'s inline jq is gone. Suite extended with six job-listing fixtures and proven to go red under three planted defects (dedup removed, job-name guard removed, variant field untrimmed).
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 
 ## Decisions

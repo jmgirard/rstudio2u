@@ -30,7 +30,7 @@ issue by T6, and no criterion below claims it.
 
 ## Acceptance criteria
 
-- [ ] AC1: `.github/keepalive.sh <commit-date> <current-date> <threshold-days>`
+- [x] AC1: `.github/keepalive.sh <commit-date> <current-date> <threshold-days>`
       creates one empty commit on the default branch and pushes it when the
       commit date is the threshold's days or more before the current date, and
       makes no git call and reports that it skipped when it is fewer. An
@@ -143,10 +143,141 @@ issue by T6, and no criterion below claims it.
 - 2026-09-07: all tasks complete; status review. Suite 93 assertions green, shellcheck 0.11.0 `-S info` clean over all 28 tracked shell files, cairn_validate exit 0 (one pre-existing advisory).
 
 ## Decisions
+- 2026-09-07: review second pass — all five criteria re-verified with fresh evidence at 62bdb5c and re-ticked (AC2-AC5 unticked first, so every tick on this pass stands on this pass's evidence); consistency gate clean, cairn_validate exit 0. Three fresh-context lenses still running; checkpoint commit, findings and gate to follow.
 
 ## Review
 
-_Fresh evidence gathered 2026-09-07 on `m016-weekly-rebuild-keepalive` at f243c8b, PR #23._
+_Second pass, after the defect return. Fresh evidence gathered 2026-09-07 on
+`m016-weekly-rebuild-keepalive` at 62bdb5c, PR #23. The first pass's evidence and
+its full finding-and-disposition log are kept below, under "First pass"._
+
+**AC1 — verified.** `.github/keepalive.sh` driven directly against a real git
+repository built for this pass (a bare remote plus a working clone, one seed
+commit), not against the stub. Stale (`2026-01-01 2026-04-11 50`, age 100):
+exit 0, the line `the newest commit is 100 day(s) old, at or past the 50-day
+threshold; committing`, tip 6c7eb96 -> 2cadae8, `git rev-list --count` 1 -> 2,
+`git diff HEAD^ HEAD` 0 lines, subject `keepalive: empty commit to keep
+scheduled workflows enabled`, author and committer
+`github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>`,
+and the bare remote's `main` at 2cadae8 — so it pushed. Fresh (`2026-01-01
+2026-02-19 50`, age 49): exit 0, the line `the newest commit is 49 day(s) old,
+below the 50-day threshold; no keepalive commit`, tip and commit count
+unchanged.
+
+The returned defect no longer reproduces. `2026-01-01 2026-02-19
+9999999999999999999` — the reviewer's own reproduction, which previously
+committed and pushed — now prints the skip line, exits 0 and leaves the tip
+unchanged; so does a 32-digit threshold. The repair is by width, not by a
+bound, so the two neighbours it could have broken were driven as well:
+`2026-01-01 2026-04-11 0000050` (zero-padded, strips to 50) commits and pushes
+at age 100, and `2026-01-01 2026-04-11 9999999` (the widest in-range value)
+skips.
+
+Ten rejections, each exiting 2 with a message naming its argument, each leaving
+the tip and the commit count unchanged: an absent argument in each of the three
+positions; a single-digit month-and-day form and `2026-02-30` in argument 1; a
+non-date argument 2; `-1` and `5.5` as argument 3; a commit date one day after
+the current date (`the commit date (argument 1) is later than the current
+date`); and a fourth argument (`expected 3 arguments, got 4`).
+
+**AC2 — verified.** `bash scripts/tests/test_keepalive.sh` exits 0 with 93
+`ok:` lines and 0 `FAIL` lines (`PASS: all keepalive assertions`). Read against
+AC2's list, the suite drives every case it names: 49 / 50 / 51 days against a
+50-day threshold (cases 1-3), an absent argument in each of the three positions
+plus the omitted and no-argument forms (case 6), a word, a single-digit
+month-and-day form, `2026-02-30` and `2026-13-01` in each of the first two
+positions (case 7), `-1`, `5.5`, `fifty`, a space and `50days` as argument 3
+(case 8), and a commit date one day after the current date (case 13). Every
+skip and every rejection carries an `assert_no_git` on an empty stub log, and
+the stub is asserted first on PATH before any case runs, so "no git call"
+cannot pass by finding no git at all. The at-threshold case now asserts the
+whole log — exactly two calls, the bot-identity `commit --allow-empty` then
+`push`, in that order.
+
+Discrimination re-checked fresh in a scratch copy of both files, six defects
+planted one at a time, control green (0 failures) before and after: an inverted
+comparison red with 9 failed assertions, an off-by-one making the at-threshold
+case skip with 10, the over-wide-threshold guard removed with 5, argument 2's
+validator re-reading argument 1 with 26, an extra `git config` inserted before
+the push with 2, and the more-than-three-arguments guard removed with 4.
+
+**AC3 — verified.** `.github/workflows/docker.yml` parsed with PyYAML rather
+than read by eye. The workflow's triggers are `push`, `schedule` and
+`workflow_dispatch`; the `keepalive` job's `if:` is
+`github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`,
+so `push` — the only other trigger — cannot reach it. Its `permissions:` block
+is exactly `{contents: read}`; the workflow declares no top-level
+`permissions:`, and the repository default is `default_workflow_permissions:
+read` (`gh api repos/jmgirard/rstudio2u/actions/permissions/workflow`), so no
+write scope is granted anywhere on the path. The push is authenticated by
+`ssh-key: ${{ secrets.KEEPALIVE_DEPLOY_KEY }}` on the second checkout; that
+secret exists on the repository (`gh api .../actions/secrets`, updated
+2026-09-07) and its public half is the repository deploy key `keepalive`
+(id 162497767, `read_only=false`, `verified=true`) — a deploy key reaches only
+the repository it is attached to. The workflow's own token appears nowhere in
+this job: the file's only `secrets.GITHUB_TOKEN` is line 347, inside `notify`
+(lines 328-376; `keepalive` begins at line 377), and the first checkout sets
+`persist-credentials: false` so no token is left in the tree the script is read
+from.
+
+**AC4 — verified.** Both dispatch runs re-read fresh with `gh run view`, and
+the branch state re-read after a `git fetch`, not taken from the
+implementation notes. Threshold `0`:
+https://github.com/jmgirard/rstudio2u/actions/runs/34081029032 —
+`event=workflow_dispatch`, keepalive job `conclusion=success`, log lines
+`default branch tip is dated 2026-09-07; today is 2026-09-07 (UTC)`, `the
+newest commit is 0 day(s) old, at or past the 0-day threshold; committing`,
+`pushed a keepalive commit`. The default branch moved 8970ea5 -> 8f86753,
+`git rev-list --count 8970ea5..8f86753` = 1, `git diff 8f86753^ 8f86753` 0
+lines, parent 8970ea5, subject `keepalive: empty commit to keep scheduled
+workflows enabled`, author and committer `github-actions[bot]`, commit date
+2026-09-07T03:51:07Z — inside that job's 03:51:04-03:51:10 window. Threshold
+unset: https://github.com/jmgirard/rstudio2u/actions/runs/34081061782 — same
+event, keepalive job `conclusion=success`, log line `the newest commit is 0
+day(s) old, below the 50-day threshold; no keepalive commit`, and no
+`committing` or `pushed` line. `origin/main` was 8f86753 before that run — the
+commit the first run made — and is 8f86753 now, after this pass's `git fetch`.
+Each run's overall conclusion is `cancelled`: the build legs were stopped once
+the keepalive job finished, so no tag could move either way.
+
+**AC5 — verified.** `.github/workflows/lint.yml` pins shellcheck 0.11.0 by
+release tarball and sha256 and runs it as `shellcheck -x -S info`. Run locally
+at that exact version through `koalaman/shellcheck:v0.11.0` (`version:
+0.11.0`): the two files the criterion names exit 0, and so does the workflow's
+own whole enumeration — `git ls-files -z '*.sh' '*.command'` over 28 tracked
+files, exit 0. CI on PR #23 at head 62bdb5c: `shellcheck` pass in 5s (run
+34082270459), `build-smoke` pass in 3m28s (run 34082270463), whose unit-test
+step logs `bash ./scripts/tests/test_keepalive.sh` and `PASS: all keepalive
+assertions`. `gh pr view 23` reports `mergeable: MERGEABLE`,
+`mergeStateStatus: CLEAN`.
+
+### Consistency gate
+
+- `cairn_validate.py` exits 0 — every check PASS, `all checks passed`. One
+  advisory WARN, not a gate failure: the `.gitignore` entry
+  `cairn/references/pdf/` is superseded by `cairn/references/sources/`, already
+  carried as a ROADMAP candidate row. The `release window` advisory did not
+  fire.
+- `cairn_impact.py` not run: this milestone changes no numbered DESIGN
+  principle — the `cairn/DESIGN.md` diff against `origin/main` adds one
+  Conventions bullet and one Known issues entry, both unnumbered.
+- Toolchain checks, from the `docker-image` profile's `consistency-gate` slot:
+  `hadolint` 2.12.0 over the Dockerfile exits 0; `docker build` from a clean
+  context succeeds — the PR's `build-smoke` job at head 62bdb5c (run
+  34082270463, `conclusion: success`), which builds the image and runs the
+  container smoke test, this milestone touching no Dockerfile or build-context
+  file; the base image is pinned to an explicit version tag
+  (`ARG UBUNTU_VERSION=24.04`, `FROM rocker/r2u:${UBUNTU_VERSION}`), never
+  `latest`; no secret is baked into a layer (no `ENV`, `ARG` or `COPY` line
+  carrying a token, key, secret, password or credential — `PASSWORD` is a
+  runtime variable read by the init scripts); `.dockerignore` is present and
+  excludes `.git`, `.github`, `cairn`, and `scripts/tests`. The `changelog`
+  slot declares none as a file, so this milestone's user-visible change is
+  stated in its archive summary.
+
+### First-pass record
+
+_First pass, gathered at f243c8b; returned on [O]-6._
 
 **AC1 — verified.** `.github/keepalive.sh` driven directly against a real git
 repository in a scratch directory (a bare remote plus a working clone, one seed

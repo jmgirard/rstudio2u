@@ -45,3 +45,4 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-09-07 (M016): `^[0-9]+$` is not a bound — `10#$n` on 19+ digits wraps negative and inverts
   the comparison; bound by digit width, and drive over-wide, zero-padded and widest-in-range.
 - 2026-09-07 (M017): a job's `.conclusion` in `gh run view --json jobs` has values `needs.<job>.result` does not — `timed_out` there is `failure` here — so a script reading both must not filter the listing on `== "failure"` alone.
+- 2026-09-07 (M018): a watchdog on the same weekly cadence as the thing it watches can only ever see gaps that are multiples of seven days, so its threshold picks a *week*, not a day — state the week it means, or a 15-day rule silently becomes a 21-day one.

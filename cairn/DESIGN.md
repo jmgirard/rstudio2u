@@ -52,8 +52,10 @@ reproducibility.
 - **The rebuild keeps itself enabled:** GitHub disables a public repository's
   scheduled workflows after 60 days without repository activity, so
   `docker.yml`'s `keepalive` job pushes an empty commit to the default branch
-  when that branch's newest commit is 50 or more days old — two weekly runs of
-  margin before the cutoff. The staleness rule lives in `.github/keepalive.sh`,
+  when that branch's newest commit is 50 or more days old — a ten-day window
+  (ages 50 through 59) in which a weekly run still fires before the cutoff,
+  so at least one such run always falls inside it and, depending on phase,
+  sometimes two. The staleness rule lives in `.github/keepalive.sh`,
   never in the workflow; the push authenticates with a write-enabled deploy key
   held in a repository secret, so the repo-wide Actions token stays read-only
   (added M016).

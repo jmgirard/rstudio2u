@@ -106,7 +106,7 @@ issue by T6, and no criterion below claims it.
       a skip — never as smaller. Drive it in the suite with an over-wide value,
       a zero-padded value whose digits strip to an in-range one, and the
       widest in-range neighbour, and show each planted inversion red.
-- [ ] T9: The review's three non-defect repairs: assert the stale path's two
+- [x] T9: The review's three non-defect repairs: assert the stale path's two
       git calls in order and no others (the claim the script's own header
       makes), drive the more-than-three-arguments rejection, correct DESIGN's
       overstated margin for the 50-day threshold, and supersede D-008's stale
@@ -139,6 +139,7 @@ issue by T6, and no criterion below claims it.
 - 2026-09-07: implement gate chose to treat an over-wide threshold as larger than any age (a skip) rather than reject it above a bound, because the skip is what AC1 already promises for every non-negative integer, so no criterion changes; also chose to make the suite assert the stale path's two git calls in order rather than soften the script's comment.
 - 2026-09-07: T8 — the overflow is repaired by width, not by a bound: leading zeros are stripped, and a threshold of more than seven digits short-circuits to the fresh branch, since the widest span the YYYY-MM-DD shape admits is 3652424 days (seven digits), so no age can reach eight. The reviewer's own reproduction now skips: against a real git repository, `keepalive.sh 2026-01-01 2026-02-19 9999999999999999999` printed the skip line, exited 0 and left the tip and the commit count unchanged; `2026-01-01 2026-04-11 50` still commits and pushes (tip moved by one, empty diff, bot identity, remote at the same sha).
 - 2026-09-07: T8 discrimination — four defects planted in a scratch copy, each red, control green (0 failures): the overflow guard removed (4 assertions, the 19- and 32-digit cases), the width taken from the raw string rather than the stripped value (2, the zero-padded-50 case), an extra `git config` before the push (1, the new ordered-call-log assertion alone), and the arity guard removed (3, the fourth-argument case).
+- 2026-09-07: T9 — the two suite repairs landed in T8's commit: the at-threshold case now asserts the whole git log (exactly two calls, the bot-identity commit then the push), and a fourth argument is driven against the arity guard. DESIGN's "two weekly runs of margin" is corrected to the ten-day window (ages 50 through 59), which guarantees one weekly run and sometimes two. D-009 supersedes D-008's renewal sentence: the credential is a deploy key with no expiry.
 
 ## Decisions
 

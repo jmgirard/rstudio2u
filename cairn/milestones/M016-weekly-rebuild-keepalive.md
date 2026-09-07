@@ -376,6 +376,12 @@ failing inside its procedure's domain, and none is a load-bearing defect in
 what the image does for its users. No return; the defect-return count for this
 milestone stays at 1.
 
+### PR conversation
+
+Read immediately before the merge gate: no reviews, no conversation comments,
+and no unresolved review threads on PR #23 (`hasNextPage: false`). Nothing to
+triage.
+
 ### First-pass record
 
 _First pass, gathered at f243c8b; returned on [O]-6._

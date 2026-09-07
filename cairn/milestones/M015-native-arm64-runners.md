@@ -1,13 +1,13 @@
 # M015: Native arm64 runners for the image build
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP3, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — the deliverable is the lane that publishes the moving tags users pull
-- **Branch/PR:** —
+- **Branch/PR:** m015-native-arm64-runners
 
 ## Goal
 
@@ -76,16 +76,17 @@ rows.
 
 ## Tasks
 
-- [ ] T1: Restructure `docker.yml`'s build job into a (variant × platform)
+- [x] T1: Restructure `docker.yml`'s build job into a (variant × platform)
       matrix — amd64 on `ubuntu-latest`, arm64 on GitHub's hosted arm64 runner
       label — each leg building its single platform with `load: true`,
       asserting the loaded image's architecture and the booted container's
       `uname -m` before running `.github/smoke-test.sh` natively (drop the
-      900s arm64 timeout to the amd64 value), then pushing by digest
-      (`outputs=type=image,push-by-digest=true,name-canonical=true`) and
-      uploading the digest as an artifact. Delete the `setup-qemu-action` step
+      900s arm64 timeout to the amd64 value); each leg builds once, pushes by
+      digest (`outputs=type=image,push-by-digest=true,name-canonical=true`),
+      pulls that digest back to boot it, and uploads the digest as an artifact
+      after the smoke test passes. Delete the `setup-qemu-action` step
       and the emulation comments it anchors.
-- [ ] T2: Add the per-variant merge job: download that variant's digests,
+- [x] T2: Add the per-variant merge job: download that variant's digests,
       compute the tag list once (UTC date + `resolve-rstudio-version.sh
       --tag`), `docker buildx imagetools create` the manifest list carrying
       every tag, and inspect the result. Add a `workflow_dispatch` test-mode
@@ -109,6 +110,9 @@ rows.
 - 2026-09-06: created by /milestone-plan.
 - 2026-09-06: plan gate chose native arm64 runners over keeping emulation and skipping the crashing build-time quarto call, because the smoke test renders through the same runtime and would keep crashing; falsified by the hosted arm64 label being unavailable to this repo or its build proving slower than the emulated one.
 - 2026-09-06: plan gate chose a dispatch test mode (digest-only push + `--dry-run` manifest) over evidencing the publish lane after merge, because approval would otherwise rest on an unexercised publish path; falsified by the test mode failing to reach the manifest step without a tag.
+- 2026-09-06: implement gate chose `ubuntu-24.04-arm` (pinned) over a floating arm64 label, push-by-digest-then-pull-back over load-then-push (one build per leg; the tested bytes are the shipped bytes), and removing `docker/setup-qemu-action` outright (recorded as D-007).
+- 2026-09-06: T1/T2 minor amendment: T1 wording now says the leg pushes by digest and pulls that digest back to boot it, replacing the `load: true` phrasing, per the gate's push-then-pull choice.
+- 2026-09-06: T1+T2: `docker.yml` build job is now a 4-leg (variant x arch) matrix on native runners with one build step per leg, plus a per-variant `publish` job that assembles the manifest list from two verified digests and a `test_mode` dispatch input that stops at `imagetools create --dry-run`.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 
 ## Decisions

@@ -101,3 +101,20 @@ pre-deletion captures. D-005 otherwise stands.
 **Consequences:** A recreated body may be edited only to repair a reference
 to a tag that no longer exists; any other change is a new release, not an
 edit.
+
+### D-007 (2026-09-06): Drop `docker/setup-qemu-action`; build each architecture on its own runner
+
+**Context:** The image build ran both architectures on one amd64 runner with
+QEMU binfmt emulation. Quarto's bundled Deno (V8) intermittently aborts with
+SIGILL (exit 132) under emulated aarch64, which made the arm64 build and its
+smoke render unreliable and left the noble moving tags stale.
+**Decision:** `docker/setup-qemu-action` is removed from `docker.yml`. Each
+(variant, architecture) leg runs on a runner of that architecture —
+`ubuntu-latest` for amd64, `ubuntu-24.04-arm` for arm64 — and builds only its
+own platform. `scripts/retry.sh` and its wrapping of the quarto calls stay:
+they still ride out genuine transients, they are just no longer riding out an
+emulator.
+**Consequences:** No workflow in the repo registers binfmt handlers; a future
+lane that wants a foreign-architecture build re-adds the action. The arm64
+runner label is pinned to a specific Ubuntu version, so a runner-image change
+takes an edit here.

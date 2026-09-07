@@ -76,7 +76,7 @@ issue by T6, and no criterion below claims it.
       `git commit --allow-empty` with an identity and a message set in the
       script, then `git push`. The staleness comparison lives only here, never
       in the workflow (the `.github/ci-failure-issue.sh` pattern).
-- [ ] T2: Write `scripts/tests/test_keepalive.sh` with a call-logging `git`
+- [x] T2: Write `scripts/tests/test_keepalive.sh` with a call-logging `git`
       stub covering every case AC2 lists. Then show the suite able to fail:
       plant, separately, an inverted comparison, an off-by-one at the
       threshold, a skip path that still calls `git commit`, and a validator
@@ -111,6 +111,8 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: plan gate chose a repository-scoped push credential over raising the repo-wide workflow write permission because the latter widens the ceiling for every present and future workflow; falsified by the credential proving unrenewable in practice.
 - 2026-09-06: implement gate chose a repository deploy key over a fine-grained account token (repo-scoped by construction, no expiry to lapse silently), and the `github-actions[bot]` identity for the commit.
 - 2026-09-06: T1 — `.github/keepalive.sh` written: three validated positional arguments, dates converted in shell arithmetic (no `date` flag portability, and an impossible date like 2026-02-30 is rejected, not only a mis-shaped one); stale means exactly `git commit --allow-empty` + `git push`, fresh means no git call.
+- 2026-09-06: T2 — `scripts/tests/test_keepalive.sh`, 74 assertions, all green offline against a call-logging `git` stub (asserted first on PATH, so "no git call" cannot pass by running nothing).
+- 2026-09-06: T2 discrimination — four defects planted in a copy of the script, each run red: an inverted comparison (12 assertions), an off-by-one making the at-threshold case skip (8, and none of the below-threshold ones), a skip path that still calls `git commit` (1 — the "no git call" assertion alone), and the second date validator re-reading argument 1 so a bad argument 2 passes (21).
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

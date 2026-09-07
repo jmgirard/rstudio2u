@@ -5,10 +5,16 @@
 # scheduled runs, so a failed weekly rebuild reaches the maintainer as an
 # issue and the next green rebuild closes it (GP7).
 #
-# Usage: .github/ci-failure-issue.sh <result> <run-url> [jobs-json]
-#   result    the run's aggregate result: "failure" opens or updates the issue,
-#             "success" closes any open ones; any other value (cancelled,
-#             skipped) is reported and ignored.
+# Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json]
+#   results   the needed jobs' results, space-separated (`needs.<job>.result`
+#             for each). They are aggregated here — the one copy of that rule,
+#             so the suite covers it. The issue is closed only when EVERY
+#             result is "success"; a run where any of them was cancelled is
+#             reported and ignored; anything else — a failure, a skipped job, a
+#             value GitHub has yet to invent — opens or updates the issue,
+#             because none of those published an image. A single value is a
+#             list of one, so "failure" / "success" / "cancelled" behave as
+#             they always did.
 #   run-url   link to the workflow run, put in the issue/comment body.
 #   jobs-json path to `gh run view --json jobs` output (or "-" for stdin). The
 #             failed variant names are extracted from it here — this is the one
@@ -32,12 +38,41 @@ JQ_ERR="$(mktemp)"
 trap 'rm -f "$JQ_ERR"' EXIT
 
 usage() {
-    echo "usage: $0 <result> <run-url> [jobs-json]" >&2
+    echo "usage: $0 <results> <run-url> [jobs-json]" >&2
     exit 2
 }
 
+# Collapse the needed jobs' results to one of failure / success / cancelled.
+# Success is unanimous or it is not success: the old rule fell through to the
+# build job's own result, so a green build with a cancelled or skipped publish
+# read as "success" and closed the issue on a run that moved no tag. An empty
+# list is a failure too — nothing reported success.
+aggregate_result() {
+    local all_success=1 any_failure=0 any_cancelled=0 r
+    [ $# -gt 0 ] || all_success=0
+    for r in "$@"; do
+        case "$r" in
+            success)   ;;
+            failure)   all_success=0; any_failure=1 ;;
+            cancelled) all_success=0; any_cancelled=1 ;;
+            *)         all_success=0 ;;
+        esac
+    done
+    if [ "$all_success" -eq 1 ]; then
+        echo success
+    elif [ "$any_failure" -eq 1 ]; then
+        echo failure
+    elif [ "$any_cancelled" -eq 1 ]; then
+        echo cancelled
+    else
+        echo failure
+    fi
+}
+
 [ $# -ge 2 ] || usage
-result="$1"
+# Deliberately unquoted: the first argument is a space-separated list.
+# shellcheck disable=SC2086
+result="$(aggregate_result $1)"
 run_url="$2"
 jobs_json="${3:-}"
 
@@ -137,6 +172,6 @@ case "$result" in
         done
         ;;
     *)
-        echo "result '$result' is neither failure nor success; nothing to do"
+        echo "the run was $result; neither opening nor closing a $LABEL issue"
         ;;
 esac

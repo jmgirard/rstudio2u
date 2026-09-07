@@ -313,29 +313,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # The failed variant names are extracted from this run's own job list by
-      # ci-failure-issue.sh (the one copy of that logic, unit-tested in
-      # scripts/tests/test_ci_failure_issue.sh); the two jobs' aggregate results
-      # decide whether the issue is opened or closed.
+      # Both decisions live in ci-failure-issue.sh, unit-tested in
+      # scripts/tests/test_ci_failure_issue.sh: it collapses the three needed
+      # jobs' results into open / close / ignore, and extracts the failed
+      # variant names from this run's own job list. This step hands it inputs
+      # and nothing else — no second copy of either rule in YAML.
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          PUBLISH_RESULT: ${{ needs.publish.result }}
+          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          if [ "$BUILD_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ]; then
-            result=failure
-          elif [ "$BUILD_RESULT" = success ] && [ "$PUBLISH_RESULT" = success ]; then
-            result=success
-          else
-            result="$BUILD_RESULT"
-          fi
           # A failed job listing must not block the alert itself: warn and let
           # the script fall back to its generic "see the run summary" text.
           gh run view "$GITHUB_RUN_ID" --json jobs > jobs.json || {
             echo "::warning::gh run view failed; the issue will not name the failed variants"
             echo '{"jobs":[]}' > jobs.json
           }
-          bash ./.github/ci-failure-issue.sh "$result" "$RUN_URL" jobs.json
+          bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json

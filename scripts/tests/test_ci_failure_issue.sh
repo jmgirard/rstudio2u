@@ -281,6 +281,49 @@ rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")
 assert_rc      "cancelled exits 0" 0 "$rc"
 if [ -s "$LOG" ]; then echo "FAIL: cancelled made gh calls"; cat "$LOG"; fails=$((fails + 1)); else echo "ok: cancelled makes no gh call"; fi
 
+# 6. Aggregating the needed jobs' results. The first argument is the list the
+# notify job passes ("<meta> <build> <publish>"), and the issue is closed only
+# when every one of them is success. Each case is asserted by which gh
+# subcommand ran on which issue, so "did not close" is distinguishable from
+# "did nothing".
+
+# 6a. Green build, publish skipped -> no tag moved. Must not close #41/#57.
+rc=$(run_script "success success skipped" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "success/success/skipped exits 0" 0 "$rc"
+assert_no_call "a skipped publish never closes the issue"     '^issue close '
+assert_call    "  ... it comments on the open issue instead"  '^issue comment 41 '
+
+# 6b. The same shape with no open issue: the failure is reported, not swallowed.
+rc=$(run_script "success success skipped" "$NONE" "$FIX_ALL_GREEN")
+assert_rc      "success/success/skipped, none open, exits 0" 0 "$rc"
+assert_call    "a skipped publish opens an issue"             '^issue create '
+
+# 6c. A value none of the three names is still not a success.
+rc=$(run_script "success success neutral" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "an unrecognised result exits 0" 0 "$rc"
+assert_no_call "an unrecognised result never closes the issue" '^issue close '
+
+# 6d. Unanimous success closes, as before.
+rc=$(run_script "success success success" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "all three success exits 0" 0 "$rc"
+assert_call    "a fully green run closes #41"                 '^issue close 41$'
+assert_call    "  ... and #57"                                '^issue close 57$'
+
+# 6e. A cancelled member is ignored, even alongside successes.
+rc=$(run_script "success cancelled cancelled" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "a cancelled member exits 0" 0 "$rc"
+if [ -s "$LOG" ]; then echo "FAIL: a cancelled run made gh calls"; cat "$LOG"; fails=$((fails + 1)); else echo "ok: a cancelled run makes no gh call"; fi
+
+# 6f. A real failure outranks a cancellation: the alert still goes out.
+rc=$(run_script "success failure cancelled" "$NONE" "$FIX_ARM64_FAIL")
+assert_rc      "failure alongside cancelled exits 0" 0 "$rc"
+assert_call    "a failure outranks a cancellation and opens an issue" '^issue create .*--title Weekly rebuild failed: noble --body '
+
+# 6g. The meta job failing skips everything downstream — still an alert.
+rc=$(run_script "failure skipped skipped" "$NONE" "$(jobs_doc "$(job 'meta' failure)")"  )
+assert_rc      "meta failure exits 0" 0 "$rc"
+assert_call    "a failed meta job opens an issue with the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+
 # Usage error: fewer than two args exits 2 without calling gh.
 : > "$LOG"
 bash "$SCRIPT" failure >/dev/null 2>&1; rc=$?

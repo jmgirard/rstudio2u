@@ -179,3 +179,103 @@ declares none as a file and no `CHANGELOG.md` exists, so this milestone's
 user-visible change is stated in its archive summary.
 
 Gate result: pass.
+
+### Independent review
+
+Three fresh-context reviewers, distinct evidence bases, none having seen the
+implementation. Executable surface changed, so the full fan-out ran despite the
+internal surface tier.
+
+- **[S] prior-PR-comments lens: no findings.** Primary evidence found and read:
+  the `## Review` records in `archive/M13-rebuild-failure-alert.md` and
+  `archive/M016-weekly-rebuild-keepalive.md`, both touching files this diff
+  touches; `LESSONS.md` names none of these files. The existence probe
+  (`gh api …/pulls/comments?per_page=1`) returned empty, so the per-PR walk was
+  correctly skipped. Each fix M13's review recorded — the failing `gh run view`
+  warn-and-fall-back, `$GITHUB_RUN_ID`, `--limit 100` on `gh issue list`, the
+  `JQ_ERR` guard — is still present and none is contradicted.
+- **[S] blame-history lens: one finding** (F2 below), plus positive
+  confirmation that the change fulfils the gap D-009 recorded, that the
+  variant parse and its dedup survive the generalization unchanged, and that
+  `needs:`/`RESULTS` were extended in lockstep.
+- **[O] diff-bug lens: eight findings** (F1, F3–F8 below, and F2 again),
+  with all six criteria judged genuinely met.
+
+Findings, ranked as reported, each with its triage. Every finding is recorded
+whatever its disposition.
+
+**F1 — [O], most severe. Non-`failure` conclusions defeat the naming.**
+"`aggregate_result` treats *any* non-`success` result as a failure, but
+`extract_failed_names` selects only `.conclusion == "failure"`. A keepalive job
+that hangs on `git push` … times out, `needs.keepalive.result` is `failure`,
+but the job listing reports `timed_out` — so the issue falls back to `(see the
+run summary for the failed job)` *and* emits the 'job listing names no failed
+job' contradiction warning blaming the parser."
+*Verified and reclassified:* the claim holds, but `git show
+main:.github/ci-failure-issue.sh` carries the identical
+`select(.conclusion == "failure")` at line 88 — the mismatch predates this
+branch and the diff neither introduced nor widened it. Out-of-scope taxonomy,
+pre-existing. **Triage: follow-up candidate row.**
+
+**F2 — [S] and [O]. The close path kept the old vocabulary.** The failure path
+was rebased to "Weekly run failed:" / "The scheduled run failed in:" and its
+create body promises closure "by the next fully green scheduled run", but
+`.github/ci-failure-issue.sh:172,177` still say `rebuild succeeded; no open
+$LABEL issue` and `The weekly rebuild succeeded; closing.` — so the message
+that does the closing tells the reader the *rebuild* succeeded, which is not
+what was verified and not what opened the issue when the cause was keepalive.
+*Verified:* both strings are byte-identical to `main` and were simply missed
+by this branch's own rename sweep. **Triage: fix now.**
+
+**F3 — [O]. Multi-word job names render as an unparseable title.**
+`failed_text="${failed_names[*]}"` joins on a space and the extraction now
+emits arbitrary job names; a listing with failed `gap check` and `keepalive`
+yields `Weekly run failed: gap check keepalive`, indistinguishable from three
+jobs. *Verified* by running the extraction on that fixture. Unreachable today
+— every job in `docker.yml` is single-word — and this is exactly the falsifier
+the plan gate recorded for the chosen approach. A separator fix would falsify
+AC4's literal `noble resolute`, so it cannot be made here without amending a
+criterion. **Triage: follow-up candidate row**, to be settled with M018's lane.
+
+**F4 — [O]. Stale contract comment.** `docker.yml:69-70` still reads "The
+notify job's variant extraction parses this name … to recover the failed
+variant names; keep the two in step" — the one pointer left aimed at the old
+`extract_variants`, and the comment whose whole job is keeping the matrix
+`name:` and the parser coupled. **Triage: fix now.**
+
+**F5 — [O]. The new guard comment omits the `if:` coupling.** The comment added
+at `docker.yml:350-352` warns that a job in `needs:` but not `RESULTS` goes
+unreported, but adding `keepalive` is also safe only because its `if:` is true
+whenever `notify`'s is; narrowing it later makes `needs.keepalive.result`
+`skipped`, which `aggregate_result` maps to failure — a spurious issue every
+week. *Verified:* `keepalive`'s `if:` is
+`github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`
+and `notify`'s is schedule-only, so `skipped` is unreachable today; the
+dependency is real and recorded nowhere. **Triage: fix now** (record it in the
+comment).
+
+**F6 — [O]. Fixture 5c pins an unreachable input.** `FIX_NO_MATRIX_JOB` asserts
+`--title Weekly run failed: notify`, but `notify` is the job running `gh run
+view` on itself, so its own conclusion is always null there. **Triage: reject.**
+The case exists to pin the non-matrix parse branch, for which `notify` is a
+stand-in name; the branch itself is reachable and separately covered by the
+`keepalive` and `meta` cases. A pure realism nitpick on a case that costs
+nothing.
+
+**F7 — [O]. AC5's no-warning property is not asserted on the dedup case.** 5i
+(`FIX_DEDUP_MIX`) carries no `assert_no_out '::warning::'`, unlike 5h. Not a
+miss against AC5, which demands only the keepalive case. **Triage: fix now**
+(one assertion).
+
+**F8 — [O]. `docker.yml`'s `push.paths` omits `.github/ci-failure-issue.sh`.**
+Pre-existing and explicitly noted as such by the reviewer. **Triage: reject —
+already tracked** as a ROADMAP candidate row added at the M015 review; no
+second row.
+
+**Return floor:** no finding demonstrates an acceptance criterion failing, and
+none is a load-bearing defect this branch introduced — F1 and F8 are
+byte-identical to `main`, F3 is unreachable under the workflow's current job
+names. Status does not return to `in-progress`.
+
+**PR conversation (PR #24):** no reviews, no conversation comments, no
+unresolved review threads. Nothing to triage.

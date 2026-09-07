@@ -1,6 +1,6 @@
 # M015: Native arm64 runners for the image build
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -147,6 +147,7 @@ rows.
 - 2026-09-06: T5: `docker.yml` gains a `meta` job resolving the RStudio version and the UTC date once per run; the four build legs take `RSTUDIO_VERSION` from it and both publish legs build the `<variant>-<version>` / `<variant>-<date>` tags from the same two outputs, so the publish job no longer reaches the network. The publish step now parses the index it created (`--dry-run` output in test mode, `imagetools inspect --raw` otherwise) and fails unless the linux platforms are exactly amd64 and arm64; proven able to fail against a planted two-manifest single-arch index, and unmoved by an `unknown/unknown` attestation entry.
 - 2026-09-06: T6: added a publish-only-failure fixture (every build leg green, `publish (noble)` failed), so the `publish` half of the extraction filter is now the sole source of a variant name; drove the all-green fixture through the failure path, where the script must fall back to generic text and warn that the listing named no failed leg; and surfaced jq's own diagnostics instead of discarding them. Proven able to fail under five planted defects: filter narrowed to build legs, contradiction warning removed, jq diagnostics back to /dev/null, all-green fixture swapped for a failing one, dedup removed.
 - 2026-09-06: T7: the open/close/ignore rule moved out of `notify`'s inline shell into `ci-failure-issue.sh`, whose first argument is now the space-separated list of the needed jobs' results (`meta build publish`); the issue closes only on a unanimous success, a cancelled member is ignored, and a failure outranks a cancellation. Seven aggregation cases added; proven able to fail under three planted defects (unknown result counted as success, cancelled no longer blocking success, failure no longer outranking cancellation). The `$TAGS` quoting and the `for f in *` / `find` reconciliation landed with T5, in the same publish step.
+- 2026-09-06: T5-T7 complete; status to review. verify: `hadolint Dockerfile` clean at 2.12.0; both shell suites pass; shellcheck 0.11.0 (-x -S info) clean over all tracked shell files and over the two workflow inline blocks extracted from `docker.yml`. No Dockerfile or build-context file changed in T5-T7 (`scripts/tests` is dockerignored), so the T4 clean-context build stands. The Review section's AC1/AC3/AC5 evidence predates these commits and needs a fresh test-mode dispatch.
 
 ## Decisions
 

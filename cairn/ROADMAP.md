@@ -1,14 +1,14 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-06 (M015 T4: reworded the pr-ci arm64 candidate off "emulated"; added the [low] hadolint DL3025 row)_
+_Last hygiene check: 2026-09-06 (M015 T5-T7: no candidate-row changes; status row to review)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M015 | Native arm64 runners for the image build | in-progress | — | high | milestones/M015-native-arm64-runners.md |
+| M015 | Native arm64 runners for the image build | review | — | high | milestones/M015-native-arm64-runners.md |
 | M014 | Semver release history | done | — | normal | milestones/archive/M014-semver-release-history.md |
 | M13 | Weekly rebuild failure alert | done | — | normal | milestones/archive/M13-rebuild-failure-alert.md |
 | M12 | Docker Hub description sync | done | — | normal | milestones/archive/M12-dockerhub-description-sync.md |

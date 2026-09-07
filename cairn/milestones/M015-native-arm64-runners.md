@@ -413,3 +413,71 @@ PR #22 checks: `shellcheck` pass, `build-smoke` pass (2m57s). The first
 r2u.stat.illinois.edu:443 (192.17.190.167), connection timed out` — the r2u
 mirror unreachable from that runner, which is the outage the image's own
 mirror-hint UX is built to report, not a branch defect; re-run green.
+
+#### Independent review (second pass)
+
+Full three-lens fan-out (user-facing tier, executable diff), all three
+fresh-context and none having seen the implementation. [O] diff-bug: 14
+candidate findings. [S] blame-history: 4 findings, each already a filed
+candidate row, plus twelve verified-safe confirmations. [S]
+prior-review-record: zero findings — it re-derived that every first-pass
+finding dispositioned fix-now (F1-F6, F8, F9) is present in the diff, and the
+existence probe `gh api repos/jmgirard/rstudio2u/pulls/comments?per_page=1`
+returned `[]`, so the per-PR walk was skipped.
+
+Findings, ranked, deduplicated across lenses. Dispositions are recorded at the
+approval gate.
+
+- G1 On the real publish path the architecture assertion runs AFTER
+  `docker buildx imagetools create` has attached the tags. `latest`, `noble`,
+  `noble-<date>` and `noble-<rsver>` already point at the index by the time
+  `got != "amd64 arm64"` fires, so the guard reports a bad publish rather than
+  preventing one. Reaching it needs a second latent fault — the prefix-based
+  `digests-<variant>-*` artifact pattern pulling a future `noble-lts` leg's
+  digest into `noble`, or a matrix edit duplicating a runner label — but the
+  outcome is a single-arch `latest` that stays wrong until a human intervenes.
+- G2 Same root as G1, stated separately: the only pre-publish gate is a file
+  count. The per-leg assertions prove each leg built what it claimed and the
+  artifact name encodes the arch, but the publish job reads only hex digest
+  filenames and never an architecture, so two same-arch digests satisfy it.
+- G3 `if: always() && needs.build.result != 'cancelled'` lets `publish` run
+  when `build` was skipped. If `meta` fails — the RStudio version scrape is
+  this repo's own documented flaky surface — `build` is skipped, both publish
+  legs run, `RSVER` and `DATE` are empty, and the tag step emits
+  `jmgirard/rstudio2u:noble-` twice. Nothing validates them; they are never
+  pushed only because the digest count is 0 and aborts first, so the count
+  guard is load-bearing for a second, unstated reason.
+- G4 The `gh run view` fallback writes `{"jobs":[]}`, which the script reads
+  as a non-empty listing yielding zero variants, so it fires the
+  contradiction warning on top of the notify step's own warning. The alert
+  carries two warnings blaming different components, the second accusing the
+  extraction of a defect that is not there.
+- G5 The "an empty results list is a failure" rule is untested. Replacing
+  `[ $# -gt 0 ] || all_success=0` with `:` leaves all 67 assertions passing —
+  reproduced independently at review. Unreachable from `docker.yml` today,
+  since `RESULTS` always interpolates three values.
+- G6 `publish` still runs `actions/checkout@v4` although nothing in the job
+  reads the repository: after T5 moved the version resolve into `meta`, its
+  steps are buildx setup, login, artifact download and two inline scripts that
+  touch only `/tmp`. A dead step on both legs of every run.
+- G7 A non-index `imagetools inspect --raw` result dies with jq's own
+  `Cannot iterate over null` under `set -e` rather than the `::error::` the
+  step wrote for exactly that case.
+- G8 `cairn/PROFILE.md:112` reads "multi-arch => `docker buildx` + QEMU in
+  CI", which no longer describes this repo's CI.
+- G9 `scripts/resolve-rstudio-version.sh:9` cites "Known issue #2", but
+  `DESIGN.md`'s Known issues list is an unnumbered bullet list; the same
+  dangling form is in `scripts/mirror_hint.R` ("Known issue #1").
+- G10 `for t in ${{ matrix.mutable }}` is the one remaining deliberate word
+  split in the publish step, and workflow inline blocks are outside the repo's
+  shellcheck lane.
+- G11 `meta`, `build` and `publish` carry no `permissions:` block, where
+  `notify` scopes itself. Unchanged from the default branch's pattern, but the
+  diff adds two new jobs.
+- G12 The acceptance-criteria checkboxes were unticked. Read from the tree
+  before this pass's tick commits landed.
+- G13 Re-confirmed, no new information: every run pushes four untagged
+  manifests before any smoke test with no GC step; `retention-days: 1` makes
+  "Re-run failed jobs" fail misleadingly after 24h; the prefix-based
+  `digests-<variant>-*` pattern; `docker.yml`'s `push.paths` omitting
+  `.github/ci-failure-issue.sh`. All four are already candidate rows.

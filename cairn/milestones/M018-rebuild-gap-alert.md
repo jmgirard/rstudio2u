@@ -66,11 +66,11 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 
 ## Coverage
 
-- AC1 → T1, T2
-- AC2 → T1, T2
+- AC1 → T1, T3
+- AC2 → T1, T3
 - AC3 → T1, T2, T3
 - AC4 → T4
-- AC5 → T3
+- AC5 → T2
 - AC6 → T5
 - AC7 → T5
 
@@ -80,12 +80,12 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
       outcomes, the five rejections, the over-wide threshold, and the
       zero-call assertions — against `gh`/`curl`/`wget` stubs modelled on
       `scripts/tests/test_keepalive.sh`'s call-logging `git` stub. Confirm red.
-- [ ] T2: Write `.github/rebuild-gap.sh`, reusing `keepalive.sh`'s
-      `days_from_civil` / `parse_date` / digit-width bound rather than
-      re-deriving them. Suite green.
-- [ ] T3: Add an optional subject argument to `.github/ci-failure-issue.sh`
+- [x] T2: Add an optional subject argument to `.github/ci-failure-issue.sh`
       (default: today's wording), and cover both renderings in
       `scripts/tests/test_ci_failure_issue.sh`.
+- [ ] T3: Write `.github/rebuild-gap.sh`, reusing `keepalive.sh`'s
+      `days_from_civil` / `parse_date` / digit-width bound rather than
+      re-deriving them. Suite green.
 - [ ] T4: Add the scheduled workflow: `gh run list --workflow docker.yml
       --event schedule --status success --limit 1 --json createdAt`, reduce to
       a UTC `YYYY-MM-DD`, and call `rebuild-gap.sh` with it, today, and `15`.
@@ -102,6 +102,9 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - 2026-09-07: plan gate chose reusing the `ci-failure` issue stream over a separate `rebuild-gap` label, because the next green scheduled rebuild is exactly the right close condition for a gap and one stream is one thing to watch; falsified by gap and build-failure alerts needing different close conditions.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned three findings on this milestone. Draft AC1's "no network call" and draft AC2's "every argument is validated" were unbounded promises over domains their named procedures could not enumerate; both were narrowed before writing — AC1 to three call-logging stubs, AC2 to its listed rejections. Draft AC4 required a live `workflow_dispatch` demonstration (a process/environment boundary the internal tier excludes) and bound an evidence-quotation act; posed at the gate, which chose the file-state promise and moved the dispatch run to T5.
 - 2026-09-07: T1 — wrote `scripts/tests/test_rebuild_gap.sh` against call-logging `gh`/`curl`/`wget` stubs; confirmed red (exit 127, no `.github/rebuild-gap.sh`). Gate chose: a fourth positional subject argument on `ci-failure-issue.sh`; a gap alert raised (not swallowed) when the run history cannot be read; a weekly Monday cadence a few hours after the rebuild.
+
+- 2026-09-07: minor amendment — T2 and T3 swapped, because the gap script's alert wording is what T2 (the subject argument) provides; Coverage renumbered with them (AC5 → T2, AC1/AC2 → T1, T3).
+- 2026-09-07: T2 — `.github/ci-failure-issue.sh` takes an optional fourth argument that replaces the failed-job wording in the title and in the lead line of both the body and the repeat comment; omitted, every rendering is byte-identical to before. Four cases added to `scripts/tests/test_ci_failure_issue.sh` and the no-subject body lead newly asserted; planting an appending-instead-of-replacing defect turned 6 assertions red, restoring it turned them green. Suite passes; pinned shellcheck 0.11.0 clean over the changed files.
 
 ## Decisions
 

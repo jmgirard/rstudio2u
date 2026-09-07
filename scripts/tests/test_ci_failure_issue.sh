@@ -64,17 +64,23 @@ chmod +x "$WORK/bin/gh"
 export GH_STUB_LOG="$LOG"
 export PATH="$WORK/bin:$PATH"
 
-# run_script <result> <list-json> [jobs-json]  — fresh log each run. The third
-# argument is the *content* of a jobs document; it is written to a temp file and
-# the file's path handed to the script, exactly as the notify job does.
+# run_script <result> <list-json> [jobs-json] [subject]  — fresh log each run.
+# The third argument is the *content* of a jobs document; it is written to a
+# temp file and the file's path handed to the script, exactly as the notify job
+# does. A fourth argument is passed through as the subject, with an empty jobs
+# position ahead of it when there is no jobs document — the shape
+# .github/rebuild-gap.sh uses.
 run_script() {
-    local result="$1" list="$2" jobs="${3-}"
+    local result="$1" list="$2" jobs="${3-}" subject="${4-}"
     : > "$LOG"
     local args=("$result" "$RUN_URL")
     if [ -n "$jobs" ]; then
         printf '%s' "$jobs" > "$WORK/jobs.json"
         args+=("$WORK/jobs.json")
+    elif [ -n "$subject" ]; then
+        args+=("")
     fi
+    [ -n "$subject" ] && args+=("$subject")
     GH_STUB_LIST="$list" bash "$SCRIPT" "${args[@]}" >"$WORK/out" 2>&1
     echo $?
 }
@@ -221,6 +227,9 @@ assert_call    "failure/none creates an issue"                '^issue create '
 assert_call    "  ... with the ci-failure label"              '^issue create .*--label ci-failure'
 assert_call    "  ... whose title names the failed variant exactly once" '^issue create .*--title Weekly run failed: noble --body '
 assert_no_call "  ... and never names the all-green variant"  '^issue create .*resolute'
+# The stub joins argv on spaces, so the body's blank line before "Run:" shows
+# as two spaces — that is the boundary standing in for end-of-string here.
+assert_call    "  ... whose body opens with the failed-job wording" '^issue create .*--body The scheduled run failed in: noble  Run: '
 assert_call    "  ... whose body links the run"               "^issue create .*$RUN_URL"
 assert_call    "failure/none ensures the label exists"        '^label create ci-failure --force'
 assert_no_call "failure/none comments on nothing"             '^issue comment '
@@ -334,6 +343,45 @@ assert_rc      "keepalive failure in the results list exits 0" 0 "$rc"
 assert_no_call "a failed keepalive never closes the issue"    '^issue close '
 assert_call    "  ... it comments on the open issue instead"  '^issue comment 41 '
 assert_call    "  ... naming the failed job"                  '^issue comment 41 .*keepalive'
+
+# 5k. A subject given. It is the whole title and the whole lead line of the
+# body — not appended to the failed-job wording, which would claim a job failed
+# in a run where none did. The jobs position is empty, as the gap check leaves
+# it, and that must not trip the "listing explained nothing" warning: without a
+# listing there is nothing to contradict.
+SUBJECT='No successful weekly rebuild in 16 days (since 2026-01-01)'
+# The same text as a regex: its parentheses are literal, not a group.
+SUBJECT_RE='No successful weekly rebuild in 16 days \(since 2026-01-01\)'
+rc=$(run_script failure "$NONE" "" "$SUBJECT")
+assert_rc      "failure with a subject exits 0" 0 "$rc"
+assert_call    "a subject becomes the whole issue title" "^issue create .*--title $SUBJECT_RE --body "
+assert_call    "  ... and the lead line of the body"     "^issue create .*--body $SUBJECT_RE  Run: "
+assert_no_call "  ... replacing the failed-job wording"  'Weekly run failed|The scheduled run failed in'
+assert_no_call "  ... and never the generic fallback"    'see the run summary'
+assert_no_out  "  ... warning about nothing"             '::warning::'
+
+# 5l. The same subject with the issue already open: the comment's lead line is
+# the subject too, so a repeat alert reads the same as the first.
+rc=$(run_script failure "$TWO" "" "$SUBJECT")
+assert_rc      "a subject with an open issue exits 0" 0 "$rc"
+assert_call    "the comment's lead line is the subject" "^issue comment 41 --body $SUBJECT_RE  Run: "
+assert_no_call "  ... not the failed-again wording"     'The scheduled run failed again in'
+assert_no_call "  ... and opens no second issue"        '^issue create '
+
+# 5m. A subject alongside a jobs document naming a failed job: the subject still
+# wins. This is what keeps the two wordings from being concatenated should a
+# future caller pass both.
+rc=$(run_script failure "$NONE" "$FIX_KEEPALIVE_FAIL" "$SUBJECT")
+assert_rc      "a subject alongside a jobs document exits 0" 0 "$rc"
+assert_call    "the subject still owns the title"        "^issue create .*--title $SUBJECT_RE --body "
+assert_no_call "  ... and the job name is not appended"  '^issue create .*keepalive'
+
+# 5n. A multi-line subject is trimmed to its first line, and cannot smuggle a
+# newline into a title.
+rc=$(run_script failure "$NONE" "" "$(printf 'First line\nSecond line')")
+assert_rc      "a multi-line subject exits 0" 0 "$rc"
+assert_call    "only the first line becomes the title"   '^issue create .*--title First line --body '
+assert_no_call "  ... and the second line is dropped"    'Second line'
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")

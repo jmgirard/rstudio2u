@@ -1,6 +1,6 @@
 # M015: Native arm64 runners for the image build
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -36,32 +36,32 @@ rows.
 
 ## Acceptance criteria
 
-- [x] AC1: A test-mode `workflow_dispatch` run of the branch's `docker.yml` —
+- [ ] AC1: A test-mode `workflow_dispatch` run of the branch's `docker.yml` —
       layers pushed by digest, no tag attached — prints from
       `docker buildx imagetools create --dry-run` a noble manifest list naming
       both `linux/amd64` and `linux/arm64`, and prints the tag list it would
       apply, containing `latest`, `noble`, `noble-<UTC date>` and
       `noble-<rstudio version>` (GP2's escape hatch).
-- [x] AC2: Reading every step of the merged `.github/workflows/docker.yml` top
+- [ ] AC2: Reading every step of the merged `.github/workflows/docker.yml` top
       to bottom finds no `docker/setup-qemu-action` step, and finds each build
       step's `platforms:` value equal to the single native architecture of the
       runner its job declares.
-- [x] AC3: In the AC1 run, the arm64 leg boots an image whose
+- [ ] AC3: In the AC1 run, the arm64 leg boots an image whose
       `docker image inspect --format '{{.Architecture}}'` is `arm64` and whose
       container answers `aarch64` to `uname -m`, and `.github/smoke-test.sh`
       against that image logs `PASS: quarto rendered .qmd to HTML`.
-- [x] AC4: `scripts/tests/test_ci_failure_issue.sh` exercises the shipped
+- [ ] AC4: `scripts/tests/test_ci_failure_issue.sh` exercises the shipped
       failed-variant extraction — the merged `docker.yml` invokes it and keeps
       no second inline copy — over fixtures shaped like the new matrix's
       `gh run view --json jobs` output, covering (a) one variant's arm64 leg
       failing, where the issue body names that variant exactly once and does
       not name the all-green variant, and (b) every leg green, where the
       script closes the issue rather than opening one.
-- [x] AC5: Reading every build step of the merged `docker.yml` finds `no-cache`
+- [ ] AC5: Reading every build step of the merged `docker.yml` finds `no-cache`
       set for `schedule` and `workflow_dispatch` events, and the AC1 run's
       build logs show the RStudio/Pandoc/Quarto install layer executed rather
       than reported `CACHED`.
-- [x] AC6: `hadolint Dockerfile` clean, `docker build` succeeds from a clean
+- [ ] AC6: `hadolint Dockerfile` clean, `docker build` succeeds from a clean
       context, and `bash scripts/tests/test_ci_failure_issue.sh` and
       `bash scripts/tests/test_retry.sh` pass (PROFILE `verify`).
 
@@ -105,6 +105,27 @@ rows.
       update `DESIGN.md` Conventions (the CI line) and Known issues; reword
       the `pr-ci.yml` arm64 candidate row to drop "emulated".
 
+- [ ] T5: Resolve the RStudio version and the UTC date once per run and carry
+      both forward, so the `RSTUDIO_VERSION` build-arg and the `<variant>-<ver>`
+      / `<variant>-<date>` tags can never disagree (a pre-build job whose
+      outputs `build` and `publish` both consume, or the value emitted into the
+      digest artifact). This also removes the network scrape from the publish
+      job, where a transient failure discards four completed builds. In the same
+      job, assert the assembled manifest list names both `linux/amd64` and
+      `linux/arm64` rather than only counting two digest artifacts.
+- [ ] T6: Make the ci-failure fixtures discriminate: add a fixture with every
+      build leg green and one `publish (<variant>)` leg failed (today, dropping
+      `publish` from the extraction leaves the suite green), make the all-green
+      fixture load-bearing rather than inert, and emit a warning when a non-empty
+      jobs document parses to zero variants instead of silently falling back to
+      the generic text.
+- [ ] T7: Fix `notify`'s result aggregation so anything that is not
+      build-success *and* publish-success is treated as not-success — today
+      publish `cancelled`/`skipped` falls through to `success` and closes the
+      ci-failure issue on a run that published nothing. Quote or glob-guard the
+      inline `$TAGS` loops in the publish job and reconcile `for f in *` with
+      the `find . -type f` count above it.
+
 ## Work log
 
 - 2026-09-06: created by /milestone-plan.
@@ -121,6 +142,7 @@ rows.
 - 2026-09-06: pushed the branch and dispatched the test-mode run for AC1/AC3/AC5 evidence: https://github.com/jmgirard/rstudio2u/actions/runs/34075352828 . All four build legs picked up runners and are in progress, so `ubuntu-24.04-arm` resolves for this repo — the plan's stated falsifier for the native-runner choice does not fire. No watcher left armed; review re-derives the run state.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 - 2026-09-06: review: PR #22 opened draft; all six criteria verified with fresh evidence from test-mode run 34075735235 (all green); consistency gate passes; three-lens review returned 13 findings, dispositions pending at the gate.
+- 2026-09-06: review send-back (defect return 1): F1 — the publish job re-scrapes the RStudio version and UTC date independently of the build legs, so an immutable `<variant>-<version>` or `-<date>` tag can name an image not built from it; the default branch resolved both once. Filed as T5–T7 with F2/F3/F5/F6/F8/F9; status back to `in-progress`. The six criteria all passed this pass (evidence in the Review section) but are unticked, since T5–T7 change the artifacts that evidence was taken from.
 
 ## Decisions
 
@@ -263,3 +285,20 @@ approval gate.
 - F13 `docker.yml`'s `push.paths` filter does not list
   `.github/ci-failure-issue.sh`. Pre-existing on the default branch; this branch
   made that file more load-bearing.
+
+### Finding dispositions (2026-09-06 gate)
+
+The gate chose to send the milestone back rather than patch at review or merge
+with follow-ups. Status returns to `in-progress` for T5–T7.
+
+- F1, F4 -> fix now, as T5. F1 is the return-floor finding: a defect the branch
+  introduces in what the published tags promise users.
+- F6 -> fix now, folded into T5 (the same job learns to check itself).
+- F2, F5, F9 -> fix now, as T6 (all three are the same suite and script).
+- F3, F8 -> fix now, as T7.
+- F7, F10, F11, F13 -> follow-up candidate rows; none blocks the lane and each
+  is independent of T5–T7.
+- F12 -> rejected. Ticking the criteria against fresh evidence is the review
+  phase's own job, done above; not a defect in the work.
+- conversation: PR #22 — no reviews, no comments, no unresolved threads. Nothing
+  to triage.

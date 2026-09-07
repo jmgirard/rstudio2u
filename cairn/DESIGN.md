@@ -58,7 +58,10 @@ reproducibility.
   sometimes two. The staleness rule lives in `.github/keepalive.sh`,
   never in the workflow; the push authenticates with a write-enabled deploy key
   held in a repository secret, so the repo-wide Actions token stays read-only
-  (added M016).
+  (added M016). A scheduled run whose keepalive job fails is reported like any
+  other failed job: `docker.yml`'s `notify` job needs `keepalive` and names it
+  in the `ci-failure` issue, so the guard against a silenced schedule cannot
+  itself lapse unnoticed (added M017).
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while

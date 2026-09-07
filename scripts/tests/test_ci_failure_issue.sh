@@ -9,17 +9,19 @@
 # success with none (no gh writes) — are asserted by WHICH subcommand ran and on
 # WHICH issue number, never by call counts. Runs offline: no network, no token.
 #
-# The failed-variant names are extracted by the script itself from a
+# The failed job names are extracted by the script itself from a
 # `gh run view --json jobs` document, so the fixtures below are job listings in
-# the shape docker.yml's matrix produces: one build leg per (variant, arch) plus
-# one publish leg per variant. They pin the behaviours that matter — a variant
-# named once however many of its legs failed, an all-green variant never named,
-# a variant recovered from a failed publish leg with every build leg green, a
-# non-matrix job never mistaken for a variant, and GitHub's auto-generated
-# multi-key job name parsed to the same variant as the explicit name.
+# the shape docker.yml's jobs produce: one build leg per (variant, arch), one
+# publish leg per variant, and the plain jobs beside them. They pin the
+# behaviours that matter — a variant named once however many of its legs
+# failed, an all-green variant never named, a variant recovered from a failed
+# publish leg with every build leg green, GitHub's auto-generated multi-key job
+# name parsed to the same variant as the explicit name, and a failed job
+# outside the matrix (`keepalive`, `meta`) named by its own job name rather
+# than parsed for a variant.
 #
 # Two cases exist to keep the alert honest when the listing explains nothing:
-# an unparseable document, and a listing whose legs are all green under a run
+# an unparseable document, and a listing whose jobs are all green under a run
 # reported as failed. Both must still open the issue, with the generic wording,
 # and must say which of the two happened.
 #
@@ -125,11 +127,36 @@ FIX_BOTH_FAIL=$(jobs_doc \
     "$(job 'publish (noble)' failure)" \
     "$(job 'publish (resolute)' failure)")
 
-# Only a job outside the matrix failed: nothing to name.
+# Only a job outside the matrix failed: it is named by its own job name, with
+# no variant parse to apply.
 FIX_NO_MATRIX_JOB=$(jobs_doc \
     "$(job 'build (noble, amd64)' success)" \
     "$(job 'build (noble, arm64)' success)" \
     "$(job 'notify' failure)")
+
+# Every build and publish leg green; only the keepalive job failed. The images
+# published, so no variant is at fault — the alert exists to name the job that
+# was. This is the fixture the keepalive reporting rests on.
+FIX_KEEPALIVE_FAIL=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish (noble)' success)" \
+    "$(job 'publish (resolute)' success)" \
+    "$(job 'keepalive' failure)")
+
+# noble's two build legs and resolute's publish leg failed, and nothing else.
+# Two failed legs of one variant collapse to one name; the publish leg is the
+# only source of the other. Expected: "noble resolute", in listing order.
+FIX_DEDUP_MIX=$(jobs_doc \
+    "$(job 'build (noble, amd64)' failure)" \
+    "$(job 'build (noble, arm64)' failure)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish (noble)' success)" \
+    "$(job 'publish (resolute)' failure)" \
+    "$(job 'keepalive' success)")
 
 # The job name GitHub generates for a matrix `include` leg when the workflow
 # sets no explicit `name:` — every include key, in order (M13's lesson).
@@ -192,7 +219,7 @@ rc=$(run_script failure "$NONE" "$FIX_ARM64_FAIL")
 assert_rc      "failure/none exits 0" 0 "$rc"
 assert_call    "failure/none creates an issue"                '^issue create '
 assert_call    "  ... with the ci-failure label"              '^issue create .*--label ci-failure'
-assert_call    "  ... whose title names the failed variant exactly once" '^issue create .*--title Weekly rebuild failed: noble --body '
+assert_call    "  ... whose title names the failed variant exactly once" '^issue create .*--title Weekly run failed: noble --body '
 assert_no_call "  ... and never names the all-green variant"  '^issue create .*resolute'
 assert_call    "  ... whose body links the run"               "^issue create .*$RUN_URL"
 assert_call    "failure/none ensures the label exists"        '^label create ci-failure --force'
@@ -230,29 +257,30 @@ assert_no_call "success/none closes nothing"                  '^issue close '
 # 5. failure, no open issue, no jobs document -> the title carries the fallback
 rc=$(run_script failure "$NONE")
 assert_rc      "failure/none/no-variants exits 0" 0 "$rc"
-assert_call    "failure/none/no-variants creates an issue with the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_call    "failure/none/no-variants creates an issue with the fallback title" '^issue create .*--title Weekly run failed: \(see the run summary'
 
 # 5b. Both variants down -> both named, each once, in job order.
 rc=$(run_script failure "$NONE" "$FIX_BOTH_FAIL")
 assert_rc      "failure/both-variants exits 0" 0 "$rc"
-assert_call    "both failed variants named, each once" '^issue create .*--title Weekly rebuild failed: noble resolute --body '
+assert_call    "both failed variants named, each once" '^issue create .*--title Weekly run failed: noble resolute --body '
 
-# 5c. A failed job outside the matrix is not a variant: the fallback text stands.
+# 5c. A failed job outside the matrix has no variant to parse, so it is named
+# by its own job name — never dropped into the fallback text.
 rc=$(run_script failure "$NONE" "$FIX_NO_MATRIX_JOB")
 assert_rc      "failure/non-matrix-job exits 0" 0 "$rc"
-assert_call    "a failed non-matrix job yields the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
-assert_no_call "  ... and is never named as a variant"        '^issue create .*notify'
+assert_call    "a failed non-matrix job is named by its own name" '^issue create .*--title Weekly run failed: notify --body '
+assert_no_out  "  ... and is not treated as an unexplained failure" '::warning::'
 
 # 5d. GitHub's auto-generated multi-key job name parses to the same variant.
 rc=$(run_script failure "$NONE" "$FIX_MULTIKEY")
 assert_rc      "failure/multikey-name exits 0" 0 "$rc"
-assert_call    "multi-key job name yields just the variant" '^issue create .*--title Weekly rebuild failed: noble --body '
+assert_call    "multi-key job name yields just the variant" '^issue create .*--title Weekly run failed: noble --body '
 
 # 5e. An unparseable jobs document must not abort the alert: fallback text, and
 # jq's complaint is surfaced rather than swallowed.
 rc=$(run_script failure "$NONE" 'not json at all')
 assert_rc      "failure/unparseable-jobs exits 0" 0 "$rc"
-assert_call    "an unparseable jobs document yields the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_call    "an unparseable jobs document yields the fallback title" '^issue create .*--title Weekly run failed: \(see the run summary'
 assert_out     "  ... and reports why it could not be parsed"  '::warning::could not parse the job listing'
 assert_no_out  "  ... without also claiming the listing was clean" '::warning::the run is reported failed'
 
@@ -261,7 +289,7 @@ assert_no_out  "  ... without also claiming the listing was clean" '::warning::t
 # the filter to build legs turns this into the fallback title.
 rc=$(run_script failure "$NONE" "$FIX_PUBLISH_ONLY_FAIL")
 assert_rc      "failure/publish-only exits 0" 0 "$rc"
-assert_call    "a publish-only failure names its variant exactly once" '^issue create .*--title Weekly rebuild failed: noble --body '
+assert_call    "a publish-only failure names its variant exactly once" '^issue create .*--title Weekly run failed: noble --body '
 assert_no_call "  ... and never names the all-green variant"  '^issue create .*resolute'
 assert_no_out  "  ... and warns about nothing"                '::warning::'
 
@@ -272,9 +300,40 @@ assert_no_out  "  ... and warns about nothing"                '::warning::'
 # a jobs document at all.
 rc=$(run_script failure "$NONE" "$FIX_ALL_GREEN")
 assert_rc      "failure/all-green-listing exits 0" 0 "$rc"
-assert_call    "a failed run with an all-green listing falls back" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_call    "a failed run with an all-green listing falls back" '^issue create .*--title Weekly run failed: \(see the run summary'
 assert_out     "  ... and says the listing named no failed leg"   '::warning::the run is reported failed but its job listing names no failed'
 assert_no_out  "  ... without blaming the parser"             '::warning::could not parse'
+
+# 5h. Only the keepalive job failed. Every image leg is green, so the run
+# published — but the job that keeps next week's run scheduled did not, and the
+# issue has to say so by name rather than fall back to generic text. Both the
+# title and the body carry the name; the body is what a reader sees first in
+# the issue itself.
+rc=$(run_script failure "$NONE" "$FIX_KEEPALIVE_FAIL")
+assert_rc      "failure/keepalive-only exits 0" 0 "$rc"
+assert_call    "a keepalive-only failure names keepalive in the title" '^issue create .*--title Weekly run failed: keepalive --body '
+assert_call    "  ... and in the body"                        '^issue create .*--body The scheduled run failed in: keepalive'
+assert_no_call "  ... and names no variant"                   '^issue create .*(noble|resolute)'
+assert_no_out  "  ... and warns about nothing, having named a job" '::warning::'
+
+# 5i. Two failed build legs of one variant and a failed publish leg of the
+# other: the variant parse and its dedup still hold with the generalized
+# extraction, and neither an all-green variant nor a green keepalive is named.
+rc=$(run_script failure "$NONE" "$FIX_DEDUP_MIX")
+assert_rc      "failure/dedup-mix exits 0" 0 "$rc"
+assert_call    "both failed variants named once each, in listing order" '^issue create .*--title Weekly run failed: noble resolute --body '
+assert_no_call "  ... and the green keepalive job is not named" '^issue create .*keepalive'
+assert_no_out  "  ... and warns about nothing, having named two variants" '::warning::'
+
+# 5j. The keepalive result reaches the aggregation. Every image job succeeded,
+# so the results list is green but for the keepalive member — which must still
+# take the open/comment path and never close the open issue. Without keepalive
+# in the list this run would read as unanimous success and close #41 and #57.
+rc=$(run_script "success success success failure" "$TWO" "$FIX_KEEPALIVE_FAIL")
+assert_rc      "keepalive failure in the results list exits 0" 0 "$rc"
+assert_no_call "a failed keepalive never closes the issue"    '^issue close '
+assert_call    "  ... it comments on the open issue instead"  '^issue comment 41 '
+assert_call    "  ... naming the failed job"                  '^issue comment 41 .*keepalive'
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")
@@ -317,7 +376,7 @@ if [ -s "$LOG" ]; then echo "FAIL: a cancelled run made gh calls"; cat "$LOG"; f
 # 6f. A real failure outranks a cancellation: the alert still goes out.
 rc=$(run_script "success failure cancelled" "$NONE" "$FIX_ARM64_FAIL")
 assert_rc      "failure alongside cancelled exits 0" 0 "$rc"
-assert_call    "a failure outranks a cancellation and opens an issue" '^issue create .*--title Weekly rebuild failed: noble --body '
+assert_call    "a failure outranks a cancellation and opens an issue" '^issue create .*--title Weekly run failed: noble --body '
 
 # 6f2. An empty results list reported nothing successful, so it is not a
 # success. Unreachable from docker.yml today, where RESULTS always carries
@@ -331,7 +390,7 @@ assert_call    "  ... it reports the failure instead"         '^issue comment 41
 # 6g. The meta job failing skips everything downstream — still an alert.
 rc=$(run_script "failure skipped skipped" "$NONE" "$(jobs_doc "$(job 'meta' failure)")"  )
 assert_rc      "meta failure exits 0" 0 "$rc"
-assert_call    "a failed meta job opens an issue with the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_call    "a failed meta job is named in the issue title" '^issue create .*--title Weekly run failed: meta --body '
 
 # Usage error: fewer than two args exits 2 without calling gh.
 : > "$LOG"

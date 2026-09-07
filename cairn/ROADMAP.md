@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M017 | Report a failing keepalive job | planned | — | high | milestones/M017-report-failing-keepalive.md |
+| M017 | Report a failing keepalive job | review | — | high | milestones/M017-report-failing-keepalive.md |
 | M018 | Alert when no weekly rebuild has succeeded in too long | planned | M017 | normal | milestones/M018-rebuild-gap-alert.md |
 | M016 | Keep the weekly rebuild alive | done | — | normal | milestones/archive/M016-weekly-rebuild-keepalive.md |
 | M015 | Native arm64 runners for the image build | done | — | high | milestones/archive/M015-native-arm64-runners.md |

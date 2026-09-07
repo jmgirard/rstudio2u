@@ -105,7 +105,7 @@ rows.
       update `DESIGN.md` Conventions (the CI line) and Known issues; reword
       the `pr-ci.yml` arm64 candidate row to drop "emulated".
 
-- [ ] T5: Resolve the RStudio version and the UTC date once per run and carry
+- [x] T5: Resolve the RStudio version and the UTC date once per run and carry
       both forward, so the `RSTUDIO_VERSION` build-arg and the `<variant>-<ver>`
       / `<variant>-<date>` tags can never disagree (a pre-build job whose
       outputs `build` and `publish` both consume, or the value emitted into the
@@ -143,6 +143,8 @@ rows.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 - 2026-09-06: review: PR #22 opened draft; all six criteria verified with fresh evidence from test-mode run 34075735235 (all green); consistency gate passes; three-lens review returned 13 findings, dispositions pending at the gate.
 - 2026-09-06: review send-back (defect return 1): F1 — the publish job re-scrapes the RStudio version and UTC date independently of the build legs, so an immutable `<variant>-<version>` or `-<date>` tag can name an image not built from it; the default branch resolved both once. Filed as T5–T7 with F2/F3/F5/F6/F8/F9; status back to `in-progress`. The six criteria all passed this pass (evidence in the Review section) but are unticked, since T5–T7 change the artifacts that evidence was taken from.
+- 2026-09-06: implement gate (T5-T7) chose a pre-build `meta` job over carrying the version with each digest, closing the ci-failure issue only when build and publish both succeeded, moving that aggregation into `ci-failure-issue.sh` where the suite covers it, and making the all-green fixture load-bearing by driving it through the failure path.
+- 2026-09-06: T5: `docker.yml` gains a `meta` job resolving the RStudio version and the UTC date once per run; the four build legs take `RSTUDIO_VERSION` from it and both publish legs build the `<variant>-<version>` / `<variant>-<date>` tags from the same two outputs, so the publish job no longer reaches the network. The publish step now parses the index it created (`--dry-run` output in test mode, `imagetools inspect --raw` otherwise) and fails unless the linux platforms are exactly amd64 and arm64; proven able to fail against a planted two-manifest single-arch index, and unmoved by an `unknown/unknown` attestation entry.
 
 ## Decisions
 

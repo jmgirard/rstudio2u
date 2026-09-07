@@ -22,6 +22,38 @@ env:
   IMAGE: jmgirard/rstudio2u
 
 jobs:
+  # Resolve the two run-wide values ONCE, before anything builds: the current
+  # stable RStudio version and the UTC date. Every build leg consumes the
+  # version as its RSTUDIO_VERSION build-arg and every publish leg builds the
+  # immutable `<variant>-<version>` / `<variant>-<date>` tags from these same
+  # outputs, so a stable release or a midnight-UTC crossing part-way through a
+  # run can never attach a tag naming something other than what was built. It
+  # also keeps the network out of the publish job, where a failed scrape would
+  # discard four finished builds.
+  meta:
+    name: meta
+    runs-on: ubuntu-latest
+    outputs:
+      rsver: ${{ steps.resolve.outputs.rsver }}
+      date: ${{ steps.resolve.outputs.date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The resolver exits non-zero on an empty/HTML/format-changed scrape, so
+      # pipefail + -e abort the run here rather than building a mis-versioned
+      # image (the version-scrape known issue / GP2). --tag gives the '-' form
+      # used both for the immutable tag suffix and for the build-arg.
+      - name: Resolve the RStudio version and the build date
+        id: resolve
+        run: |
+          set -euo pipefail
+          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
+          DATE=$(date -u +%Y-%m-%d)
+          echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "RStudio version $RSVER, build date $DATE"
+
   # One leg per (variant, architecture), each on a runner of that architecture:
   # nothing is emulated, so the arm64 image is built and booted by an arm64 CPU.
   # Each leg pushes its layers WITHOUT a tag (push-by-digest), pulls that exact
@@ -33,6 +65,7 @@ jobs:
     # The notify job's variant extraction parses this name ("build (<variant>,
     # <arch>)") to recover the failed variant names; keep the two in step.
     name: build (${{ matrix.variant }}, ${{ matrix.arch }})
+    needs: meta
     runs-on: ${{ matrix.runner }}
     strategy:
       # A resolute failure must never block noble (GP3 preview tier), and an
@@ -69,19 +102,6 @@ jobs:
           username: jmgirard
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Resolve + validate the current stable RStudio version. The resolver
-      # exits non-zero on an empty/HTML/format-changed scrape, so pipefail + -e
-      # abort the job here rather than building a mis-versioned image (the
-      # version-scrape known issue / GP2). --tag gives the '-' form used both
-      # for the immutable tag suffix (computed once in the publish job) and for
-      # the RSTUDIO_VERSION build-arg.
-      - name: Resolve the RStudio version
-        id: meta
-        run: |
-          set -euo pipefail
-          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
-          echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
-
       # Build this leg's single native platform once and push the result by
       # digest — no tag, no manifest list. Scheduled/manual runs rebuild from
       # scratch (no-cache) to pull in new RStudio/Pandoc/Quarto and a newer r2u
@@ -96,7 +116,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           build-args: |
             UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
+            RSTUDIO_VERSION=${{ needs.meta.outputs.rsver }}
           outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
           provenance: false
           pull: true
@@ -168,7 +188,7 @@ jobs:
   # and fails loudly when a leg of its variant did not produce one.
   publish:
     name: publish (${{ matrix.variant }})
-    needs: build
+    needs: [meta, build]
     if: always() && needs.build.result != 'cancelled'
     runs-on: ubuntu-latest
     strategy:
@@ -201,13 +221,15 @@ jobs:
 
       # Mutable tags (latest/noble/resolute) plus immutable tags that pin the
       # date and the RStudio version, so a course can pin a reproducible image
-      # (GP2). Resolved once here, for the whole manifest list.
+      # (GP2). Both immutable suffixes come from the meta job's outputs — the
+      # same two values the build legs were given — never from a second scrape.
       - name: Compute the tag list
         id: tags
+        env:
+          RSVER: ${{ needs.meta.outputs.rsver }}
+          DATE: ${{ needs.meta.outputs.date }}
         run: |
           set -euo pipefail
-          DATE=$(date -u +%Y-%m-%d)
-          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
           {
             echo "tags<<EOF"
             for t in ${{ matrix.mutable }}; do echo "$IMAGE:$t"; done
@@ -217,7 +239,11 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       # In test mode --dry-run prints the manifest list it would push and
-      # attaches nothing; otherwise the tags are created and read back.
+      # attaches nothing; otherwise the tags are created and the pushed index is
+      # read back raw. Either way the resulting index is parsed and required to
+      # name both linux architectures — counting two digest files proves only
+      # that two legs uploaded something, not that the assembled list is
+      # multi-arch.
       - name: Create the manifest list
         env:
           TEST_MODE: ${{ inputs.test_mode }}
@@ -229,24 +255,46 @@ jobs:
           # and that case must reach the explicit error below, not a cd failure.
           mkdir -p /tmp/digests
           cd /tmp/digests
-          n=$(find . -type f | wc -l | tr -d ' ')
-          if [ "$n" -ne 2 ]; then
-            echo "::error::expected 2 verified digests for ${{ matrix.variant }}, found $n — a build leg failed or was skipped"
+          # One listing feeds both the count and the refs, so the guard and the
+          # loop can never disagree about which entries are digests.
+          digests=()
+          while IFS= read -r f; do
+            digests+=("$(basename "$f")")
+          done < <(find . -type f | sort)
+          if [ "${#digests[@]}" -ne 2 ]; then
+            echo "::error::expected 2 verified digests for ${{ matrix.variant }}, found ${#digests[@]} — a build leg failed or was skipped"
             exit 1
           fi
           refs=()
-          for f in *; do refs+=("${IMAGE}@sha256:$f"); done
+          for d in "${digests[@]}"; do refs+=("${IMAGE}@sha256:${d}"); done
+          # TAGS is newline-separated; read it as lines, never by word splitting.
+          tags=()
+          while IFS= read -r t; do
+            [ -n "$t" ] && tags+=("$t")
+          done <<< "$TAGS"
+          if [ "${#tags[@]}" -eq 0 ]; then
+            echo "::error::the tag list for ${{ matrix.variant }} is empty"
+            exit 1
+          fi
           echo "tags for ${{ matrix.variant }}:"
-          printf '  %s\n' $TAGS
+          printf '  %s\n' "${tags[@]}"
           tag_args=()
-          for t in $TAGS; do tag_args+=(-t "$t"); done
+          for t in "${tags[@]}"; do tag_args+=(-t "$t"); done
           if [ "$TEST_MODE" = "true" ]; then
             echo "test mode: printing the manifest list instead of publishing"
-            docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}"
+            docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}" | tee /tmp/manifest.json
           else
             docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
-            docker buildx imagetools inspect "$(printf '%s' "$TAGS" | head -1)"
+            docker buildx imagetools inspect --raw "${tags[0]}" | tee /tmp/manifest.json
           fi
+          # Attestation entries carry os/architecture "unknown"; only real linux
+          # platforms count.
+          got=$(jq -r '[.manifests[].platform | select(.os == "linux") | .architecture] | unique | join(" ")' /tmp/manifest.json)
+          if [ "$got" != "amd64 arm64" ]; then
+            echo "::error::the ${{ matrix.variant }} manifest list names linux platforms '$got', expected 'amd64 arm64'"
+            exit 1
+          fi
+          echo "manifest list for ${{ matrix.variant }} names both architectures: $got"
 
   # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
   # opens (or updates) a ci-failure issue and the next green run closes it
@@ -254,7 +302,7 @@ jobs:
   # always() is required: without it a failed build job would skip the very
   # job that reports the failure.
   notify:
-    needs: [build, publish]
+    needs: [meta, build, publish]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:

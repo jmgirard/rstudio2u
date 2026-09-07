@@ -1,13 +1,13 @@
 # M017: Report a failing keepalive job
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** internal — CI alerting that reaches only the maintainer; no external consumer of the repo reads it
-- **Branch/PR:** —
+- **Branch/PR:** m017-report-failing-keepalive
 
 ## Goal
 
@@ -69,7 +69,7 @@ schedule-only.
 
 ## Tasks
 
-- [ ] T1: Add the failing cases to `scripts/tests/test_ci_failure_issue.sh`
+- [x] T1: Add the failing cases to `scripts/tests/test_ci_failure_issue.sh`
       first: keepalive-failure aggregation (AC1), `keepalive` named in title
       and body (AC3), the build/publish dedup case unchanged (AC4), and the
       two warning cases (AC5). Confirm red before touching the script.
@@ -92,6 +92,7 @@ schedule-only.
 
 - 2026-09-07: created by /milestone-plan.
 - 2026-09-07: plan gate chose a general failed-job-name extraction over a keepalive-specific special case in `ci-failure-issue.sh`, because a third reportable job (M018's gap check, a future lane) would need the same widening again and the special case would collect one branch per job; falsified by a job whose name cannot be rendered usefully in an issue title.
+- 2026-09-06: T1: suite gains a keepalive-only listing, an AC4 dedup listing, and a results-list case carrying a failed keepalive member; the non-matrix and meta cases flip from fallback text to being named; issue wording moves to job-neutral "Weekly run failed:" / "The scheduled run failed in:" per the implementation gate. 16 assertions red against the unchanged script; shellcheck 0.11.0 -S info clean.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned two findings on this milestone — the draft AC4 bound an instrument property ("every case already in the suite passes unmodified") and the draft AC5 promised "emitted only when" over all listings on two example cases. Both fixed before writing: AC4 became a deliverable property over one named listing, AC5 narrowed to its two demonstrated inputs.
 
 ## Decisions

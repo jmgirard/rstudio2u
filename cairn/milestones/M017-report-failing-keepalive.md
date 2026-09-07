@@ -73,7 +73,7 @@ schedule-only.
       first: keepalive-failure aggregation (AC1), `keepalive` named in title
       and body (AC3), the build/publish dedup case unchanged (AC4), and the
       two warning cases (AC5). Confirm red before touching the script.
-- [ ] T2: Generalize `extract_variants` in `.github/ci-failure-issue.sh` into
+- [x] T2: Generalize `extract_variants` in `.github/ci-failure-issue.sh` into
       a failed-job-name extraction: `build (`/`publish (` legs keep the
       existing variant parse and dedup, every other failed job contributes its
       own `.name`. Re-base the contradiction warning on "names no failed job
@@ -93,6 +93,7 @@ schedule-only.
 - 2026-09-07: created by /milestone-plan.
 - 2026-09-07: plan gate chose a general failed-job-name extraction over a keepalive-specific special case in `ci-failure-issue.sh`, because a third reportable job (M018's gap check, a future lane) would need the same widening again and the special case would collect one branch per job; falsified by a job whose name cannot be rendered usefully in an issue title.
 - 2026-09-06: T1: suite gains a keepalive-only listing, an AC4 dedup listing, and a results-list case carrying a failed keepalive member; the non-matrix and meta cases flip from fallback text to being named; issue wording moves to job-neutral "Weekly run failed:" / "The scheduled run failed in:" per the implementation gate. 16 assertions red against the unchanged script; shellcheck 0.11.0 -S info clean.
+- 2026-09-06: T2: `extract_variants` became `extract_failed_names` — the build/publish variant parse and its dedup kept behind a jq `if`, every other failed job named by itself, so a later reportable job needs no new branch. Contradiction warning re-based on "names no failed job"; usage header, file header and label description brought into step. Suite green (all assertions), shellcheck 0.11.0 -S info clean.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned two findings on this milestone — the draft AC4 bound an instrument property ("every case already in the suite passes unmodified") and the draft AC5 promised "emitted only when" over all listings on two example cases. Both fixed before writing: AC4 became a deliverable property over one named listing, AC5 narrowed to its two demonstrated inputs.
 
 ## Decisions

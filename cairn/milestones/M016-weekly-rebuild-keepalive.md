@@ -275,6 +275,107 @@ assertions`. `gh pr view 23` reports `mergeable: MERGEABLE`,
   slot declares none as a file, so this milestone's user-visible change is
   stated in its archive summary.
 
+### Independent review (three fresh-context lenses)
+
+`[O]` diff-bug, `[S]` blame-history and `[S]` prior-review record, spawned with
+distinct evidence bases, none having seen the implementation. Every reported
+finding and its disposition:
+
+**[O]-1 / [S]-1 — a `test_mode` dispatch still pushes a real commit to the
+default branch.** `.github/workflows/docker.yml:377-379` — the `keepalive`
+job's `if:` admits every `workflow_dispatch`, `test_mode: true` included, and
+that input's description promises "Exercise the whole lane without
+publishing". Reported independently by both lenses. Confirmed: T7's two AC4
+dispatches were themselves test-mode runs, and one of them moved `main`
+8970ea5 -> 8f86753. Falsifies no criterion — AC3 requires the job to run on
+schedule and dispatch and no other event, which an added test-mode exclusion
+would still satisfy — and it fails safe, since the commit it makes is the one
+the schedule would have made anyway. Gating the job off `test_mode` would also
+remove the only path AC4's verification can take without publishing real tags.
+Triaged at the gate.
+
+**[O]-2 — the threshold input's description claims a rejection the workflow
+prevents.** `.github/workflows/docker.yml:413-414` passes
+`${{ inputs.keepalive_threshold || '50' }}`, so a dispatch field cleared to
+empty becomes 50 and never reaches the script, while the input's description
+says "Anything that is not a non-negative whole number is refused by
+`.github/keepalive.sh`". The fallback itself is required — the `inputs`
+context is null on a scheduled run — and the first pass rejected the
+substitution on that ground ([O]-5 there); what is new is the inaccurate prose
+about it. The same expression's reliance on the string `'0'` being truthy is
+confirmed empirically by AC4's threshold-0 run reaching the script. Triaged at
+the gate.
+
+**[O]-5 — `days_in_month` has no default arm.** `.github/keepalive.sh:56-67`
+covers months 1-12 only, so an out-of-range month would echo nothing and the
+caller's `(( 10#$d < 1 || 10#$d > ))` would be an arithmetic syntax error.
+Unreachable today: `parse_date` rejects a bad month at line 78 before line 81
+calls it (confirmed by reading the ordering). A latent trap if that ordering
+ever moves. Triaged at the gate.
+
+**[O]-3 — the dispatched ref supplies the code that runs with the write deploy
+key in scope.** `.github/workflows/docker.yml:395-410`: checkout 1 takes the
+dispatched ref, checkout 2 loads `KEEPALIVE_DEPLOY_KEY`, so that branch's
+`keepalive.sh` runs against a credential that can write `main`. The first pass
+rejected the same observation as an intentional part of the two-checkout
+design ([O]-4 there), and this reviewer agrees it should stand; it asks only
+that the job comment say the exposure is understood rather than selling the
+split as a convenience. Triaged at the gate.
+
+**[O]-6 — the threshold default 50 is written at three sites.**
+`.github/workflows/docker.yml:22` (the input default), `:414` (the fallback),
+and the DESIGN Conventions bullet in prose. A policy change means editing all
+three, and a divergence is invisible because the scheduled path only ever
+exercises the fallback. Triaged at the gate.
+
+**[O]-4 — follow-up (existing candidate row strengthened). A future-dated tip
+commit makes the guard fail permanently and silently.**
+`.github/keepalive.sh:113` exits 2 when the tip is dated after today — correct
+as AC1's contract, but in the workflow it means every scheduled run fails and,
+because `notify` aggregates only meta, build and publish, nothing reports it.
+Not a new gap; it is a further exit path through the `notify` blind spot
+already carried as a candidate row, and the row is extended to name it.
+
+**[O]-7 — rejected.** Skip and commit messages echo the raw argument, leading
+zeros included (`the 0000000000000000050-day threshold`). Cosmetic; the
+comparison is unaffected, and the first pass rejected the identical finding
+([O]-12 there).
+
+**[O]-8 — rejected.** D-009's heading says "annotating D-008" where D-003's
+heading says "superseding". The rule for a `### D-` heading is that it names
+any entry it supersedes, annotates, or narrows, which this does, and the entry
+body states precisely which sentence is superseded. `DECISIONS.md` is
+append-only history besides, so the heading would be superseded rather than
+edited.
+
+**[S] blame-history — one finding (the `test_mode` item above), the rest
+confirmations.** D-007 untouched: the job runs on one `ubuntu-latest` runner
+and adds no emulation and no matrix leg. D-008 and D-009 honoured precisely:
+job-scoped `contents: read` following M13's pattern, the push authenticated by
+the deploy key and never by `GITHUB_TOKEN`, no repo-wide permission widened.
+The `paths` filters are right in both directions — `pr-ci.yml` gained the new
+script, and `docker.yml`'s own `push.paths` deliberately does not list it, so
+a keepalive commit starts no build. DESIGN's ten-day window matches the
+literal 50 the workflow passes. The `notify` blind spot and the missing push
+contention handling are the candidate rows already on this branch.
+
+**[S] prior-review record — no regression.** No archived `## Review` finding on
+the touched files is reintroduced or contradicted. M02's "path filter omits its
+own harness script" lesson is honoured — `pr-ci.yml` gained both the `paths`
+entry and the test-step call. M11's silent-guard pattern does not reappear.
+Its one candidate, reported only because the lens filters nothing: `docker.yml`
+has no `concurrency:` group where `dockerhub-description.yml` has one — but a
+concurrency group serializes overlapping workflow runs, not a race against an
+out-of-band human push, so it would not close that gap, which is in any case
+already a candidate row. The GitHub probe
+(`repos/jmgirard/rstudio2u/pulls/comments?per_page=1`) returned `[]`, so the
+per-PR walk was correctly skipped.
+
+**Return floor.** No actioned finding demonstrates an acceptance criterion
+failing inside its procedure's domain, and none is a load-bearing defect in
+what the image does for its users. No return; the defect-return count for this
+milestone stays at 1.
+
 ### First-pass record
 
 _First pass, gathered at f243c8b; returned on [O]-6._

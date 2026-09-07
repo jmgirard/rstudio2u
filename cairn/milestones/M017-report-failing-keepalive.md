@@ -79,7 +79,7 @@ schedule-only.
       own `.name`. Re-base the contradiction warning on "names no failed job
       at all". Update the script's usage header, which currently documents
       only variant names. Suite green.
-- [ ] T3: Add `keepalive` to `notify`'s `needs:` list and a fourth
+- [x] T3: Add `keepalive` to `notify`'s `needs:` list and a fourth
       `needs.keepalive.result` to its `RESULTS` env value in
       `.github/workflows/docker.yml`; update the job comment that says "the
       three needed jobs".
@@ -94,6 +94,7 @@ schedule-only.
 - 2026-09-07: plan gate chose a general failed-job-name extraction over a keepalive-specific special case in `ci-failure-issue.sh`, because a third reportable job (M018's gap check, a future lane) would need the same widening again and the special case would collect one branch per job; falsified by a job whose name cannot be rendered usefully in an issue title.
 - 2026-09-06: T1: suite gains a keepalive-only listing, an AC4 dedup listing, and a results-list case carrying a failed keepalive member; the non-matrix and meta cases flip from fallback text to being named; issue wording moves to job-neutral "Weekly run failed:" / "The scheduled run failed in:" per the implementation gate. 16 assertions red against the unchanged script; shellcheck 0.11.0 -S info clean.
 - 2026-09-06: T2: `extract_variants` became `extract_failed_names` — the build/publish variant parse and its dedup kept behind a jq `if`, every other failed job named by itself, so a later reportable job needs no new branch. Contradiction warning re-based on "names no failed job"; usage header, file header and label description brought into step. Suite green (all assertions), shellcheck 0.11.0 -S info clean.
+- 2026-09-06: T3: `notify` now needs [meta, build, publish, keepalive] and RESULTS carries the matching fourth `needs.keepalive.result`; parsed the workflow and confirmed the two lists are equal as sets and in length, and that every needed job exists. Job comment re-based off "the three needed jobs".
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned two findings on this milestone — the draft AC4 bound an instrument property ("every case already in the suite passes unmodified") and the draft AC5 promised "emitted only when" over all listings on two example cases. Both fixed before writing: AC4 became a deliverable property over one named listing, AC5 narrowed to its two demonstrated inputs.
 
 ## Decisions

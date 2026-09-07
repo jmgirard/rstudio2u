@@ -325,8 +325,14 @@ jobs:
   # (GP7). Push and dispatch runs have a person behind them and skip this job.
   # always() is required: without it a failed build job would skip the very
   # job that reports the failure.
+  #
+  # keepalive is needed here for the same reason the build jobs are: a run
+  # whose images published but whose keepalive job failed is not a run that
+  # went right — the schedule it protects is the reason there is a next run to
+  # report on at all — and without it in this list such a run reads as
+  # unanimous success and closes an open issue.
   notify:
-    needs: [meta, build, publish]
+    needs: [meta, build, publish, keepalive]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
@@ -338,14 +344,16 @@ jobs:
         uses: actions/checkout@v4
 
       # Both decisions live in ci-failure-issue.sh, unit-tested in
-      # scripts/tests/test_ci_failure_issue.sh: it collapses the three needed
-      # jobs' results into open / close / ignore, and extracts the failed
-      # variant names from this run's own job list. This step hands it inputs
-      # and nothing else — no second copy of either rule in YAML.
+      # scripts/tests/test_ci_failure_issue.sh: it collapses the needed jobs'
+      # results into open / close / ignore, and extracts the failed job names
+      # from this run's own job list. This step hands it inputs and nothing
+      # else — no second copy of either rule in YAML. RESULTS carries one
+      # `needs.<job>.result` per entry in the needs: list above; a job added
+      # to one and not the other is a job whose failure goes unreported.
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }}
+          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }} ${{ needs.keepalive.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -353,10 +361,10 @@ jobs:
           # the script fall back to its generic "see the run summary" text.
           # An empty file, not '{"jobs":[]}': an empty listing is "no listing
           # was available", which the script reports as such. A valid but
-          # variant-free document would instead trip its contradiction warning,
+          # job-free document would instead trip its contradiction warning,
           # blaming the extraction for a failure that happened here.
           gh run view "$GITHUB_RUN_ID" --json jobs > jobs.json || {
-            echo "::warning::gh run view failed; the issue will not name the failed variants"
+            echo "::warning::gh run view failed; the issue will not name the failed jobs"
             : > jobs.json
           }
           bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json

@@ -42,10 +42,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # Build noble for amd64 only and load it into the daemon so we can boot it
-      # (multi-arch images can't be --load'ed — arm64 is boot-checked at publish
-      # time on docker.yml, a documented GP3 asymmetry). No login, no push, no
-      # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
-      # produces no immutable tags. Reuses docker.yml's gha cache scope for speed.
+      # (arm64 is boot-checked at publish time on docker.yml, on a native arm64
+      # runner — a documented GP3 asymmetry). No login, no push, no version
+      # scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane produces no
+      # immutable tags. Reuses docker.yml's per-arch gha cache scope for speed.
       - name: Build noble (amd64) for smoke test
         uses: docker/build-push-action@v6
         with:
@@ -57,7 +57,7 @@ jobs:
           tags: rstudio2u:pr-smoke-noble
           push: false
           provenance: false
-          cache-from: type=gha,scope=noble
+          cache-from: type=gha,scope=noble-amd64
 
       # A non-zero exit fails the job and blocks the merge (cairn never merges
       # red CI). The script always tears the container down.

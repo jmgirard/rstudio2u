@@ -5,10 +5,11 @@
 # A transiently-failing command (fails a few times, then succeeds) is retried to
 # success and its stdout passes through untouched; a command that always fails
 # exits non-zero after the cap; the command's own exit code is propagated. This
-# mirrors the motivating case — Quarto's bundled Deno aborting with SIGILL
-# (exit 132) under QEMU emulation during the multi-arch build, where a re-run of
-# the identical command succeeds. Runs offline with RETRY_DELAY=0 (no sleeps, no
-# network, no dependencies).
+# mirrors the case retry.sh was written for — Quarto's bundled Deno aborting
+# with SIGILL (exit 132) under QEMU emulation during the multi-arch build, where
+# a re-run of the identical command succeeded; CI no longer emulates (D-007),
+# and the wrapper stays for ordinary transients. Runs offline with
+# RETRY_DELAY=0 (no sleeps, no network, no dependencies).
 #
 set -uo pipefail
 

@@ -12,33 +12,86 @@ on:
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag."
+        type: boolean
+        default: false
 
 env:
   IMAGE: jmgirard/rstudio2u
-  PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
-  build:
-    # The notify job's jq filter parses this name ("build (<variant>)") to
-    # recover the failed variant names; keep the two in step.
-    name: build (${{ matrix.variant }})
+  # Resolve the two run-wide values ONCE, before anything builds: the current
+  # stable RStudio version and the UTC date. Every build leg consumes the
+  # version as its RSTUDIO_VERSION build-arg and every publish leg builds the
+  # immutable `<variant>-<version>` / `<variant>-<date>` tags from these same
+  # outputs, so a stable release or a midnight-UTC crossing part-way through a
+  # run can never attach a tag naming something other than what was built. It
+  # also keeps the network out of the publish job, where a failed scrape would
+  # discard four finished builds.
+  meta:
+    name: meta
     runs-on: ubuntu-latest
+    outputs:
+      rsver: ${{ steps.resolve.outputs.rsver }}
+      date: ${{ steps.resolve.outputs.date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The resolver exits non-zero on an empty/HTML/format-changed scrape, so
+      # pipefail + -e abort the run here rather than building a mis-versioned
+      # image (the version-scrape known issue / GP2). --tag gives the '-' form
+      # used both for the immutable tag suffix and for the build-arg.
+      - name: Resolve the RStudio version and the build date
+        id: resolve
+        run: |
+          set -euo pipefail
+          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
+          DATE=$(date -u +%Y-%m-%d)
+          echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "RStudio version $RSVER, build date $DATE"
+
+  # One leg per (variant, architecture), each on a runner of that architecture:
+  # nothing is emulated, so the arm64 image is built and booted by an arm64 CPU.
+  # Each leg pushes its layers WITHOUT a tag (push-by-digest), pulls that exact
+  # digest back, and smoke-tests it — so the bytes that are tested are the bytes
+  # that ship (GP7). An untagged push is invisible to users: no moving tag moves
+  # until the publish job assembles the manifest list, which it only reaches
+  # when every leg of that variant passed.
+  build:
+    # The notify job's variant extraction parses this name ("build (<variant>,
+    # <arch>)") to recover the failed variant names; keep the two in step.
+    name: build (${{ matrix.variant }}, ${{ matrix.arch }})
+    needs: meta
+    runs-on: ${{ matrix.runner }}
     strategy:
+      # A resolute failure must never block noble (GP3 preview tier), and an
+      # amd64 failure must not cancel the arm64 leg mid-build.
       fail-fast: false
       matrix:
         include:
           - variant: noble
             ubuntu_version: "24.04"
-            mutable: latest noble
+            arch: amd64
+            runner: ubuntu-latest
+          - variant: noble
+            ubuntu_version: "24.04"
+            arch: arm64
+            runner: ubuntu-24.04-arm
           - variant: resolute
             ubuntu_version: "26.04"
-            mutable: resolute
+            arch: amd64
+            runner: ubuntu-latest
+          - variant: resolute
+            ubuntu_version: "26.04"
+            arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -49,21 +102,146 @@ jobs:
           username: jmgirard
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Resolve the current stable RStudio version and build the tag list:
-      # mutable tags (latest/noble/resolute) plus immutable tags that pin the
-      # date and the RStudio version, so a course can pin a reproducible image.
-      - name: Compute tags and RStudio version
-        id: meta
+      # Build this leg's single native platform once and push the result by
+      # digest — no tag, no manifest list. Scheduled/manual runs rebuild from
+      # scratch (no-cache) to pull in new RStudio/Pandoc/Quarto and a newer r2u
+      # base; push-triggered (code change) runs reuse the cache for speed. The
+      # cache scope is per (variant, arch), so the two architectures never
+      # shadow each other's layers.
+      - name: Build ${{ matrix.variant }} (${{ matrix.arch }}) and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+            RSTUDIO_VERSION=${{ needs.meta.outputs.rsver }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          provenance: false
+          pull: true
+          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}-${{ matrix.arch }}
+
+      # Pull the pushed digest back and prove it is the architecture this leg
+      # claims — both as the image records it and as the running kernel reports
+      # it. Without these two assertions a mis-wired matrix could smoke-test the
+      # same amd64 image twice and still look green.
+      - name: Pull back the pushed image and assert its architecture
+        id: pulled
         run: |
           set -euo pipefail
-          DATE=$(date -u +%Y-%m-%d)
-          # Resolve + validate the current stable RStudio version. The resolver
-          # exits non-zero on an empty/HTML/format-changed scrape, so pipefail +
-          # -e abort the job here rather than publishing a mis-named "<variant>-"
-          # tag (Known issue #2 / GP2). --tag gives the '-' form used for both
-          # the immutable tag suffix and the RSTUDIO_VERSION build-arg.
-          RSVER=$(bash ./scripts/resolve-rstudio-version.sh --tag)
-          echo "rsver=$RSVER" >> "$GITHUB_OUTPUT"
+          ref="${IMAGE}@${{ steps.build.outputs.digest }}"
+          docker pull "$ref"
+          got_arch=$(docker image inspect --format '{{.Architecture}}' "$ref")
+          if [ "$got_arch" != "${{ matrix.arch }}" ]; then
+            echo "::error::image architecture is '$got_arch', expected '${{ matrix.arch }}'"
+            exit 1
+          fi
+          case "${{ matrix.arch }}" in
+            amd64) want_uname=x86_64 ;;
+            arm64) want_uname=aarch64 ;;
+            *) echo "::error::unknown arch '${{ matrix.arch }}'"; exit 1 ;;
+          esac
+          got_uname=$(docker run --rm --entrypoint uname "$ref" -m)
+          if [ "$got_uname" != "$want_uname" ]; then
+            echo "::error::container reports 'uname -m' = '$got_uname', expected '$want_uname'"
+            exit 1
+          fi
+          echo "image is ${{ matrix.arch }} ($got_arch / $got_uname): $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # A non-zero exit here fails this leg and, because the publish job
+      # requires both of a variant's digests, blocks that variant's tags from
+      # moving. The deepened smoke exercises the bundled/symlinked Quarto and
+      # r2u binary paths where arm64 can diverge from amd64 (GP3); running on
+      # native hardware, arm64 needs no longer timeout than amd64.
+      - name: Smoke-test ${{ matrix.variant }} (${{ matrix.arch }})
+        env:
+          SMOKE_TIMEOUT: "300"
+        run: bash ./.github/smoke-test.sh "${{ steps.pulled.outputs.ref }}"
+
+      # Hand the verified digest to the publish job. The upload happens only
+      # after the smoke test passes, so an unverified leg contributes no digest
+      # and its variant cannot be published.
+      - name: Export the verified digest
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload the digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.variant }}-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # One publish leg per variant: assemble the multi-arch manifest list from that
+  # variant's two verified digests and attach every tag to it in a single
+  # imagetools call. always() with a per-variant digest check is what keeps the
+  # variants independent — GitHub cannot express "needs only my variant's build
+  # legs", so each publish leg instead requires exactly two digests of its own
+  # and fails loudly when a leg of its variant did not produce one.
+  publish:
+    name: publish (${{ matrix.variant }})
+    needs: [meta, build]
+    # 'failure' must still reach this job: a variant whose legs all passed is
+    # published even when the other variant's did not (GP3 preview tier), and
+    # the digest guard below is what reports the variant that did fail.
+    # 'skipped' must not: it means meta failed and nothing was built, so there
+    # is nothing to assemble and the meta outputs are empty.
+    if: always() && needs.build.result != 'cancelled' && needs.build.result != 'skipped'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: noble
+            mutable: latest noble
+          - variant: resolute
+            mutable: resolute
+    steps:
+      # No checkout: since the version resolve moved to the meta job, nothing
+      # in this job reads the repository. imagetools is a buildx subcommand,
+      # so setup-buildx-action is still needed.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: jmgirard
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Download this variant's digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.variant }}-*
+          merge-multiple: true
+
+      # Mutable tags (latest/noble/resolute) plus immutable tags that pin the
+      # date and the RStudio version, so a course can pin a reproducible image
+      # (GP2). Both immutable suffixes come from the meta job's outputs — the
+      # same two values the build legs were given — never from a second scrape.
+      - name: Compute the tag list
+        id: tags
+        env:
+          RSVER: ${{ needs.meta.outputs.rsver }}
+          DATE: ${{ needs.meta.outputs.date }}
+        run: |
+          set -euo pipefail
+          # An empty output here would build `<image>:<variant>-` — a tag name
+          # missing the thing it exists to pin. Refuse it rather than hand a
+          # malformed tag to imagetools.
+          if [ -z "$RSVER" ] || [ -z "$DATE" ]; then
+            echo "::error::the meta job produced no RStudio version and/or build date (rsver='$RSVER', date='$DATE')"
+            exit 1
+          fi
           {
             echo "tags<<EOF"
             for t in ${{ matrix.mutable }}; do echo "$IMAGE:$t"; done
@@ -72,102 +250,71 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # Step 1 — build BOTH arches once into the layer cache, pushing nothing.
-      # This is the single source build that the smoke test (step 2) and the
-      # publish step (step 3) both reuse, so the image we boot is byte-for-byte
-      # the image we ship (GP7). It owns the cache scope: it is the only step
-      # that writes cache-to, so the amd64-only smoke build can't shadow the
-      # arm64 layers. Scheduled/manual runs rebuild from scratch (no-cache) to
-      # pull in new RStudio/Pandoc/Quarto and a newer r2u base; push-triggered
-      # (code change) runs reuse the cache for speed. The slow emulated arm64
-      # build happens here exactly once per run.
-      - name: Build ${{ matrix.variant }} (both arches, cache only)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: ${{ env.PLATFORMS }}
-          build-args: |
-            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
-          push: false
-          provenance: false
-          pull: true
-          no-cache: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-          cache-from: type=gha,scope=${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
-
-      # Step 2 — load each arch's image singly from step 1's cache (multi-arch
-      # can't be --load'ed) so we can boot it. cache-from only, never no-cache:
-      # this must reuse step 1's layers, not build a different image than we
-      # publish. Both arches are boot-checked here: amd64 natively, then arm64
-      # under QEMU emulation (setup-qemu-action registered binfmt above), which
-      # closes the old arm64 parity blind spot — the deepened smoke exercises the
-      # bundled/symlinked Quarto and r2u binary paths where arm64 can diverge
-      # (GP3, Known issue #3). Emulated boot is slow, so arm64 gets a longer
-      # timeout; fail-fast:false keeps a resolute failure from blocking noble.
-      - name: Build ${{ matrix.variant }} (amd64) for smoke test
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64
-          load: true
-          build-args: |
-            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
-          tags: ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
-          push: false
-          provenance: false
-          cache-from: type=gha,scope=${{ matrix.variant }}
-
-      # A non-zero exit here fails this variant's job (fail-fast: false keeps the
-      # variants independent, so a resolute failure never blocks noble) and, by
-      # aborting before the publish step, blocks publishing a broken image.
-      - name: Smoke-test ${{ matrix.variant }} (amd64)
+      # In test mode --dry-run prints the manifest list it would push and
+      # attaches nothing; otherwise the tags are created and the pushed index is
+      # read back raw. Either way the resulting index is parsed and required to
+      # name both linux architectures — counting two digest files proves only
+      # that two legs uploaded something, not that the assembled list is
+      # multi-arch.
+      - name: Create the manifest list
         env:
-          SMOKE_TIMEOUT: "300"
-        run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}
-
-      # Load the arm64 image singly (same cache scope as step 1, so it is the
-      # arm64 half of what we publish) so the deepened smoke can boot it under
-      # emulation. A different smoke tag keeps it distinct from the amd64 load.
-      - name: Build ${{ matrix.variant }} (arm64) for smoke test
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/arm64
-          load: true
-          build-args: |
-            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
-          tags: ${{ env.IMAGE }}:smoke-${{ matrix.variant }}-arm64
-          push: false
-          provenance: false
-          cache-from: type=gha,scope=${{ matrix.variant }}
-
-      # Boot the arm64 image under QEMU and run the same deepened checks. A
-      # non-zero exit aborts before publish, so arm64 parity drift (a broken
-      # bundled/symlinked Quarto or r2u binary path) blocks the ship (GP3,
-      # Known issue #3). Emulated boot + install + render is slow: 15-min timeout.
-      - name: Smoke-test ${{ matrix.variant }} (arm64, emulated)
-        env:
-          SMOKE_TIMEOUT: "900"
-        run: bash ./.github/smoke-test.sh ${{ env.IMAGE }}:smoke-${{ matrix.variant }}-arm64
-
-      # Step 3 — publish. Reuses step 1's cached layers for BOTH arches
-      # (cache-from only, no no-cache — the fresh build already happened in
-      # step 1), so the published image is exactly the one step 2 smoke-tested.
-      - name: Build and push ${{ matrix.variant }}
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: ${{ env.PLATFORMS }}
-          build-args: |
-            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-            RSTUDIO_VERSION=${{ steps.meta.outputs.rsver }}
-          tags: ${{ steps.meta.outputs.tags }}
-          push: true
-          provenance: false
-          cache-from: type=gha,scope=${{ matrix.variant }}
+          TEST_MODE: ${{ inputs.test_mode }}
+          TAGS: ${{ steps.tags.outputs.tags }}
+        run: |
+          set -euo pipefail
+          # mkdir, not working-directory: download-artifact creates no directory
+          # when its pattern matches nothing (every leg of this variant failed),
+          # and that case must reach the explicit error below, not a cd failure.
+          mkdir -p /tmp/digests
+          cd /tmp/digests
+          # One listing feeds both the count and the refs, so the guard and the
+          # loop can never disagree about which entries are digests.
+          digests=()
+          while IFS= read -r f; do
+            digests+=("$(basename "$f")")
+          done < <(find . -type f | sort)
+          if [ "${#digests[@]}" -ne 2 ]; then
+            echo "::error::expected 2 verified digests for ${{ matrix.variant }}, found ${#digests[@]} — a build leg failed or was skipped"
+            exit 1
+          fi
+          refs=()
+          for d in "${digests[@]}"; do refs+=("${IMAGE}@sha256:${d}"); done
+          # TAGS is newline-separated; read it as lines, never by word splitting.
+          tags=()
+          while IFS= read -r t; do
+            [ -n "$t" ] && tags+=("$t")
+          done <<< "$TAGS"
+          if [ "${#tags[@]}" -eq 0 ]; then
+            echo "::error::the tag list for ${{ matrix.variant }} is empty"
+            exit 1
+          fi
+          echo "tags for ${{ matrix.variant }}:"
+          printf '  %s\n' "${tags[@]}"
+          tag_args=()
+          for t in "${tags[@]}"; do tag_args+=(-t "$t"); done
+          # Assemble the index and check it BEFORE any tag moves. --dry-run
+          # produces the exact index the real create would push, so the same
+          # assertion runs on both paths and refuses a single-architecture
+          # publish rather than reporting one after the tags already point at
+          # it. Counting two digest files proves only that two legs uploaded
+          # something, never that they are different architectures.
+          docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}" | tee /tmp/manifest.json
+          # `.manifests[]?` so a result that is not an index yields an empty
+          # list and the explicit error below, not jq's "cannot iterate over
+          # null" under set -e. Attestation entries carry os/architecture
+          # "unknown"; only real linux platforms count.
+          got=$(jq -r '[.manifests[]?.platform | select(.os == "linux") | .architecture] | unique | join(" ")' /tmp/manifest.json)
+          if [ "$got" != "amd64 arm64" ]; then
+            echo "::error::the ${{ matrix.variant }} manifest list names linux platforms '$got', expected 'amd64 arm64' — nothing was tagged"
+            exit 1
+          fi
+          echo "manifest list for ${{ matrix.variant }} names both architectures: $got"
+          if [ "$TEST_MODE" = "true" ]; then
+            echo "test mode: the manifest list above was printed, not published; no tag attached"
+          else
+            docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
+            docker buildx imagetools inspect "${tags[0]}"
+          fi
 
   # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
   # opens (or updates) a ci-failure issue and the next green run closes it
@@ -175,7 +322,7 @@ jobs:
   # always() is required: without it a failed build job would skip the very
   # job that reports the failure.
   notify:
-    needs: build
+    needs: [meta, build, publish]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
@@ -186,24 +333,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # The failed variant names come from this run's own job list (the build
-      # legs are named "build (<variant>)" above); the build job's aggregate
-      # result decides whether the issue is opened or closed.
+      # Both decisions live in ci-failure-issue.sh, unit-tested in
+      # scripts/tests/test_ci_failure_issue.sh: it collapses the three needed
+      # jobs' results into open / close / ignore, and extracts the failed
+      # variant names from this run's own job list. This step hands it inputs
+      # and nothing else — no second copy of either rule in YAML.
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_RESULT: ${{ needs.build.result }}
+          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          # A failed job listing must not block the alert itself: warn and
-          # fall back to the script's generic "see the run summary" text.
-          jobs_json=$(gh run view "$GITHUB_RUN_ID" --json jobs) || {
+          # A failed job listing must not block the alert itself: warn and let
+          # the script fall back to its generic "see the run summary" text.
+          # An empty file, not '{"jobs":[]}': an empty listing is "no listing
+          # was available", which the script reports as such. A valid but
+          # variant-free document would instead trip its contradiction warning,
+          # blaming the extraction for a failure that happened here.
+          gh run view "$GITHUB_RUN_ID" --json jobs > jobs.json || {
             echo "::warning::gh run view failed; the issue will not name the failed variants"
-            jobs_json='{"jobs":[]}'
+            : > jobs.json
           }
-          failed=()
-          while IFS= read -r v; do
-            [ -n "$v" ] && failed+=("$v")
-          done < <(jq -r '.jobs[] | select(.name | startswith("build (")) | select(.conclusion == "failure") | .name | ltrimstr("build (") | rtrimstr(")")' <<<"$jobs_json")
-          bash ./.github/ci-failure-issue.sh "$BUILD_RESULT" "$RUN_URL" ${failed[@]+"${failed[@]}"}
+          bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json

@@ -14,9 +14,9 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   packages (IP1) with a chunk-free .qmd — quarto's markdown engine renders via
   bundled Pandoc, no knitr/jupyter needed; add an R code chunk only if you first
   install knitr.
-- 2026-07-18 (M05): boot-check an arm64-only image with a single-platform
-  `load:true` build + `docker run` under QEMU binfmt (multi-arch images can't be
-  --load'ed); a native-arm64 host verifies the real arch without emulation.
+- 2026-07-18 (M05, corrected M015): boot-check an arm64 image on an arm64
+  runner (Quarto's bundled Deno crashes under QEMU): build one platform, push by
+  digest untagged, pull it back, and assert both `.Architecture` and `uname -m`.
 - 2026-07-18 (M07): simulate an r2u mirror outage in the container smoke by
   blackholing non-Ubuntu apt hosts (`/etc/hosts` → 127.0.0.1) and pointing
   `options(repos=)` at a dead port to kill bspm's source fallback; apt's

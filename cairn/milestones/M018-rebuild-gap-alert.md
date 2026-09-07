@@ -1,6 +1,6 @@
 # M018: Alert when no weekly rebuild has succeeded in too long
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M017
 - **Driving RR:** —
@@ -91,9 +91,11 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
       a UTC `YYYY-MM-DD`, and call `rebuild-gap.sh` with it, today, and `15`.
       An empty result means no successful scheduled run is on record, which is
       a gap — handle it explicitly rather than letting it parse as a bad date.
-- [ ] T5: Dispatch the new workflow once and record its log in the work log
-      (not an acceptance promise). Update the DESIGN Conventions for the alert
-      and its bound, and run the profile `verify` gate.
+- [x] T5: Update the DESIGN Conventions for the alert and its bound, and run
+      the profile `verify` gate. The dispatch run (not an acceptance promise)
+      moves to post-merge: GitHub refuses `workflow_dispatch` for a workflow
+      file that is not yet on the default branch, so it cannot happen on this
+      branch. Its log is recorded in the work log when it runs.
 
 ## Work log
 
@@ -110,6 +112,10 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 
 - 2026-09-07: T4 — `.github/workflows/rebuild-gap.yml` added: `schedule:` Mondays 12:00 UTC (six hours after the 06:00 rebuild) plus `workflow_dispatch:` with a threshold input, `gh run list --workflow docker.yml --event schedule --status success --limit 1` reduced to the UTC date before the `T`, then `.github/rebuild-gap.sh` with that, today and 15. Its three branches were exercised offline against a stubbed `gh` — a date, an empty result (`none`), and a failed lookup (`unknown`).
 - 2026-09-07: T4 minor addition beyond the plan — `scripts/tests/test_rebuild_gap.sh` wired into `pr-ci.yml`'s unit-test step, with `.github/rebuild-gap.sh` and `.github/date-lib.sh` added to that lane's `paths` filter; a new suite that CI never runs is not a guard.
+
+- 2026-09-07: T5 — DESIGN Conventions gained the gap-alert bullet and its bound (the check is itself scheduled, so a disabled-schedule failure belongs to the keepalive, not here). Profile verify gate clean: `hadolint` 2.12.0 reports no violations, `docker build` succeeds (arm64, image sha256:e77c8ff287dd), pinned shellcheck 0.11.0 clean over all 31 tracked shell files, and all seven shell suites pass.
+- 2026-09-07: T5 minor amendment — the dispatch run moves to post-merge. `gh workflow run rebuild-gap.yml --ref m018-rebuild-gap-alert` returned `HTTP 404: workflow rebuild-gap.yml not found on the default branch`, and `gh workflow list --all` lists only the six workflows already on `main`, so a workflow file can be dispatched only once it is there. Recorded, not graded — the plan already put the dispatch outside the acceptance promises.
+- 2026-09-07: local `docker build --platform linux/amd64` failed at the `COPY scripts` layer ("does not provide the specified platform") because this host has no buildx and the classic builder cannot cross-build; the verify build was run natively for arm64 instead. CI builds each architecture on a runner of that architecture, so nothing about the image is unevidenced by this — only the local flag was wrong.
 
 ## Decisions
 

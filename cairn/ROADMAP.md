@@ -1,13 +1,15 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-07 (M016 done and archived; M13 row pruned under terminal-row retention; two keepalive lessons added and three narrow syntax entries pruned to the LESSONS cap)_
+_Last hygiene check: 2026-09-07 (M017 and M018 planned; the notify-blindness and rebuild-gap candidate rows absorbed into them; a Docker Hub tag-date oracle row added)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M017 | Report a failing keepalive job | planned | — | high | milestones/M017-report-failing-keepalive.md |
+| M018 | Alert when no weekly rebuild has succeeded in too long | planned | M017 | normal | milestones/M018-rebuild-gap-alert.md |
 | M016 | Keep the weekly rebuild alive | done | — | normal | milestones/archive/M016-weekly-rebuild-keepalive.md |
 | M015 | Native arm64 runners for the image build | done | — | high | milestones/archive/M015-native-arm64-runners.md |
 | M014 | Semver release history | done | — | normal | milestones/archive/M014-semver-release-history.md |
@@ -21,9 +23,8 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015 — added 2026-07-17 — GP3; from M05
 - Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
 - macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
-- Rebuild-gap alert: notice that no successful weekly rebuild has run in too long (any cause, not just a disabled schedule) and raise the existing ci-failure issue — added 2026-09-06 — GP2, GP7; deferred from M016 planning
-- A failing keepalive job goes unreported, and worse: `notify` aggregates only the meta, build and publish results, so a scheduled run whose builds pass and whose keepalive fails reads as all-success and closes the ci-failure issue while the guard is broken — one way in is a future-dated tip commit, which keepalive.sh refuses by contract, so every scheduled run then fails silently — added 2026-09-06, sharpened 2026-09-07 — GP7; from M016 implementation and both M016 review passes, adjacent to the rebuild-gap row above
 - The keepalive `git push` has no contention handling: a bare push from a shallow checkout with no `concurrency:` group in `docker.yml`, so a maintainer push landing between checkout and push fails non-fast-forward with no retry; the test stub always exits 0, so no failing-push path is exercised — added 2026-09-07 — from M016 review
+- Docker Hub tag date as a second gap oracle: alert when the newest published `<variant>-<date>` tag is stale, measuring the user-visible freshness commitment rather than that a run happened — added 2026-09-07 — GP2; rejected as M018's oracle in favour of run history
 - Read the first scheduled keepalive run: only dispatches have been exercised, so the schedule path's null `inputs` fallback and its `github.event.repository.default_branch` value are unevidenced — added 2026-09-07 — from M016 review
 - Untagged manifests accumulate on Docker Hub: push-by-digest leaves four per run (test-mode runs tag none) with no GC step — added 2026-09-06 — from M015 review
 - Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review

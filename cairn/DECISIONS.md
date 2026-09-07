@@ -118,3 +118,27 @@ emulator.
 lane that wants a foreign-architecture build re-adds the action. The arm64
 runner label is pinned to a specific Ubuntu version, so a runner-image change
 takes an edit here.
+
+### D-008 (2026-09-06): A CI keepalive commit may write to the default branch, using a repo-scoped credential
+
+**Context:** The repo is public, so GitHub disables `docker.yml`'s weekly
+`schedule` trigger after 60 days of repository inactivity. Nothing inside the
+repo can detect that state once it happens — a disabled workflow runs no
+watchdog — so the always-fresh commitment (GP2) would end silently. The only
+mechanism that acts without a person is a commit pushed by CI, and until now
+the default branch has taken only the maintainer's docs-only tracking commits
+and squash-merges of reviewed branches.
+**Decision:** A `keepalive` job in `docker.yml` may push an empty commit to the
+default branch when that branch's newest commit is 50 or more days old. It
+authenticates with a credential scoped to this repository and held in a
+repository secret, not with the workflow's own `GITHUB_TOKEN`: the repo-wide
+Actions workflow permission stays read-only, so no other workflow gains write
+access. Rejected: a documented manual check (leaves the failure dependent on
+recall) and raising the repo-wide workflow permission (widens the ceiling for
+every present and future workflow).
+**Consequences:** The default branch now has a second author. A keepalive
+commit matches no `paths` filter in `docker.yml` or `pr-ci.yml`, so it starts
+no build. The credential is a maintainer-held secret that must be renewed
+before it expires; its lapse is silent in the same way the original failure
+is. Whether GitHub counts such a commit as repository activity is untestable
+from this repo and is recorded in DESIGN Known issues.

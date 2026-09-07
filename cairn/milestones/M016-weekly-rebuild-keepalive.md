@@ -144,6 +144,7 @@ issue by T6, and no criterion below claims it.
 
 ## Decisions
 - 2026-09-07: review second pass — all five criteria re-verified with fresh evidence at 62bdb5c and re-ticked (AC2-AC5 unticked first, so every tick on this pass stands on this pass's evidence); consistency gate clean, cairn_validate exit 0. Three fresh-context lenses still running; checkpoint commit, findings and gate to follow.
+- 2026-09-07: step-7 approval: PR #23 approved for merge, with the review's five fix-now items applied first; [O]-4 routed to the existing notify candidate row, [O]-7 and [O]-8 rejected with reasons in the Review section.
 
 ## Review
 
@@ -381,6 +382,37 @@ milestone stays at 1.
 Read immediately before the merge gate: no reviews, no conversation comments,
 and no unresolved review threads on PR #23 (`hasNextPage: false`). Nothing to
 triage.
+
+### Gate outcome
+
+Approved for merge with the five fix-now items applied first; the follow-up
+routed to the existing candidate row, the two rejections logged above.
+
+Fix-now work, committed on the branch before the approval marker:
+
+- `.github/keepalive.sh` `days_in_month` gains `*) echo 0 ;;` with a comment
+  saying why it is unreachable and why it is there ([O]-5).
+- `docker.yml`'s `test_mode` description now states that the keepalive job
+  runs on every dispatch, so a test run still commits when the branch is past
+  the threshold ([O]-1).
+- The `keepalive_threshold` description no longer claims that everything
+  non-numeric is refused: a cleared field is named as the one exception, and
+  the fallback it lands on is named ([O]-2).
+- The two-checkout comment now names the exposure it buys — on a dispatch the
+  dispatched branch's copy of the script runs while the deploy key is in
+  scope — and says why it is accepted ([O]-3).
+- Both `50` sites now cross-reference each other and the DESIGN bullet ([O]-6).
+
+Re-verified after the repairs: the suite still passes (`PASS: all keepalive
+assertions`), shellcheck 0.11.0 `-S info` over all 28 tracked shell files
+exits 0, `docker.yml` still parses and the `keepalive` job's `if:`,
+`permissions:` and `THRESHOLD:` are unchanged. Against the real git
+repository: fresh and over-wide thresholds still skip with the tip unchanged,
+the stale case still commits one empty commit and pushes, and months `13` and
+`00` are still rejected at exit 2 — the arm added to `days_in_month` changes
+no reachable behaviour.
+
+Defect returns for this milestone: 1. Amendment returns: 0.
 
 ### First-pass record
 

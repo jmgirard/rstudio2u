@@ -63,6 +63,10 @@ days_in_month() {
                 echo 28
             fi
             ;;
+        # Unreachable while parse_date checks the month range first, below.
+        # Present so a reordering there cannot turn this into an empty
+        # substitution and an arithmetic syntax error in the caller.
+        *) echo 0 ;;
     esac
 }
 

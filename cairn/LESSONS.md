@@ -3,9 +3,6 @@
 _Durable, append-only repo lessons (build quirks, testing tricks). Captured at
 milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 
-- 2026-07-17 (M03): unit-test a network-scraping shell script offline by giving
-  it an env seam (`RS_UPDATE_RESPONSE`) that injects the raw response body in
-  place of the fetch — fixtures drive every branch with no network.
 - 2026-07-18 (M05): assert bspm's *binary* install path (not a source fallback)
   by checking `dpkg -s r-cran-<lowercased-pkg>` after install.packages() — r2u
   names binaries r-cran-<name>; a source compile would load but register no apt
@@ -47,3 +44,4 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   the workflow's own ref for the code, the target ref for the write; only a real dispatch shows the gap.
 - 2026-09-07 (M016): `^[0-9]+$` is not a bound — `10#$n` on 19+ digits wraps negative and inverts
   the comparison; bound by digit width, and drive over-wide, zero-padded and widest-in-range.
+- 2026-09-07 (M017): a job's `.conclusion` in `gh run view --json jobs` has values `needs.<job>.result` does not — `timed_out` there is `failure` here — so a script reading both must not filter the listing on `== "failure"` alone.

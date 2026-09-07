@@ -319,6 +319,15 @@ rc=$(run_script "success failure cancelled" "$NONE" "$FIX_ARM64_FAIL")
 assert_rc      "failure alongside cancelled exits 0" 0 "$rc"
 assert_call    "a failure outranks a cancellation and opens an issue" '^issue create .*--title Weekly rebuild failed: noble --body '
 
+# 6f2. An empty results list reported nothing successful, so it is not a
+# success. Unreachable from docker.yml today, where RESULTS always carries
+# three values, but the rule is what keeps a future empty interpolation from
+# closing the issue on a run that did nothing.
+rc=$(run_script "" "$TWO" "$FIX_ALL_GREEN")
+assert_rc      "an empty results list exits 0" 0 "$rc"
+assert_no_call "an empty results list never closes the issue" '^issue close '
+assert_call    "  ... it reports the failure instead"         '^issue comment 41 '
+
 # 6g. The meta job failing skips everything downstream — still an alert.
 rc=$(run_script "failure skipped skipped" "$NONE" "$(jobs_doc "$(job 'meta' failure)")"  )
 assert_rc      "meta failure exits 0" 0 "$rc"

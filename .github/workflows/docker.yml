@@ -189,7 +189,12 @@ jobs:
   publish:
     name: publish (${{ matrix.variant }})
     needs: [meta, build]
-    if: always() && needs.build.result != 'cancelled'
+    # 'failure' must still reach this job: a variant whose legs all passed is
+    # published even when the other variant's did not (GP3 preview tier), and
+    # the digest guard below is what reports the variant that did fail.
+    # 'skipped' must not: it means meta failed and nothing was built, so there
+    # is nothing to assemble and the meta outputs are empty.
+    if: always() && needs.build.result != 'cancelled' && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -200,9 +205,9 @@ jobs:
           - variant: resolute
             mutable: resolute
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      # No checkout: since the version resolve moved to the meta job, nothing
+      # in this job reads the repository. imagetools is a buildx subcommand,
+      # so setup-buildx-action is still needed.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -230,6 +235,13 @@ jobs:
           DATE: ${{ needs.meta.outputs.date }}
         run: |
           set -euo pipefail
+          # An empty output here would build `<image>:<variant>-` — a tag name
+          # missing the thing it exists to pin. Refuse it rather than hand a
+          # malformed tag to imagetools.
+          if [ -z "$RSVER" ] || [ -z "$DATE" ]; then
+            echo "::error::the meta job produced no RStudio version and/or build date (rsver='$RSVER', date='$DATE')"
+            exit 1
+          fi
           {
             echo "tags<<EOF"
             for t in ${{ matrix.mutable }}; do echo "$IMAGE:$t"; done
@@ -280,21 +292,29 @@ jobs:
           printf '  %s\n' "${tags[@]}"
           tag_args=()
           for t in "${tags[@]}"; do tag_args+=(-t "$t"); done
-          if [ "$TEST_MODE" = "true" ]; then
-            echo "test mode: printing the manifest list instead of publishing"
-            docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}" | tee /tmp/manifest.json
-          else
-            docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
-            docker buildx imagetools inspect --raw "${tags[0]}" | tee /tmp/manifest.json
-          fi
-          # Attestation entries carry os/architecture "unknown"; only real linux
-          # platforms count.
-          got=$(jq -r '[.manifests[].platform | select(.os == "linux") | .architecture] | unique | join(" ")' /tmp/manifest.json)
+          # Assemble the index and check it BEFORE any tag moves. --dry-run
+          # produces the exact index the real create would push, so the same
+          # assertion runs on both paths and refuses a single-architecture
+          # publish rather than reporting one after the tags already point at
+          # it. Counting two digest files proves only that two legs uploaded
+          # something, never that they are different architectures.
+          docker buildx imagetools create --dry-run "${tag_args[@]}" "${refs[@]}" | tee /tmp/manifest.json
+          # `.manifests[]?` so a result that is not an index yields an empty
+          # list and the explicit error below, not jq's "cannot iterate over
+          # null" under set -e. Attestation entries carry os/architecture
+          # "unknown"; only real linux platforms count.
+          got=$(jq -r '[.manifests[]?.platform | select(.os == "linux") | .architecture] | unique | join(" ")' /tmp/manifest.json)
           if [ "$got" != "amd64 arm64" ]; then
-            echo "::error::the ${{ matrix.variant }} manifest list names linux platforms '$got', expected 'amd64 arm64'"
+            echo "::error::the ${{ matrix.variant }} manifest list names linux platforms '$got', expected 'amd64 arm64' — nothing was tagged"
             exit 1
           fi
           echo "manifest list for ${{ matrix.variant }} names both architectures: $got"
+          if [ "$TEST_MODE" = "true" ]; then
+            echo "test mode: the manifest list above was printed, not published; no tag attached"
+          else
+            docker buildx imagetools create "${tag_args[@]}" "${refs[@]}"
+            docker buildx imagetools inspect "${tags[0]}"
+          fi
 
   # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
   # opens (or updates) a ci-failure issue and the next green run closes it
@@ -327,8 +347,12 @@ jobs:
           set -euo pipefail
           # A failed job listing must not block the alert itself: warn and let
           # the script fall back to its generic "see the run summary" text.
+          # An empty file, not '{"jobs":[]}': an empty listing is "no listing
+          # was available", which the script reports as such. A valid but
+          # variant-free document would instead trip its contradiction warning,
+          # blaming the extraction for a failure that happened here.
           gh run view "$GITHUB_RUN_ID" --json jobs > jobs.json || {
             echo "::warning::gh run view failed; the issue will not name the failed variants"
-            echo '{"jobs":[]}' > jobs.json
+            : > jobs.json
           }
           bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json

@@ -27,14 +27,16 @@ on:
   workflow_dispatch:
     inputs:
       threshold_days:
-        description: "The largest gap, in days, that is not yet an alert. More than this many days since a scheduled rebuild last succeeded raises the ci-failure issue. The scheduled run has no inputs and takes the same default from the job's own fallback below -- change the policy and both sites move together."
+        description: "The largest gap, in days, that is not yet an alert. More than this many days since a scheduled rebuild last succeeded raises the ci-failure issue. Both workflows are weekly, so a real gap is always a multiple of seven days; the default of 8 is what makes the second missed rebuild the alert, and anything from 8 to 13 picks the same week. The scheduled run has no inputs and takes the same default from the job's own fallback below -- change the policy and both sites move together."
         type: string
-        default: "15"
+        default: "8"
 
 jobs:
   gap:
-    # One word, no spaces: the failed-job names in a ci-failure title are joined
-    # on a space, so a job name containing one would render ambiguously there.
+    # One word, no spaces. Nothing here puts this name in an issue title -- the
+    # gap alert passes a subject and no jobs document at all -- but the repo's
+    # other alert path joins failed-job names on a space, so a job name without
+    # one stays safe if this job is ever wired into that path.
     name: rebuild-gap
     runs-on: ubuntu-latest
     permissions:
@@ -52,8 +54,8 @@ jobs:
           # Absent on a scheduled run, where the `inputs` context is null, so
           # this fallback is the scheduled policy. The dispatch input's own
           # default (above) and the DESIGN Conventions bullet state the same
-          # 15; all three move together or not at all.
-          THRESHOLD: ${{ inputs.threshold_days || '15' }}
+          # 8; all three move together or not at all.
+          THRESHOLD: ${{ inputs.threshold_days || '8' }}
         run: |
           set -euo pipefail
           # The newest SUCCESSFUL SCHEDULED docker.yml run, and only that: a
@@ -76,11 +78,19 @@ jobs:
               # what keeps an empty string from reaching the script as a
               # mis-shaped date and being refused instead of reported.
               last_success=none
-            else
+            elif [[ $created_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
               # `createdAt` is RFC 3339 in UTC (a trailing Z), so the date is
               # the ten characters before the T -- no `date` parsing, whose
-              # flags differ between GNU and BSD.
+              # flags differ between GNU and BSD. The shape is checked here
+              # rather than left to the script: a value with no T would reach
+              # it whole, be refused as a mis-shaped date, and end the run at
+              # exit 2 having raised nothing. Silence is the one outcome this
+              # check must never have, so an unreadable answer is the
+              # `unknown` sentinel like any other unreadable history.
               last_success="${created_at%%T*}"
+            else
+              echo "::warning::gh run list returned an unparseable createdAt ('$created_at'); reporting an unreadable rebuild history"
+              last_success=unknown
             fi
           fi
           today=$(date -u +%Y-%m-%d)

@@ -117,6 +117,8 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - 2026-09-07: T5 minor amendment — the dispatch run moves to post-merge. `gh workflow run rebuild-gap.yml --ref m018-rebuild-gap-alert` returned `HTTP 404: workflow rebuild-gap.yml not found on the default branch`, and `gh workflow list --all` lists only the six workflows already on `main`, so a workflow file can be dispatched only once it is there. Recorded, not graded — the plan already put the dispatch outside the acceptance promises.
 - 2026-09-07: local `docker build --platform linux/amd64` failed at the `COPY scripts` layer ("does not provide the specified platform") because this host has no buildx and the classic builder cannot cross-build; the verify build was run natively for arm64 instead. CI builds each architecture on a runner of that architecture, so nothing about the image is unevidenced by this — only the local flag was wrong.
 - 2026-09-07: review — PR #26 opened; every acceptance criterion executed with fresh evidence and ticked; consistency gate clean (`cairn_validate` all checks pass, one pre-existing advisory); three review lenses returned eleven findings, all from the diff-bug lens, logged in the Review section with a proposed triage for the gate.
+- 2026-09-07: gate — maintainer chose "fix three, then merge": the threshold moved 15 → 8, an unparseable `createdAt` now routes to the `unknown` sentinel, and the job-name comment's rationale was corrected; findings 2 and 4 filed as candidate rows, the other six rejected with reasons in the Review section.
+- 2026-09-07: step-7 approval: PR #26 approved for merge.
 
 ## Decisions
 
@@ -288,11 +290,56 @@ reaches `parse_date` and exits 2 raising nothing, so finding 3 holds.
 The [O] lens did not re-run AC7's gate (no `shellcheck` on that host); this
 session ran all three from pinned images, recorded under AC7 above.
 
-Proposed triage, put to the maintainer at the gate: fix now — 1 (the
-threshold, so the alert fires on the second missed week), 3 (a shape check
-routing an unparseable `createdAt` to the `unknown` sentinel), 10 (the
-comment's rationale, a claim its own workflow does not support); follow-up
-candidate rows — 2 and 4; reject — 5 (deliberate ordering, no criterion pins
-it), 6 (no caller can produce CRLF), 7 (pre-existing, not introduced here),
-8 (no later step reads the tree), 9 (both idioms correct), 11 (the repo's
-existing convention).
+### Triage
+
+Dispositions taken at the gate, where the maintainer chose "fix three, then
+merge".
+
+- **1 — fixed.** The threshold moves from 15 to 8 in all three places (the
+  dispatch input default and its description, the `THRESHOLD` env fallback,
+  the DESIGN bullet), so the alert fires on the second missed rebuild rather
+  than the third. The Goal's promise still holds: it says a gap of more than
+  fifteen days raises the issue, and raising it at fourteen does not falsify
+  that.
+- **3 — fixed.** The workflow now checks `createdAt`'s shape before stripping
+  it and routes anything that does not match `^[0-9]{4}-[0-9]{2}-[0-9]{2}T`
+  to the `unknown` sentinel with a `::warning::`, so an unreadable answer is
+  an alert rather than an exit-2 run raising nothing.
+- **10 — fixed.** The `name: rebuild-gap` comment now says what is true: no
+  path here puts the job name in an issue title, and the one-word name is
+  caution against the repo's other alert path, not a requirement of this one.
+- **2 — follow-up.** ROADMAP candidate row added: the date reduction's three
+  branches have no committed test.
+- **4 — follow-up.** ROADMAP candidate row added: the workflow has no
+  self-report for its own failure.
+- **5 — rejected.** The validation order is deliberate (arguments 2 and 3 are
+  checked the same way whichever argument 1 is), no criterion pins it, and
+  each of AC2's five rejections was verified naming its own argument.
+- **6 — rejected.** No current caller can pass a CRLF subject.
+- **7 — rejected.** Pre-existing; the diff did not introduce it.
+- **8 — rejected.** No later step reads the checkout, so the stray file is
+  inert.
+- **9 — rejected.** Both `dirname` idioms are correct; a style difference.
+- **11 — rejected.** The three-site threshold matches the repo's existing
+  convention for the keepalive's own bound.
+
+### Re-verification after the gate fixes
+
+The fixes touch `.github/workflows/rebuild-gap.yml` and `cairn/DESIGN.md`.
+The step body was re-extracted from the fixed YAML and run offline against a
+stubbed `gh` in five modes: a date (`2026-01-01`), an empty result (`none`),
+a failed lookup (`unknown`), a value that is not a timestamp (`unknown`,
+with the new warning), and an RFC-3339-shaped value with a space instead of a
+`T` (`unknown`) — each reaching the script with today's UTC date and a
+threshold of 8. Before the fix the last two exited 2 raising nothing, which
+is the finding. AC4 and AC6 still hold against the fixed files: the workflow
+keeps its `schedule` and `workflow_dispatch` triggers, its `gh run list`
+call and its three-argument invocation, and the DESIGN bullet still records
+the alert and the disabled-schedule bound. Pinned `shellcheck` 0.11.0 clean
+over all 31 tracked shell files, `hadolint` v2.12.0 clean, all eight shell
+suites pass.
+
+### PR conversation
+
+Read once before the merge chip: no reviews, no conversation comments, no
+unresolved review threads on PR #26.

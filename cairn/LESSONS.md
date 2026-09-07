@@ -32,18 +32,18 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
 - 2026-07-18 (M09): a stub resolving the same config as the code under test gives
   false coverage; force the code's own parse to reach the output, then mutate to
   confirm. A stub answering a looped query must be argument-sensitive, multi-item (M10).
-- 2026-07-18 (M09): PowerShell variable names are case-insensitive — a `$DotEnv` parameter silently shadows a script-scope `$dotenv`.
-- 2026-07-18 (M09): batch `for /f "tokens=* delims= "` is trim-LEFT only; trim
-  both ends with a `:~0,1` / `:~-1` loop.
 - 2026-07-18 (M09): ask `docker compose port <svc> <port>` for the real host
   binding instead of re-deriving it from RS_PORT/.env — authoritative across
   every override mechanism.
 - 2026-09-03 (M11): a shellcheck severity floor can pass the defect it is meant to
   catch (SC2086 is info, not warning) — plant it and see red before trusting `-S`.
-- 2026-09-03 (M12): `gh secret list` prints each secret's update time — verify a rotation with it.
 - 2026-09-04 (M13): cancelling a workflow run cancels its downstream jobs before their `if:` runs, so a cancelled run shows `cancelled`, never `skipped` — a skip needs a run that completes.
 - 2026-09-04 (M13): a matrix `include` leg with several keys is named `job (k1, k2, k3)`; set `name: job (${{ matrix.variant }})` when a script parses job names.
 - 2026-09-04 (M014): `gh release view --json body -q .body` appends a newline the body lacks, and `git tag -F` drops `#` heading lines unless `--cleanup=verbatim` — byte-compare bodies only through one identical extraction on both sides.
 - 2026-09-06 (M015): `docker buildx imagetools create --dry-run` prints the exact
   index the real create would push — assert on it before the create, so a bad
   manifest is refused rather than reported after the tags already moved.
+- 2026-09-07 (M016): a job running a repo script against another ref needs two checkouts —
+  the workflow's own ref for the code, the target ref for the write; only a real dispatch shows the gap.
+- 2026-09-07 (M016): `^[0-9]+$` is not a bound — `10#$n` on 19+ digits wraps negative and inverts
+  the comparison; bound by digit width, and drive over-wide, zero-padded and widest-in-range.

@@ -1,6 +1,6 @@
 # M015: Native arm64 runners for the image build
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -117,6 +117,8 @@ rows.
 - 2026-09-06: T4: corrected the QEMU-as-current prose in `scripts/install_quarto.sh`, `scripts/retry.sh`, `scripts/tests/test_retry.sh`, `.github/smoke-test.sh`, the `docker.yml` comments, `DESIGN.md` Conventions (marked corrected M015) and the M05 LESSONS line (marked corrected M015, recompressed to keep the file at 49 lines); added a DESIGN Known issue for the hosted-arm64-runner dependency; reworded the pr-ci arm64 candidate row.
 - 2026-09-06: T4 also repointed `pr-ci.yml`'s `cache-from` to the new per-arch scope `noble-amd64` and corrected its comment; the old `scope=noble` no longer exists after T1.
 - 2026-09-06: verify: shellcheck 0.11.0 (-x -S info) clean over all tracked shell files; both shell suites pass; `hadolint` clean at 2.12.0, the version `hadolint/hadolint-action@v3.1.0` pins. Current hadolint (2.14) reports DL3025 on the Dockerfile's HEALTHCHECK — present identically on main, unrelated to this branch, filed as a [low] candidate row.
+- 2026-09-06: verify (T4, build-context change): `docker build` succeeds from a clean context on this arm64 host (exit 0, 849 MB); the built image reports `uname -m` = aarch64 and runs quarto 1.9.38, and the build log carries zero `retry:` diagnostics — the Deno-invoking quarto calls needed no retry when nothing is emulated.
+- 2026-09-06: pushed the branch and dispatched the test-mode run for AC1/AC3/AC5 evidence: https://github.com/jmgirard/rstudio2u/actions/runs/34075352828 . All four build legs picked up runners and are in progress, so `ubuntu-24.04-arm` resolves for this repo — the plan's stated falsifier for the native-runner choice does not fire. No watcher left armed; review re-derives the run state.
 - 2026-09-06: [O] criteria audit, full mode: 4 findings on 6 criteria — AC3 could not distinguish arm64 from amd64 (fixed: architecture assertions), AC4 tested a mutated filter and allowed a duplicated variant (fixed: shipped extraction under fixtures, deduplicated), AC5 contradicted itself on a cached push run (fixed: scoped to the no-cache dispatch), AC1's evidence timing went to the gate (answered: dispatch test mode).
 
 ## Decisions

@@ -86,7 +86,7 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - [x] T3: Write `.github/rebuild-gap.sh`, reusing `keepalive.sh`'s
       `days_from_civil` / `parse_date` / digit-width bound rather than
       re-deriving them. Suite green.
-- [ ] T4: Add the scheduled workflow: `gh run list --workflow docker.yml
+- [x] T4: Add the scheduled workflow: `gh run list --workflow docker.yml
       --event schedule --status success --limit 1 --json createdAt`, reduce to
       a UTC `YYYY-MM-DD`, and call `rebuild-gap.sh` with it, today, and `15`.
       An empty result means no successful scheduled run is on record, which is
@@ -107,6 +107,9 @@ excludes, so the dispatch run happens as T5 and is logged, not graded.
 - 2026-09-07: T2 — `.github/ci-failure-issue.sh` takes an optional fourth argument that replaces the failed-job wording in the title and in the lead line of both the body and the repeat comment; omitted, every rendering is byte-identical to before. Four cases added to `scripts/tests/test_ci_failure_issue.sh` and the no-subject body lead newly asserted; planting an appending-instead-of-replacing defect turned 6 assertions red, restoring it turned them green. Suite passes; pinned shellcheck 0.11.0 clean over the changed files.
 
 - 2026-09-07: T3 — `.github/rebuild-gap.sh` written; the date parsing, calendar check and threshold width bound moved to a new `.github/date-lib.sh` sourced by it and by `keepalive.sh`, whose suite stays green unchanged. The boundary is not shared: keepalive acts at or past its threshold, the gap check only past its own. Both `scripts/tests/test_rebuild_gap.sh` and `test_keepalive.sh` pass. Discrimination checked by planting three defects — the boundary off by one (3 red), a `curl` call on the deciding path (10 red), the unreadable-history sentinel claiming a measured gap (3 red) — each green again on restore. Pinned shellcheck 0.11.0 clean over every tracked shell file plus the two new ones.
+
+- 2026-09-07: T4 — `.github/workflows/rebuild-gap.yml` added: `schedule:` Mondays 12:00 UTC (six hours after the 06:00 rebuild) plus `workflow_dispatch:` with a threshold input, `gh run list --workflow docker.yml --event schedule --status success --limit 1` reduced to the UTC date before the `T`, then `.github/rebuild-gap.sh` with that, today and 15. Its three branches were exercised offline against a stubbed `gh` — a date, an empty result (`none`), and a failed lookup (`unknown`).
+- 2026-09-07: T4 minor addition beyond the plan — `scripts/tests/test_rebuild_gap.sh` wired into `pr-ci.yml`'s unit-test step, with `.github/rebuild-gap.sh` and `.github/date-lib.sh` added to that lane's `paths` filter; a new suite that CI never runs is not a guard.
 
 ## Decisions
 

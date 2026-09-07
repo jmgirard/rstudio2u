@@ -385,13 +385,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      # `ref:` is explicit because a manual dispatch can be aimed at any branch,
-      # and the commit must land on the default branch whichever ref the
-      # workflow file was read from.
-      - name: Check out the default branch
+      # Two checkouts, because the two things this job needs can come from
+      # different refs. The rule is read from the ref the workflow file itself
+      # came from, so a dispatch aimed at a branch exercises that branch's
+      # version of it; the commit has to land on the default branch whatever
+      # ref was dispatched. On the scheduled run the two are the same ref.
+      - name: Check out this workflow's own ref — the rule is read from here
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out the default branch — the commit lands here
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.repository.default_branch }}
+          path: default-branch
           # A deploy key on this repository with write access: it can reach no
           # other repository, and unlike a personal access token it does not
           # expire, so it cannot lapse as silently as the failure it guards
@@ -400,6 +408,7 @@ jobs:
           ssh-key: ${{ secrets.KEEPALIVE_DEPLOY_KEY }}
 
       - name: Commit if the default branch has gone quiet
+        working-directory: default-branch
         env:
           # Absent on a scheduled run, where the `inputs` context is null; the
           # dispatch input's own default is the same 50.
@@ -412,4 +421,4 @@ jobs:
           commit_date=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%d)
           today=$(date -u +%Y-%m-%d)
           echo "default branch tip is dated $commit_date; today is $today (UTC)"
-          bash ./.github/keepalive.sh "$commit_date" "$today" "$THRESHOLD"
+          bash "$GITHUB_WORKSPACE/.github/keepalive.sh" "$commit_date" "$today" "$THRESHOLD"

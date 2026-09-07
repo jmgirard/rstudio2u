@@ -95,7 +95,7 @@ issue by T6, and no criterion below claims it.
       scoped to this repository and store it as the secret T3 reads; the
       maintainer creates it — cairn never handles credentials — and the
       milestone waits on it before T7.
-- [ ] T6: Record the keepalive in `cairn/DESIGN.md` Conventions, and in its
+- [x] T6: Record the keepalive in `cairn/DESIGN.md` Conventions, and in its
       Known issues the exposure this does not remove: the mechanism rests on
       GitHub continuing to count a pushed commit as repository activity, which
       this repo cannot test.
@@ -115,6 +115,8 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: T2 discrimination — four defects planted in a copy of the script, each run red: an inverted comparison (12 assertions), an off-by-one making the at-threshold case skip (8, and none of the below-threshold ones), a skip path that still calls `git commit` (1 — the "no git call" assertion alone), and the second date validator re-reading argument 1 so a bad argument 2 passes (21).
 - 2026-09-06: T3 — `keepalive` job added to `docker.yml`: `if:` admits only `schedule` and `workflow_dispatch`, `permissions: contents: read`, checkout of `github.event.repository.default_branch` with `ssh-key: secrets.KEEPALIVE_DEPLOY_KEY`, and a `keepalive_threshold` dispatch input defaulting to 50. Both dates are taken in UTC (`TZ=UTC git log --date=format-local`, `date -u`) so the comparison cannot straddle a timezone.
 - 2026-09-06: T4 — `pr-ci.yml` runs `scripts/tests/test_keepalive.sh` in its unit-test step and lists `.github/keepalive.sh` in its `paths` filter.
+- 2026-09-06: T6 — DESIGN Conventions records the keepalive mechanism; DESIGN Known issues records the untestable assumption that GitHub counts a pushed commit as the activity that defers the cutoff.
+- 2026-09-06: candidate row added — a failing `keepalive` job is not reported, because `notify` aggregates only meta/build/publish. Adding it there would change the ci-failure alert's shape, so it is deferred rather than folded in.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-06 (M016 planned; the keepalive candidate row absorbed and replaced by a rebuild-gap-alert row)_
+_Last hygiene check: 2026-09-06 (M016 in-progress; a candidate row added for the unreported keepalive-job failure)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
@@ -23,6 +23,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
 - macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - Rebuild-gap alert: notice that no successful weekly rebuild has run in too long (any cause, not just a disabled schedule) and raise the existing ci-failure issue — added 2026-09-06 — GP2, GP7; deferred from M016 planning
+- A failing keepalive job goes unreported: the `notify` job aggregates only the meta, build and publish results, so a broken keepalive leaves the same silent gap the keepalive exists to close — added 2026-09-06 — GP7; from M016 implementation, adjacent to the rebuild-gap row above
 - Untagged manifests accumulate on Docker Hub: push-by-digest leaves four per run (test-mode runs tag none) with no GC step — added 2026-09-06 — from M015 review
 - Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review
 - [low] `HEALTHCHECK ... CMD wget … || exit 1` trips DL3025 on hadolint newer than the 2.12.0 the PR lane pins; the shell form is required for the `||`, so this is a JSON-form rewrite or a pinned ignore — added 2026-09-06 — found running current hadolint at M015

@@ -49,6 +49,14 @@ reproducibility.
   auto-detect is a bug worth engineering against. s6-overlay is pinned
   exactly (`S6_VERSION`); base image is pinned to a versioned tag, never
   `latest`.
+- **The rebuild keeps itself enabled:** GitHub disables a public repository's
+  scheduled workflows after 60 days without repository activity, so
+  `docker.yml`'s `keepalive` job pushes an empty commit to the default branch
+  when that branch's newest commit is 50 or more days old — two weekly runs of
+  margin before the cutoff. The staleness rule lives in `.github/keepalive.sh`,
+  never in the workflow; the push authenticates with a write-enabled deploy key
+  held in a repository secret, so the repo-wide Actions token stays read-only
+  (added M016).
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while
@@ -135,3 +143,9 @@ _Warts confirmed in the 2026-07-17 interview:_
   free only while the repo stays public and pinned to one Ubuntu version
   (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
   (added M015).
+- The keepalive rests on GitHub continuing to count a pushed commit as the
+  repository activity that defers the 60-day scheduled-workflow cutoff. This
+  repo cannot test that: the counter is not exposed, and the only observation
+  that would settle it needs 60 quiet days to produce. If the assumption is
+  wrong, the keepalive commits and the schedule is disabled anyway (added
+  M016).

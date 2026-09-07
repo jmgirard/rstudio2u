@@ -117,6 +117,7 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: T4 — `pr-ci.yml` runs `scripts/tests/test_keepalive.sh` in its unit-test step and lists `.github/keepalive.sh` in its `paths` filter.
 - 2026-09-06: T6 — DESIGN Conventions records the keepalive mechanism; DESIGN Known issues records the untestable assumption that GitHub counts a pushed commit as the activity that defers the cutoff.
 - 2026-09-06: candidate row added — a failing `keepalive` job is not reported, because `notify` aggregates only meta/build/publish. Adding it there would change the ci-failure alert's shape, so it is deferred rather than folded in.
+- 2026-09-06: T5 handed to the maintainer — generate an ed25519 keypair, add the public half as a write-enabled deploy key titled `keepalive`, store the private half as the repository secret `KEEPALIVE_DEPLOY_KEY`. Confirmed beforehand: `main` is unprotected, the repo-wide Actions workflow permission is `read`, and no deploy key or such secret exists yet. T7 waits on it.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

@@ -1,0 +1,98 @@
+name: Check the weekly rebuild is not stale
+
+# The one alert no run can raise for itself. docker.yml's `notify` job reports
+# on a run that happened; a run that never happens reports nothing, and the
+# always-fresh commitment (GP2) would end in silence. This workflow measures
+# the thing directly — how long since a scheduled rebuild last succeeded — so a
+# disabled schedule, a deleted workflow, a GitHub outage and a month of red
+# builds all surface as the same alert, because they are the same symptom.
+#
+# Its own bound: this workflow is itself on a schedule, so once GitHub has
+# disabled the repository's scheduled workflows it is disabled with them and
+# reports nothing. That failure mode belongs to docker.yml's `keepalive` job,
+# which exists to stop it happening; this check does not cover it and is not
+# meant to.
+#
+# The staleness rule is not in this file: .github/rebuild-gap.sh holds it,
+# unit-tested in scripts/tests/test_rebuild_gap.sh, and the step below hands it
+# two dates and a threshold and nothing else (the keepalive.sh pattern).
+
+on:
+  # Mondays at 12:00 UTC, six hours after docker.yml's 06:00 rebuild, so the
+  # run this check measures has finished before it is measured. Weekly, to
+  # match the cadence of the thing it watches: a gap that stays open gets one
+  # follow-up comment a week rather than a daily stream on the same issue.
+  schedule:
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+    inputs:
+      threshold_days:
+        description: "The largest gap, in days, that is not yet an alert. More than this many days since a scheduled rebuild last succeeded raises the ci-failure issue. Both workflows are weekly, so a real gap is always a multiple of seven days; the default of 8 is what makes the second missed rebuild the alert, and anything from 8 to 13 picks the same week. The scheduled run has no inputs and takes the same default from the job's own fallback below -- change the policy and both sites move together."
+        type: string
+        default: "8"
+
+jobs:
+  gap:
+    # One word, no spaces. Nothing here puts this name in an issue title -- the
+    # gap alert passes a subject and no jobs document at all -- but the repo's
+    # other alert path joins failed-job names on a space, so a job name without
+    # one stays safe if this job is ever wired into that path.
+    name: rebuild-gap
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Alert if no scheduled rebuild has succeeded lately
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # Absent on a scheduled run, where the `inputs` context is null, so
+          # this fallback is the scheduled policy. The dispatch input's own
+          # default (above) and the DESIGN Conventions bullet state the same
+          # 8; all three move together or not at all.
+          THRESHOLD: ${{ inputs.threshold_days || '8' }}
+        run: |
+          set -euo pipefail
+          # The newest SUCCESSFUL SCHEDULED docker.yml run, and only that: a
+          # push-triggered or dispatched build proves someone was here, not
+          # that the unattended lane still works, and the unattended lane is
+          # what this checks.
+          if ! gh run list --workflow docker.yml --event schedule \
+                 --status success --limit 1 --json createdAt \
+                 --jq '.[0].createdAt // empty' > created_at.txt; then
+            # The lookup itself failed. Not a measured gap and not a clean
+            # bill of health, so it is neither reported as one: `unknown` is
+            # the sentinel the script renders as its own alert.
+            echo "::warning::gh run list failed; reporting an unreadable rebuild history"
+            last_success=unknown
+          else
+            created_at="$(cat created_at.txt)"
+            if [ -z "$created_at" ]; then
+              # The query worked and matched nothing: no successful scheduled
+              # run is on record. That is a gap, and saying so explicitly is
+              # what keeps an empty string from reaching the script as a
+              # mis-shaped date and being refused instead of reported.
+              last_success=none
+            elif [[ $created_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+              # `createdAt` is RFC 3339 in UTC (a trailing Z), so the date is
+              # the ten characters before the T -- no `date` parsing, whose
+              # flags differ between GNU and BSD. The shape is checked here
+              # rather than left to the script: a value with no T would reach
+              # it whole, be refused as a mis-shaped date, and end the run at
+              # exit 2 having raised nothing. Silence is the one outcome this
+              # check must never have, so an unreadable answer is the
+              # `unknown` sentinel like any other unreadable history.
+              last_success="${created_at%%T*}"
+            else
+              echo "::warning::gh run list returned an unparseable createdAt ('$created_at'); reporting an unreadable rebuild history"
+              last_success=unknown
+            fi
+          fi
+          today=$(date -u +%Y-%m-%d)
+          echo "last successful scheduled rebuild: $last_success; today is $today (UTC)"
+          bash ./.github/rebuild-gap.sh "$last_success" "$today" "$THRESHOLD"

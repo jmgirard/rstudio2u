@@ -4,9 +4,12 @@
 # job results. Called by the `notify` job in .github/workflows/docker.yml on
 # scheduled runs, so a failure anywhere in the run — a build or publish leg, or
 # the keepalive job that keeps next week's run scheduled at all — reaches the
-# maintainer as an issue, and the next fully green run closes it (GP7).
+# maintainer as an issue, and the next fully green run closes it (GP7). Also
+# called by .github/rebuild-gap.sh, which reports something no single run can
+# see — that no scheduled run has succeeded in too long — through this same
+# issue, since the next fully green run is the right close condition for both.
 #
-# Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json]
+# Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json] [subject]
 #   results   the needed jobs' results, space-separated (`needs.<job>.result`
 #             for each). They are aggregated here — the one copy of that rule,
 #             so the suite covers it. The issue is closed only when EVERY
@@ -26,6 +29,16 @@
 #             unparseable means the issue falls back to generic text; a document
 #             that is present but names no failed job is warned about rather
 #             than quietly falling back.
+#   subject   what the issue is about, as one sentence. Given, it replaces the
+#             "Weekly run failed: <jobs>" wording in both the title and the
+#             lead line of the body/comment, so a caller reporting something
+#             other than a failed job in this run says what it means instead of
+#             borrowing wording that would be wrong. Omitted or empty, every
+#             rendering is exactly what it was before this argument existed —
+#             the notify job passes three arguments and is unaffected. It is a
+#             title, so it is trimmed to one line and to what a GitHub issue
+#             title holds; a caller passing a subject usually has no jobs
+#             document and passes "" in that position.
 # Env: GH_TOKEN (or a logged-in `gh`) with issues:write on the repo.
 #
 # One issue is reused: with an open ci-failure issue, a failure comments on
@@ -42,7 +55,7 @@ JQ_ERR="$(mktemp)"
 trap 'rm -f "$JQ_ERR"' EXIT
 
 usage() {
-    echo "usage: $0 <results> <run-url> [jobs-json]" >&2
+    echo "usage: $0 <results> <run-url> [jobs-json] [subject]" >&2
     exit 2
 }
 
@@ -79,6 +92,13 @@ aggregate_result() {
 result="$(aggregate_result $1)"
 run_url="$2"
 jobs_json="${3:-}"
+# A title, so: the first line only, and no longer than a GitHub issue title
+# holds. A caller that builds this from a date and a day count cannot exceed
+# either bound, but the trim is here so a future caller cannot make an issue
+# create fail from the wording alone.
+subject="${4:-}"
+subject="${subject%%$'\n'*}"
+subject="${subject:0:256}"
 
 # Recover the failed job names from the run's job list. The build legs are
 # named "build (<variant>, <arch>)" and the publish legs "publish (<variant>)",
@@ -131,6 +151,22 @@ else
     failed_text="(see the run summary for the failed job)"
 fi
 
+# The three renderings, in one place. Without a subject each is character-for-
+# character what it was before the argument existed; with one, the caller's
+# sentence replaces the failed-job wording everywhere it would have appeared,
+# so nothing claims a job failed in a run where none did.
+if [ -n "$subject" ]; then
+    title="$subject"
+    lead_open="$subject"
+    lead_again="$subject"
+    reason="$subject"
+else
+    title="Weekly run failed: $failed_text"
+    lead_open="The scheduled run failed in: $failed_text"
+    lead_again="The scheduled run failed again in: $failed_text"
+    reason="$failed_text"
+fi
+
 # Fill the `open` array with the numbers of the open ci-failure issues,
 # oldest first (gh's default order is newest first; the reused issue should
 # be the one opened first). A read loop, not mapfile: macOS bash 3.2 runs
@@ -148,7 +184,7 @@ case "$result" in
         # A failed run whose own job listing names no failed job at all is a
         # contradiction — the extraction, the job names, or the aggregation is
         # wrong. Say so rather than quietly shipping the generic text.
-        if [ ${#failed_names[@]} -eq 0 ] && [ -n "$jobs_doc" ] && [ ! -s "$JQ_ERR" ]; then
+        if [ ${#failed_names[@]} -eq 0 ] && [ -z "$subject" ] && [ -n "$jobs_doc" ] && [ ! -s "$JQ_ERR" ]; then
             echo "::warning::the run is reported failed but its job listing names no failed job; the issue falls back to generic text"
         fi
         gh label create "$LABEL" --force \
@@ -157,12 +193,12 @@ case "$result" in
         list_open
         if [ ${#open[@]} -eq 0 ]; then
             gh issue create --label "$LABEL" \
-                --title "Weekly run failed: $failed_text" \
-                --body "$(printf 'The scheduled run failed in: %s\n\nRun: %s\n\nThis issue is closed automatically by the next fully green scheduled run.' "$failed_text" "$run_url")"
-            echo "opened a $LABEL issue for: $failed_text"
+                --title "$title" \
+                --body "$(printf '%s\n\nRun: %s\n\nThis issue is closed automatically by the next fully green scheduled run.' "$lead_open" "$run_url")"
+            echo "opened a $LABEL issue for: $reason"
         else
             gh issue comment "${open[0]}" \
-                --body "$(printf 'The scheduled run failed again in: %s\n\nRun: %s' "$failed_text" "$run_url")"
+                --body "$(printf '%s\n\nRun: %s' "$lead_again" "$run_url")"
             echo "commented on open $LABEL issue #${open[0]}"
         fi
         ;;

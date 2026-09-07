@@ -1,6 +1,6 @@
 # M017: Report a failing keepalive job
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** high
 - **Depends on:** —
 - **Driving RR:** —
@@ -96,6 +96,7 @@ schedule-only.
 - 2026-09-06: T2: `extract_variants` became `extract_failed_names` — the build/publish variant parse and its dedup kept behind a jq `if`, every other failed job named by itself, so a later reportable job needs no new branch. Contradiction warning re-based on "names no failed job"; usage header, file header and label description brought into step. Suite green (all assertions), shellcheck 0.11.0 -S info clean.
 - 2026-09-06: T3: `notify` now needs [meta, build, publish, keepalive] and RESULTS carries the matching fourth `needs.keepalive.result`; parsed the workflow and confirmed the two lists are equal as sets and in length, and that every needed job exists. Job comment re-based off "the three needed jobs".
 - 2026-09-06: T4: verify gate clean — hadolint 2.12.0 no violations on `Dockerfile`; `docker build` exit 0 (all 12 steps cached, and a context probe confirmed the context holds only `scripts/`, none of the five files this branch changes); shellcheck 0.11.0 -S info clean on both changed shell files. DESIGN Conventions keepalive bullet now states that a failing keepalive job is reported through the `ci-failure` issue.
+- 2026-09-06: all four tasks done, verify gate clean, status -> review.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned two findings on this milestone — the draft AC4 bound an instrument property ("every case already in the suite passes unmodified") and the draft AC5 promised "emitted only when" over all listings on two example cases. Both fixed before writing: AC4 became a deliverable property over one named listing, AC5 narrowed to its two demonstrated inputs.
 
 ## Decisions

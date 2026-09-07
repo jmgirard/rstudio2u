@@ -66,8 +66,9 @@ jobs:
   # until the publish job assembles the manifest list, which it only reaches
   # when every leg of that variant passed.
   build:
-    # The notify job's variant extraction parses this name ("build (<variant>,
-    # <arch>)") to recover the failed variant names; keep the two in step.
+    # The notify job's extract_failed_names parses this name ("build (<variant>,
+    # <arch>)") to recover the failed variant behind a leg, rather than naming
+    # the leg itself; keep the two in step.
     name: build (${{ matrix.variant }}, ${{ matrix.arch }})
     needs: meta
     runs-on: ${{ matrix.runner }}
@@ -331,6 +332,12 @@ jobs:
   # went right — the schedule it protects is the reason there is a next run to
   # report on at all — and without it in this list such a run reads as
   # unanimous success and closes an open issue.
+  #
+  # Needing it is safe only because keepalive's own `if:` is true whenever this
+  # job's is: keepalive runs on schedule and dispatch, notify on schedule
+  # alone, so needs.keepalive.result is never `skipped` here. Narrow that `if:`
+  # and it can be — and aggregate_result reads `skipped` as a failure, which
+  # would open a ci-failure issue every week for a job that never ran.
   notify:
     needs: [meta, build, publish, keepalive]
     if: always() && github.event_name == 'schedule'

@@ -169,12 +169,12 @@ case "$result" in
     success)
         list_open
         if [ ${#open[@]} -eq 0 ]; then
-            echo "rebuild succeeded; no open $LABEL issue"
+            echo "the scheduled run was fully green; no open $LABEL issue"
             exit 0
         fi
         for n in "${open[@]}"; do
             gh issue comment "$n" \
-                --body "$(printf 'The weekly rebuild succeeded; closing.\n\nRun: %s' "$run_url")"
+                --body "$(printf 'The scheduled run was fully green; closing.\n\nRun: %s' "$run_url")"
             gh issue close "$n"
             echo "closed $LABEL issue #$n"
         done

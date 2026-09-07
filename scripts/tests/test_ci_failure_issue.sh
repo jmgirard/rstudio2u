@@ -323,6 +323,7 @@ rc=$(run_script failure "$NONE" "$FIX_DEDUP_MIX")
 assert_rc      "failure/dedup-mix exits 0" 0 "$rc"
 assert_call    "both failed variants named once each, in listing order" '^issue create .*--title Weekly run failed: noble resolute --body '
 assert_no_call "  ... and the green keepalive job is not named" '^issue create .*keepalive'
+assert_no_out  "  ... and warns about nothing, having named two variants" '::warning::'
 
 # 5j. The keepalive result reaches the aggregation. Every image job succeeded,
 # so the results list is green but for the keepalive member — which must still

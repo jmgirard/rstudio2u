@@ -99,6 +99,8 @@ schedule-only.
 - 2026-09-06: all four tasks done, verify gate clean, status -> review.
 - 2026-09-07: reduced criteria audit ([O] fresh-context reader, internal tier) returned two findings on this milestone — the draft AC4 bound an instrument property ("every case already in the suite passes unmodified") and the draft AC5 promised "emitted only when" over all listings on two example cases. Both fixed before writing: AC4 became a deliverable property over one named listing, AC5 narrowed to its two demonstrated inputs.
 - 2026-09-07: review: PR #24 opened draft; all six criteria verified against fresh evidence and ticked; consistency gate pass (one pre-existing `.gitignore` advisory). Three fresh-context reviewers still running; PR CI shellcheck green, build-smoke pending.
+- 2026-09-07: review: three fresh-context reviewers returned eight findings; four fixed at the gate (F2 close-path wording, F4 stale parser comment, F5 the `if:` coupling, F7 a dedup no-warning assertion), two filed as candidate rows (F1 non-`failure` conclusions, F3 multi-word job names), two rejected (F6 fixture realism, F8 already tracked). No finding met the return floor. PR conversation empty.
+- 2026-09-07: step-7 approval: PR #24 approved for merge
 
 ## Decisions
 
@@ -279,3 +281,19 @@ names. Status does not return to `in-progress`.
 
 **PR conversation (PR #24):** no reviews, no conversation comments, no
 unresolved review threads. Nothing to triage.
+
+**Fix-now work applied at the gate.** F2: the close path now reads "the
+scheduled run was fully green; no open ci-failure issue" and "The scheduled run
+was fully green; closing." — in step with the create body's promise of closure
+by the next fully green scheduled run. F4: `docker.yml`'s matrix-name comment
+now names `extract_failed_names` and says it recovers the variant behind a leg
+rather than the leg itself. F5: the `notify` comment now records that needing
+`keepalive` is safe only while its `if:` is true whenever `notify`'s is, and
+what a narrowed condition would cost. F7: the dedup case gains
+`assert_no_out '::warning::'`. Re-verified after the fixes: suite exit 0, 83
+assertions (was 82), `PASS`; shellcheck 0.11.0 `-S info` exit 0 on both changed
+shell files; `notify`'s `needs:` and `RESULTS` still both
+`[meta, build, publish, keepalive]`. No acceptance criterion is affected — all
+four are comment, wording, or added-assertion changes.
+
+**F1 and F3 filed** as ROADMAP candidate rows at the post-merge hygiene pass.

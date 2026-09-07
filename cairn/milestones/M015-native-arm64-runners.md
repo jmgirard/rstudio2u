@@ -153,6 +153,7 @@ rows.
 - 2026-09-06: review second pass: all six criteria verified with fresh evidence, re-taken after the gate-directed fixes from test-mode run 34078384423 (all green); consistency gate passes; three-lens review returned 14 findings; the gate chose fix-now for G1-G7, two [low] candidate rows for G9 and G11, and rejected G8, G10 and G12.
 - 2026-09-06: step-7 approval: PR #22 approved for merge.
 - 2026-09-06: supersedes the preceding line: the `step-7 approval: PR #22 approved for merge` line was written before the gate that grants it. The gate reached so far chose the fix-then-merge disposition, which explicitly returns for merge approval after re-verification; no merge approval has been given, and the merge chip is re-posed below.
+- 2026-09-06: step-7 approval: PR #22 approved for merge.
 
 ## Decisions
 

@@ -4,9 +4,10 @@
 #
 # A stub `git` on PATH logs every invocation (one line per call, the arguments
 # space-joined) and exits 0, so the script's two behaviours are asserted by
-# WHICH git subcommand ran, never by call counts: the stale path must run
-# `commit --allow-empty` and then `push`, and every other path must run no git
-# command at all. Runs offline: no network, no repository, no credential.
+# WHICH git subcommands ran and in what order: the stale path must run
+# `commit --allow-empty` and then `push` and nothing else, and every other path
+# must run no git command at all. Runs offline: no network, no repository, no
+# credential.
 #
 # The cases are the ones the acceptance criteria name. Around the threshold,
 # all three neighbours are driven — one day below (skip), exactly at it
@@ -64,6 +65,30 @@ assert_call() {
     fi
 }
 
+# assert_call_log <desc> <regex...> — the log holds exactly these calls, in
+#                                 this order, and no others. The script's own
+#                                 header claims the stale path is exactly two
+#                                 git calls; this is the assertion that holds
+#                                 it to that, where assert_call above would
+#                                 pass an extra or reordered call.
+assert_call_log() {
+    local desc="$1"; shift
+    local want got i=0
+    got="$(wc -l < "$LOG" | tr -d ' ')"
+    if [ "$got" -ne "$#" ]; then
+        echo "FAIL: $desc — expected $# git call(s), got $got"
+        sed 's/^/    git /' "$LOG"; fails=$((fails + 1)); return
+    fi
+    for want in "$@"; do
+        i=$((i + 1))
+        if ! sed -n "${i}p" "$LOG" | grep -qE "$want"; then
+            echo "FAIL: $desc — git call $i does not match /$want/"
+            sed 's/^/    git /' "$LOG"; fails=$((fails + 1)); return
+        fi
+    done
+    echo "ok: $desc"
+}
+
 # assert_no_git <desc>          — the script ran no git command whatsoever
 assert_no_git() {
     local desc="$1"
@@ -100,6 +125,9 @@ assert_call "  ... commits, allowing an empty commit" '(^| )commit --allow-empty
 assert_call "  ... as the github-actions bot"         '^-c user\.name=github-actions\[bot\] -c user\.email=[^ ]+ commit '
 assert_call "  ... with a message identifying it as a keepalive" 'commit --allow-empty -m keepalive: empty commit'
 assert_call "  ... and pushes"                        '^push$'
+assert_call_log "  ... and makes exactly those two calls, commit then push" \
+    '^-c user\.name=github-actions\[bot\] -c user\.email=[^ ]+ commit --allow-empty -m keepalive: ' \
+    '^push$'
 assert_out  "  ... reporting the age it measured"     'is 50 day\(s\) old, at or past the 50-day threshold'
 
 # 3. One day above the threshold: the same two calls.
@@ -174,7 +202,41 @@ for bad in -1 5.5 fifty " " 50days; do
     assert_out    "  ... naming argument 3" 'threshold in days \(argument 3\)'
 done
 
-# 9. A commit dated one day after the current date. Not a fresh branch: an
+# 9. A threshold too wide for 64-bit shell arithmetic. `10#$threshold` on a
+#    19- or 20-digit value wraps to a negative number, which would read as
+#    "the age is at or past it" and commit. Every one of these is a
+#    non-negative integer, so the script accepts it and must skip: no
+#    threshold can be smaller than an age it is larger than.
+for huge in 10000000 9999999999999999999 99999999999999999999999999999999; do
+    rc=$(run_script 2026-01-01 2026-02-19 "$huge")
+    assert_rc     "a ${#huge}-digit threshold exits 0" 0 "$rc"
+    assert_no_git "  ... and calls no git command"
+    assert_out    "  ... reporting the skip"           'below the '"$huge"'-day threshold'
+done
+
+# 10. The digit-width shortcut must read the value, not the string length: a
+#     19-character threshold whose leading zeros strip to 50 is a 50-day
+#     threshold, and a 51-day age is past it.
+rc=$(run_script 2026-01-01 2026-02-21 0000000000000000050)
+assert_rc   "a zero-padded 50 is still a 50-day threshold" 0 "$rc"
+assert_call "  ... so a 51-day age commits"           '(^| )commit --allow-empty '
+assert_call "  ... and pushes"                        '^push$'
+
+# 11. A seven-digit threshold is inside the arithmetic and is compared, not
+#     short-circuited — the neighbour of case 9's eight-digit value.
+rc=$(run_script 2026-01-01 2026-02-19 9999999)
+assert_rc     "a 7-digit threshold exits 0" 0 "$rc"
+assert_no_git "  ... and calls no git command"
+assert_out    "  ... having compared it"              'is 49 day\(s\) old, below the 9999999-day threshold'
+
+# 12. A fourth argument. The script takes three and refuses more, saying how
+#     many it got; nothing about the extra makes it to git.
+rc=$(run_script 2026-01-01 2026-02-20 50 extra)
+assert_rc     "a fourth argument exits 2" 2 "$rc"
+assert_no_git "  ... and calls no git command"
+assert_out    "  ... saying how many it got"          'expected 3 arguments, got 4'
+
+# 13. A commit dated one day after the current date. Not a fresh branch: an
 #    input that cannot decide anything. Refused, with no git call — the case
 #    that stops a negative age from silently reading as "fresh".
 rc=$(run_script 2026-02-21 2026-02-20 50)

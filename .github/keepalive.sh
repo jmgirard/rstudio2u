@@ -13,10 +13,12 @@
 #   threshold-days  a non-negative integer; the age at which a commit is made.
 #
 # The branch is stale when current-date minus commit-date is threshold-days or
-# more. Stale means exactly two git calls — an empty commit and a push. Fresh
-# means no git call at all, a line saying so, and exit 0. Every argument is
-# validated before either date is compared; a rejection names the argument it
-# rejected and exits 2, making no git call either.
+# more. Stale means exactly two git calls — an empty commit and then a push,
+# in that order and with nothing else on the path. Fresh means no git call at
+# all, a line saying so, and exit 0. Every argument is validated before either
+# date is compared; a rejection names the argument it rejected and exits 2,
+# making no git call either. A threshold wider than the arithmetic can hold is
+# fresh, never stale — see the comparison below.
 #
 # Both dates are converted to a day number in shell arithmetic rather than by
 # `date`, whose parsing flags differ between GNU and BSD; that also makes the
@@ -96,6 +98,11 @@ if ! [[ $threshold =~ ^[0-9]+$ ]]; then
     die "the threshold in days (argument 3) is not a non-negative integer: '$threshold'"
 fi
 
+# Leading zeros stripped, so the digit count below is the value's own width;
+# an all-zero threshold collapses to a single 0.
+threshold_digits="${threshold#"${threshold%%[!0]*}"}"
+[ -n "$threshold_digits" ] || threshold_digits=0
+
 age=$(( current_days - commit_days ))
 
 # A commit dated after today is not a fresh branch, it is a clock or an input
@@ -105,7 +112,15 @@ if (( age < 0 )); then
     die "the commit date (argument 1) is later than the current date: '$commit_date' > '$current_date'"
 fi
 
-if (( age < 10#$threshold )); then
+# A threshold too wide for the arithmetic is larger than any age, not smaller.
+# Shell arithmetic is 64-bit, so a 19- or 20-digit argument 3 — a non-negative
+# integer this script accepts — would wrap to a negative number and invert the
+# comparison. The widest span the YYYY-MM-DD shape admits is
+# `days_from_civil 9999 12 31` minus `days_from_civil 0000 01 01` = 3652424
+# days, seven digits, so an age can never reach eight; a threshold of more
+# than seven digits is therefore above every age the comparison can ever see,
+# and the branch is fresh without the arithmetic being asked.
+if [ "${#threshold_digits}" -gt 7 ] || (( age < 10#$threshold_digits )); then
     echo "the newest commit is $age day(s) old, below the ${threshold}-day threshold; no keepalive commit"
     exit 0
 fi

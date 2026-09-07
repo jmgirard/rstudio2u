@@ -62,11 +62,11 @@ issue by T6, and no criterion below claims it.
 
 ## Coverage
 
-- AC1 → T1
-- AC2 → T1, T2
+- AC1 → T1, T8
+- AC2 → T1, T2, T8, T9
 - AC3 → T3, T5
 - AC4 → T3, T5, T7
-- AC5 → T1, T2, T4
+- AC5 → T1, T2, T4, T8, T9
 
 ## Tasks
 
@@ -101,6 +101,16 @@ issue by T6, and no criterion below claims it.
       this repo cannot test.
 - [x] T7: Run AC4's two dispatches from the milestone branch; record both run
       URLs and both tip comparisons.
+- [x] T8: Repair the threshold overflow the review returned on. A threshold
+      too wide for 64-bit shell arithmetic must read as larger than any age —
+      a skip — never as smaller. Drive it in the suite with an over-wide value,
+      a zero-padded value whose digits strip to an in-range one, and the
+      widest in-range neighbour, and show each planted inversion red.
+- [ ] T9: The review's three non-defect repairs: assert the stale path's two
+      git calls in order and no others (the claim the script's own header
+      makes), drive the more-than-three-arguments rejection, correct DESIGN's
+      overstated margin for the 50-day threshold, and supersede D-008's stale
+      "must be renewed before it expires" consequence with a new D-entry.
 
 ## Work log
 
@@ -126,6 +136,9 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 - 2026-09-07: review — all five criteria verified with fresh evidence (Review section); consistency gate clean, cairn_validate exit 0; PR #23 opened, CI green after one re-run of a build-smoke leg that failed on an r2u mirror outage.
 - 2026-09-07: review returned M016 to in-progress — defect return 1. AC1 fails inside its own domain: a 19-digit threshold (a non-negative integer AC1 does not reject) wraps in shell arithmetic, so `.github/keepalive.sh 2026-01-01 2026-02-19 9999999999999999999` commits and pushes where AC1 requires no git call. Four further repairs and four follow-ups recorded in the Review section; AC2-AC5 keep their evidence.
+- 2026-09-07: implement gate chose to treat an over-wide threshold as larger than any age (a skip) rather than reject it above a bound, because the skip is what AC1 already promises for every non-negative integer, so no criterion changes; also chose to make the suite assert the stale path's two git calls in order rather than soften the script's comment.
+- 2026-09-07: T8 — the overflow is repaired by width, not by a bound: leading zeros are stripped, and a threshold of more than seven digits short-circuits to the fresh branch, since the widest span the YYYY-MM-DD shape admits is 3652424 days (seven digits), so no age can reach eight. The reviewer's own reproduction now skips: against a real git repository, `keepalive.sh 2026-01-01 2026-02-19 9999999999999999999` printed the skip line, exited 0 and left the tip and the commit count unchanged; `2026-01-01 2026-04-11 50` still commits and pushes (tip moved by one, empty diff, bot identity, remote at the same sha).
+- 2026-09-07: T8 discrimination — four defects planted in a scratch copy, each red, control green (0 failures): the overflow guard removed (4 assertions, the 19- and 32-digit cases), the width taken from the raw string rather than the stripped value (2, the zero-padded-50 case), an extra `git config` before the push (1, the new ordered-call-log assertion alone), and the arity guard removed (3, the fourth-argument case).
 
 ## Decisions
 

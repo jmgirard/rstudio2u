@@ -88,7 +88,7 @@ issue by T6, and no criterion below claims it.
       `keepalive_threshold` dispatch input defaulting to 50, and the call to
       `.github/keepalive.sh` with the branch's newest commit date and today's
       UTC date.
-- [ ] T4: Run `scripts/tests/test_keepalive.sh` from `pr-ci.yml`'s unit-test
+- [x] T4: Run `scripts/tests/test_keepalive.sh` from `pr-ci.yml`'s unit-test
       step and add `.github/keepalive.sh` to that workflow's `paths` filter
       (`.github/workflows/**` already matches, the script does not).
 - [ ] T5: Hand the maintainer the exact steps to create a push credential
@@ -114,6 +114,7 @@ issue by T6, and no criterion below claims it.
 - 2026-09-06: T2 — `scripts/tests/test_keepalive.sh`, 74 assertions, all green offline against a call-logging `git` stub (asserted first on PATH, so "no git call" cannot pass by running nothing).
 - 2026-09-06: T2 discrimination — four defects planted in a copy of the script, each run red: an inverted comparison (12 assertions), an off-by-one making the at-threshold case skip (8, and none of the below-threshold ones), a skip path that still calls `git commit` (1 — the "no git call" assertion alone), and the second date validator re-reading argument 1 so a bad argument 2 passes (21).
 - 2026-09-06: T3 — `keepalive` job added to `docker.yml`: `if:` admits only `schedule` and `workflow_dispatch`, `permissions: contents: read`, checkout of `github.event.repository.default_branch` with `ssh-key: secrets.KEEPALIVE_DEPLOY_KEY`, and a `keepalive_threshold` dispatch input defaulting to 50. Both dates are taken in UTC (`TZ=UTC git log --date=format-local`, `date -u`) so the comparison cannot straddle a timezone.
+- 2026-09-06: T4 — `pr-ci.yml` runs `scripts/tests/test_keepalive.sh` in its unit-test step and lists `.github/keepalive.sh` in its `paths` filter.
 - 2026-09-06: plan gate chose 50 days over 30 and 55 because it leaves two weekly runs of margin before the 60-day cutoff at roughly one commit per quiet period; falsified by a weekly run missing often enough that two are not reliably available.
 
 ## Decisions

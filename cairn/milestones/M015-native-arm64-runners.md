@@ -152,6 +152,7 @@ rows.
 - 2026-09-06: gate-directed fixes for G1-G7: the publish job now assembles and checks the index with `imagetools create --dry-run` BEFORE any tag moves, so a single-architecture list is refused rather than reported (the real `create` runs only after the check passes, and `.manifests[]?` turns a non-index result into the explicit error instead of a jq abort); `publish` no longer runs when `build` was skipped, and the tag step refuses an empty version or date; the `gh run view` fallback writes an empty file rather than `{"jobs":[]}`, so the alert stops blaming the extraction for a listing that never arrived; `publish` drops its dead `actions/checkout`; and the empty-results aggregation rule gained a test, proven to go red under the mutation that previously survived.
 - 2026-09-06: review second pass: all six criteria verified with fresh evidence, re-taken after the gate-directed fixes from test-mode run 34078384423 (all green); consistency gate passes; three-lens review returned 14 findings; the gate chose fix-now for G1-G7, two [low] candidate rows for G9 and G11, and rejected G8, G10 and G12.
 - 2026-09-06: step-7 approval: PR #22 approved for merge.
+- 2026-09-06: supersedes the preceding line: the `step-7 approval: PR #22 approved for merge` line was written before the gate that grants it. The gate reached so far chose the fix-then-merge disposition, which explicitly returns for merge approval after re-verification; no merge approval has been given, and the merge chip is re-posed below.
 
 ## Decisions
 

@@ -14,6 +14,7 @@ on:
       - ".github/workflows/**"
       - ".github/smoke-test.sh"
       - ".github/ci-failure-issue.sh"
+      - ".github/keepalive.sh"
 
 jobs:
   build-smoke:
@@ -32,6 +33,7 @@ jobs:
           bash ./scripts/tests/test_parse_pandoc_version.sh
           bash ./scripts/tests/test_retry.sh
           bash ./scripts/tests/test_ci_failure_issue.sh
+          bash ./scripts/tests/test_keepalive.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0

@@ -14,9 +14,13 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
         type: boolean
         default: false
+      keepalive_threshold:
+        description: "How many days of quiet on the default branch make the keepalive job push an empty commit. Set 0 here to make the next run commit unconditionally. A value that is not a non-negative whole number is refused by .github/keepalive.sh; clearing the field is the one exception, and falls back to the default below. The scheduled run has no inputs and takes that same default from the job's own fallback -- change the policy and both sites move together."
+        type: string
+        default: "50"
 
 env:
   IMAGE: jmgirard/rstudio2u
@@ -356,3 +360,73 @@ jobs:
             : > jobs.json
           }
           bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json
+
+  # Keep the `schedule` trigger above from being switched off. GitHub disables
+  # a public repository's scheduled workflows after 60 days without repository
+  # activity, and a disabled workflow runs no watchdog of its own — so the
+  # always-fresh commitment (GP2) would end with nothing reporting it. This job
+  # pushes an empty commit when the default branch has been quiet for long
+  # enough; that commit matches no `paths` filter here or in pr-ci.yml, so it
+  # starts no build.
+  #
+  # The staleness rule itself is not in this file: .github/keepalive.sh holds
+  # it, unit-tested in scripts/tests/test_keepalive.sh, and this step hands it
+  # two dates and a threshold and nothing else (the ci-failure-issue.sh
+  # pattern). Push and pull-request runs skip the job — they are already the
+  # activity it exists to manufacture.
+  keepalive:
+    name: keepalive
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    # No write scope: the push below is authenticated by the deploy key, never
+    # by this token. The repo-wide Actions workflow permission stays read-only,
+    # so raising it here for one job would be the only write grant in the file —
+    # and raising it repo-wide would widen the ceiling for every workflow.
+    permissions:
+      contents: read
+    steps:
+      # Two checkouts, because the two things this job needs can come from
+      # different refs. The rule is read from the ref the workflow file itself
+      # came from, so a dispatch aimed at a branch exercises that branch's
+      # version of it; the commit has to land on the default branch whatever
+      # ref was dispatched. On the scheduled run the two are the same ref.
+      #
+      # The exposure that buys: on a dispatch, the dispatched branch's copy of
+      # keepalive.sh is what runs while the deploy key is in scope. Accepted,
+      # not overlooked -- dispatching already requires write access to this
+      # repository, so it reaches nothing a dispatcher could not reach anyway,
+      # and it is what makes the commit verifiable before the branch merges.
+      - name: Check out this workflow's own ref — the rule is read from here
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out the default branch — the commit lands here
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: default-branch
+          # A deploy key on this repository with write access: it can reach no
+          # other repository, and unlike a personal access token it does not
+          # expire, so it cannot lapse as silently as the failure it guards
+          # against. checkout stores it and points the remote at SSH, which is
+          # what makes the `git push` inside keepalive.sh work.
+          ssh-key: ${{ secrets.KEEPALIVE_DEPLOY_KEY }}
+
+      - name: Commit if the default branch has gone quiet
+        working-directory: default-branch
+        env:
+          # Absent on a scheduled run, where the `inputs` context is null, so
+          # this fallback is the scheduled policy. The dispatch input's own
+          # default (above) and the DESIGN Conventions bullet state the same
+          # 50; all three move together or not at all.
+          THRESHOLD: ${{ inputs.keepalive_threshold || '50' }}
+        run: |
+          set -euo pipefail
+          # Both dates in UTC, so the comparison never straddles a timezone:
+          # format-local with TZ=UTC renders the committer date in UTC, and
+          # `date -u` gives today in the same zone.
+          commit_date=$(TZ=UTC git log -1 --format=%cd --date=format-local:%Y-%m-%d)
+          today=$(date -u +%Y-%m-%d)
+          echo "default branch tip is dated $commit_date; today is $today (UTC)"
+          bash "$GITHUB_WORKSPACE/.github/keepalive.sh" "$commit_date" "$today" "$THRESHOLD"

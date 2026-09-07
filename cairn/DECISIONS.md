@@ -142,3 +142,20 @@ no build. The credential is a maintainer-held secret that must be renewed
 before it expires; its lapse is silent in the same way the original failure
 is. Whether GitHub counts such a commit as repository activity is untestable
 from this repo and is recorded in DESIGN Known issues.
+
+### D-009 (2026-09-07): The keepalive credential is a deploy key with no expiry, annotating D-008
+
+**Context:** D-008's Consequences said the keepalive credential "must be
+renewed before it expires". That was written before the credential existed;
+implementation then chose a repository deploy key, which is scoped to one
+repository by construction and carries no expiry date. The sentence describes
+a risk this repo does not have.
+**Decision:** The keepalive push credential is an ed25519 repository deploy
+key, write-enabled and titled `keepalive`, with its private half in the
+repository secret `KEEPALIVE_DEPLOY_KEY`. D-008's decision stands unchanged;
+only its renewal sentence is superseded.
+**Consequences:** There is no expiry to track and no renewal to forget. The
+credential now fails only by being revoked or deleted — a failing keepalive
+job, not a silently lapsed one — and reporting that failure is the `notify`
+gap carried as a ROADMAP candidate row. A future credential that does expire
+re-opens D-008's concern and takes its own entry.

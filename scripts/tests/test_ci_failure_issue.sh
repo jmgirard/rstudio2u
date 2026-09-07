@@ -14,8 +14,14 @@
 # the shape docker.yml's matrix produces: one build leg per (variant, arch) plus
 # one publish leg per variant. They pin the behaviours that matter — a variant
 # named once however many of its legs failed, an all-green variant never named,
-# a non-matrix job never mistaken for a variant, and GitHub's auto-generated
+# a variant recovered from a failed publish leg with every build leg green, a
+# non-matrix job never mistaken for a variant, and GitHub's auto-generated
 # multi-key job name parsed to the same variant as the explicit name.
+#
+# Two cases exist to keep the alert honest when the listing explains nothing:
+# an unparseable document, and a listing whose legs are all green under a run
+# reported as failed. Both must still open the issue, with the generic wording,
+# and must say which of the two happened.
 #
 set -uo pipefail
 
@@ -89,6 +95,18 @@ FIX_ARM64_FAIL=$(jobs_doc \
     "$(job 'publish (noble)' failure)" \
     "$(job 'publish (resolute)' success)")
 
+# Every build leg green; only noble's publish leg failed — a registry hiccup in
+# `imagetools create` with nothing wrong in the builds. This is the only fixture
+# where a variant's name comes solely from a `publish (...)` job, so it is what
+# holds the `publish` half of the extraction filter honest.
+FIX_PUBLISH_ONLY_FAIL=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish (noble)' failure)" \
+    "$(job 'publish (resolute)' success)")
+
 # Every leg green.
 FIX_ALL_GREEN=$(jobs_doc \
     "$(job 'build (noble, amd64)' success)" \
@@ -139,6 +157,24 @@ assert_no_call() {
     else echo "ok: $desc"; fi
 }
 
+# assert_out <desc> <regex>      — the script's own output matches the regex
+assert_out() {
+    local desc="$1" re="$2"
+    if grep -qE "$re" "$WORK/out"; then echo "ok: $desc"; else
+        echo "FAIL: $desc — no output line matching /$re/"; sed 's/^/    | /' "$WORK/out"
+        fails=$((fails + 1))
+    fi
+}
+
+# assert_no_out <desc> <regex>   — the script's output matches nothing
+assert_no_out() {
+    local desc="$1" re="$2"
+    if grep -qE "$re" "$WORK/out"; then
+        echo "FAIL: $desc — unexpected output matching /$re/"; sed 's/^/    | /' "$WORK/out"
+        fails=$((fails + 1))
+    else echo "ok: $desc"; fi
+}
+
 assert_rc() {
     local desc="$1" want="$2" got="$3"
     if [ "$got" -eq "$want" ]; then echo "ok: $desc"; else
@@ -162,6 +198,7 @@ assert_call    "  ... whose body links the run"               "^issue create .*$
 assert_call    "failure/none ensures the label exists"        '^label create ci-failure --force'
 assert_no_call "failure/none comments on nothing"             '^issue comment '
 assert_no_call "failure/none closes nothing"                  '^issue close '
+assert_no_out  "  ... and warns about nothing, having named a variant" '::warning::'
 
 # 2. failure, open issues -> comment on the first (oldest), create nothing
 rc=$(run_script failure "$TWO" "$FIX_ARM64_FAIL")
@@ -211,10 +248,33 @@ rc=$(run_script failure "$NONE" "$FIX_MULTIKEY")
 assert_rc      "failure/multikey-name exits 0" 0 "$rc"
 assert_call    "multi-key job name yields just the variant" '^issue create .*--title Weekly rebuild failed: noble --body '
 
-# 5e. An unparseable jobs document must not abort the alert: fallback text.
+# 5e. An unparseable jobs document must not abort the alert: fallback text, and
+# jq's complaint is surfaced rather than swallowed.
 rc=$(run_script failure "$NONE" 'not json at all')
 assert_rc      "failure/unparseable-jobs exits 0" 0 "$rc"
 assert_call    "an unparseable jobs document yields the fallback title" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_out     "  ... and reports why it could not be parsed"  '::warning::could not parse the job listing'
+assert_no_out  "  ... without also claiming the listing was clean" '::warning::the run is reported failed'
+
+# 5f. Only a publish leg failed. Every build leg is green, so this variant's
+# name can only come from the `publish (...)` half of the extraction: narrowing
+# the filter to build legs turns this into the fallback title.
+rc=$(run_script failure "$NONE" "$FIX_PUBLISH_ONLY_FAIL")
+assert_rc      "failure/publish-only exits 0" 0 "$rc"
+assert_call    "a publish-only failure names its variant exactly once" '^issue create .*--title Weekly rebuild failed: noble --body '
+assert_no_call "  ... and never names the all-green variant"  '^issue create .*resolute'
+assert_no_out  "  ... and warns about nothing"                '::warning::'
+
+# 5g. A run reported failed whose job listing shows every leg green: the
+# extraction, the job names, or the aggregation disagree. The alert still goes
+# out, with the generic wording, and says the listing explained nothing. This is
+# what makes the all-green fixture load-bearing — the success path never reads
+# a jobs document at all.
+rc=$(run_script failure "$NONE" "$FIX_ALL_GREEN")
+assert_rc      "failure/all-green-listing exits 0" 0 "$rc"
+assert_call    "a failed run with an all-green listing falls back" '^issue create .*--title Weekly rebuild failed: \(see the run summary'
+assert_out     "  ... and says the listing named no failed leg"   '::warning::the run is reported failed but its job listing names no failed'
+assert_no_out  "  ... without blaming the parser"             '::warning::could not parse'
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")

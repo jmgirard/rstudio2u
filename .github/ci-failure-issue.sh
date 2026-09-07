@@ -13,7 +13,9 @@
 #   jobs-json path to `gh run view --json jobs` output (or "-" for stdin). The
 #             failed variant names are extracted from it here — this is the one
 #             copy of that parsing, so it can be unit-tested. Omitted, empty, or
-#             unparseable means the issue falls back to generic text.
+#             unparseable means the issue falls back to generic text; a document
+#             that is present but yields no variant is warned about rather than
+#             quietly falling back.
 # Env: GH_TOKEN (or a logged-in `gh`) with issues:write on the repo.
 #
 # One issue is reused: with an open ci-failure issue, a failure comments on
@@ -22,6 +24,12 @@
 set -euo pipefail
 
 LABEL="ci-failure"
+
+# jq's own diagnostics land here rather than in /dev/null, so an absent jq or a
+# changed `gh run view --json jobs` schema is reported instead of silently
+# degrading the alert to its generic text.
+JQ_ERR="$(mktemp)"
+trap 'rm -f "$JQ_ERR"' EXIT
 
 usage() {
     echo "usage: $0 <result> <run-url> [jobs-json]" >&2
@@ -48,14 +56,29 @@ extract_variants() {
         | sub("^(build|publish) \\("; "")
         | sub("[,)].*$"; "")
         | select(length > 0)
-    ' 2>/dev/null | awk '!seen[$0]++'
+    ' 2>"$JQ_ERR" | awk '!seen[$0]++' || true
 }
 
-variants=()
+jobs_doc=""
 if [ -n "$jobs_json" ]; then
+    if [ "$jobs_json" = "-" ]; then
+        jobs_doc="$(cat)"
+    else
+        jobs_doc="$(cat "$jobs_json" 2>/dev/null || true)"
+    fi
+fi
+
+variants=()
+if [ -n "$jobs_doc" ]; then
     while IFS= read -r v; do
         [ -n "$v" ] && variants+=("$v")
-    done < <(if [ "$jobs_json" = "-" ]; then cat; else cat "$jobs_json" 2>/dev/null; fi | extract_variants)
+    done < <(printf '%s' "$jobs_doc" | extract_variants)
+fi
+
+# Emitted outside the extraction pipeline, so it reaches stdout as a workflow
+# annotation instead of being read back as a variant name.
+if [ -s "$JQ_ERR" ]; then
+    echo "::warning::could not parse the job listing ($(head -1 "$JQ_ERR")); the issue will not name the failed variants"
 fi
 
 if [ ${#variants[@]} -gt 0 ]; then
@@ -78,6 +101,13 @@ list_open() {
 
 case "$result" in
     failure)
+        # A failed run whose own job listing names no failed build or publish
+        # leg is a contradiction — the extraction, the job names, or the
+        # aggregation is wrong. Say so rather than quietly shipping the
+        # generic text.
+        if [ ${#variants[@]} -eq 0 ] && [ -n "$jobs_doc" ] && [ ! -s "$JQ_ERR" ]; then
+            echo "::warning::the run is reported failed but its job listing names no failed build or publish leg; the issue falls back to generic text"
+        fi
         gh label create "$LABEL" --force \
             --description "Opened by the weekly rebuild when it fails" \
             --color B60205 >/dev/null

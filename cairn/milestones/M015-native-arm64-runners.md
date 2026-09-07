@@ -150,6 +150,8 @@ rows.
 - 2026-09-06: T5-T7 complete; status to review. verify: `hadolint Dockerfile` clean at 2.12.0; both shell suites pass; shellcheck 0.11.0 (-x -S info) clean over all tracked shell files and over the two workflow inline blocks extracted from `docker.yml`. No Dockerfile or build-context file changed in T5-T7 (`scripts/tests` is dockerignored), so the T4 clean-context build stands. The Review section's AC1/AC3/AC5 evidence predates these commits and needs a fresh test-mode dispatch.
 - 2026-09-06: dispatched a fresh test-mode run against the T5-T7 branch for the review's AC1/AC3/AC5 evidence: https://github.com/jmgirard/rstudio2u/actions/runs/34077353835 . No watcher left armed; review re-derives the run state.
 - 2026-09-06: gate-directed fixes for G1-G7: the publish job now assembles and checks the index with `imagetools create --dry-run` BEFORE any tag moves, so a single-architecture list is refused rather than reported (the real `create` runs only after the check passes, and `.manifests[]?` turns a non-index result into the explicit error instead of a jq abort); `publish` no longer runs when `build` was skipped, and the tag step refuses an empty version or date; the `gh run view` fallback writes an empty file rather than `{"jobs":[]}`, so the alert stops blaming the extraction for a listing that never arrived; `publish` drops its dead `actions/checkout`; and the empty-results aggregation rule gained a test, proven to go red under the mutation that previously survived.
+- 2026-09-06: review second pass: all six criteria verified with fresh evidence, re-taken after the gate-directed fixes from test-mode run 34078384423 (all green); consistency gate passes; three-lens review returned 14 findings; the gate chose fix-now for G1-G7, two [low] candidate rows for G9 and G11, and rejected G8, G10 and G12.
+- 2026-09-06: step-7 approval: PR #22 approved for merge.
 
 ## Decisions
 
@@ -482,3 +484,72 @@ approval gate.
   "Re-run failed jobs" fail misleadingly after 24h; the prefix-based
   `digests-<variant>-*` pattern; `docker.yml`'s `push.paths` omitting
   `.github/ci-failure-issue.sh`. All four are already candidate rows.
+
+#### Re-verification after the gate-directed fixes
+
+The gate directed fixes for G1-G7, which changed `docker.yml`'s publish job and
+`ci-failure-issue.sh`'s caller. Fresh evidence re-taken against the fixed
+branch, run https://github.com/jmgirard/rstudio2u/actions/runs/34078384423
+(2026-09-07, all eight jobs green; `notify` skipped). It supersedes the run
+34077353835 figures above for AC1, AC3 and AC5; AC2, AC4 and AC6 were re-run
+locally against the fixed tree.
+
+- AC1 — still met, and the ordering the gate asked for is visible. The
+  `publish (noble)` step printed the tag list (`latest`, `noble`,
+  `noble-2026-09-07`, `noble-2026.08.2-200`), then the index from `imagetools
+  create --dry-run` with `platform.architecture` `amd64`
+  (`sha256:02acf681…`) and `arm64` (`sha256:62460db2…`), both `os: linux`,
+  then `manifest list for noble names both architectures: amd64 arm64`, and
+  only then `test mode: the manifest list above was printed, not published; no
+  tag attached`. The check precedes the publish decision on both paths.
+- AC2 — still met; the workflow's only `platforms:` value and the matrix
+  pairing are unchanged by the fixes, and each leg's pull-back step again
+  printed its declared architecture: two `image is amd64 (amd64 / x86_64)` and
+  two `image is arm64 (arm64 / aarch64)`.
+- AC3 — still met. `build (noble, arm64)` printed `image is arm64 (arm64 /
+  aarch64)` for `sha256:62460db2…` — the same digest the noble index carries
+  as its `arm64` entry — and its smoke test logged `PASS: quarto rendered .qmd
+  to HTML`. `build (resolute, arm64)` printed the same architecture pair for
+  `sha256:0c90bdd3…`.
+- AC4 — still met. `bash scripts/tests/test_ci_failure_issue.sh` exits 0 over
+  70 assertions (three added for the empty-results rule), against the shipped
+  script; `docker.yml` still parses no job conclusions of its own.
+- AC5 — still met. Zero `CACHED` lines across all four legs, and the
+  RStudio/Pandoc/Quarto layer executed in each: 37.4s (noble amd64), 36.5s
+  (noble arm64), 32.3s (resolute amd64), 45.0s (resolute arm64).
+- AC6 — still met. `hadolint Dockerfile` exits 0 at 2.12.0; both shell suites
+  pass; shellcheck 0.11.0 `-x -S info` is clean over every tracked shell file
+  and over the publish and notify inline blocks extracted from the workflow
+  (one SC2153 on `$TAGS`, a false positive — it is a workflow-supplied env
+  var). The Dockerfile and build context are untouched by these fixes, so the
+  clean-context build recorded for AC6 above stands.
+
+#### Finding dispositions (2026-09-06 gate, second pass)
+
+The gate chose to fix the seven load-bearing findings on the branch and merge
+after re-verification, rather than merge with follow-ups.
+
+- G1, G2, G7 -> fixed. The publish job assembles and checks the index with
+  `imagetools create --dry-run` before any tag moves; the real `create` runs
+  only after the check passes, and `.manifests[]?` turns a non-index result
+  into the step's own error rather than a jq abort.
+- G3 -> fixed. `publish` no longer runs when `build` was skipped, and the tag
+  step refuses an empty version or date.
+- G4 -> fixed. The `gh run view` fallback writes an empty file, so a listing
+  that never arrived is reported as that and not as a contradiction.
+- G5 -> fixed. Three assertions added for the empty-results rule; the mutation
+  that previously survived now turns the suite red.
+- G6 -> fixed. `publish` drops `actions/checkout`.
+- G8 -> rejected. The `PROFILE.md` line is a greenfield opener in a template
+  slot, identical on the default branch, and states what multi-arch implies for
+  a new repo rather than what this repo's CI does.
+- G9 -> follow-up candidate row. Pre-existing on the default branch and
+  unmodified by this diff; `scripts/mirror_hint.R` carries the same form.
+- G10 -> rejected. `matrix.mutable` is a workflow literal with no glob or
+  whitespace, so the split is correct and deliberate.
+- G11 -> follow-up candidate row.
+- G12 -> rejected. Read from the tree before this pass's tick commits landed;
+  all six boxes are ticked against recorded evidence.
+- G13 -> no action; all four are already candidate rows.
+- conversation: PR #22 — no reviews, no comments, no unresolved threads.
+  Nothing to triage.

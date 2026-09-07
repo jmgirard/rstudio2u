@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-09-06 (M015 T5-T7: no candidate-row changes; status row to review)_
+_Last hygiene check: 2026-09-06 (M015 review: two [low] rows from the second-pass findings)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
@@ -29,4 +29,6 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [low] `digests-<variant>-*` artifact pattern is prefix-based: a future variant name extending an existing one would be pulled into the shorter one's publish leg — added 2026-09-06 — from M015 review
 - [low] `retention-days: 1` on the digest artifacts makes GitHub's "Re-run failed jobs" fail with a misleading message after 24h — added 2026-09-06 — from M015 review
 - [low] `docker.yml`'s `push.paths` filter omits `.github/ci-failure-issue.sh`, now load-bearing — added 2026-09-06 — from M015 review
+- [low] `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
+- [low] `docker.yml`'s `meta`, `build` and `publish` jobs carry no `permissions:` block, where `notify` scopes itself — added 2026-09-06 — from M015 review
 - [low] `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06

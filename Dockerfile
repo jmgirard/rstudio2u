@@ -64,9 +64,11 @@ RUN set -eux \
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------
-# Report container health by checking that RStudio Server is serving HTTP
+# Report container health by checking that RStudio Server is serving HTTP.
+# JSON form runs the same `sh -c` the shell form did (hadolint DL3025); the
+# `|| exit 1` folds wget's other exit codes into Docker's "unhealthy" code.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -q -O /dev/null http://localhost:8787/ || exit 1
+    CMD ["/bin/sh", "-c", "wget -q -O /dev/null http://localhost:8787/ || exit 1"]
 
 EXPOSE 8787
 CMD ["/init"]

@@ -159,3 +159,23 @@ credential now fails only by being revoked or deleted — a failing keepalive
 job, not a silently lapsed one — and reporting that failure is the `notify`
 gap carried as a ROADMAP candidate row. A future credential that does expire
 re-opens D-008's concern and takes its own entry.
+
+### D-010 (2026-09-11): Take Dependabot's five GitHub Actions version bumps, including hadolint 2.15.1
+
+**Context:** Dependabot opened five pull requests that change action versions
+in the workflows. D-002 and D-004 treat a change to a CI tool version as a
+dependency change. The hadolint bump flagged the shell-form `HEALTHCHECK`,
+which PR #27 rewrote in JSON form before this decision.
+**Decision:** The maintainer approved all five bumps:
+- `actions/checkout` v4 to v7 (#12)
+- `docker/login-action` v3 to v4 (#13)
+- `hadolint/hadolint-action` v3.1.0 to v3.5.0, hadolint 2.12.0 to 2.15.1 (#14)
+- `docker/setup-buildx-action` v3 to v4 (#15)
+- `docker/build-push-action` v6 to v7 (#16)
+
+Actions stay on movable major tags, the repo's style. The SHA pin in D-004
+does not change. Each PR passed its PR checks. The PR checks do not run
+`docker.yml`, so #13, #15, and #16 also passed a test-mode `docker.yml` run
+on their own branches.
+**Consequences:** New hadolint rules reach CI only when the action version
+changes. A later action bump is still a dependency change under D-002.

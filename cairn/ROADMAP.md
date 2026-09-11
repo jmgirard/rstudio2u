@@ -30,6 +30,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Read the first scheduled keepalive run: only dispatches have been exercised, so the schedule path's null `inputs` fallback and its `github.event.repository.default_branch` value are unevidenced — added 2026-09-07 — from M016 review
 - Untagged manifests accumulate on Docker Hub: push-by-digest leaves four per run (test-mode runs tag none) with no GC step — added 2026-09-06 — from M015 review
 - Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review
+- A timeout reaching `r2u.stat.illinois.edu` in the noble amd64 smoke test (bspm install of data.table) fails the whole noble publish. Only a later run recovers. Seen in the 2026-09-07 scheduled run and in push run 34645083284 on 2026-09-11 — added 2026-09-11 — GP7; found merging the Dependabot bumps
 - [low] `digests-<variant>-*` artifact pattern is prefix-based: a future variant name extending an existing one would be pulled into the shorter one's publish leg — added 2026-09-06 — from M015 review
 - [low] `retention-days: 1` on the digest artifacts makes GitHub's "Re-run failed jobs" fail with a misleading message after 24h — added 2026-09-06 — from M015 review
 - [low] `docker.yml`'s `push.paths` filter omits `.github/ci-failure-issue.sh`, now load-bearing — added 2026-09-06 — from M015 review

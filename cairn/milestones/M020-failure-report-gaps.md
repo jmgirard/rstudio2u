@@ -73,7 +73,7 @@ moving tags backward").
       `rebuild-gap` job; assert the title for each and no contradiction
       warning under result `failure`. See them red, then widen the `select` in
       `extract_failed_names` and its usage comment (LESSONS M017).
-- [ ] T2: New `.github/` script that runs the `gh run list` query now in
+- [x] T2: New `.github/` script that runs the `gh run list` query now in
       `rebuild-gap.yml` and prints the date, `none`, or `unknown` with the
       existing warnings. Tests first in a new `scripts/tests/` file with an
       argument-sensitive `gh` stub (LESSONS M09) driving all four outcomes and
@@ -111,6 +111,7 @@ moving tags backward").
 - 2026-10-20: note on AC4: `docker.yml`'s `notify` runs on schedule only, so a push run started by the new path rebuilds and publishes but does not exercise the failure script; kept as approved.
 - 2026-10-20: implement: branch m020-failure-report-gaps cut from main at 85dd3e3; status in-progress.
 - 2026-10-20: T1 done: five new cases (5o–5r) in test_ci_failure_issue.sh; the timed-out job and timed-out leg cases were red before the fix (4 assertions), all green after widening the `select`.
+- 2026-10-20: T2 done: `.github/last-rebuild-success.sh <output-file>` writes the word to a file so its `::warning::` lines stay on stdout for the run log; every outcome exits 0, only a missing argument exits 2. `scripts/tests/test_last_rebuild_success.sh` (16 assertions) red before the script existed; five planted defects (empty→unknown, untrimmed date, shape without T, lookup failure→none, wrong event) each turned it red. Wired into `rebuild-gap.yml` and `pr-ci.yml`.
 
 ## Decisions
 

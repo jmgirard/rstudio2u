@@ -13,9 +13,12 @@ name: Check the weekly rebuild is not stale
 # which exists to stop it happening; this check does not cover it and is not
 # meant to.
 #
-# The staleness rule is not in this file: .github/rebuild-gap.sh holds it,
-# unit-tested in scripts/tests/test_rebuild_gap.sh, and the step below hands it
-# two dates and a threshold and nothing else (the keepalive.sh pattern).
+# No rule is in this file: .github/last-rebuild-success.sh finds the date of
+# the last success and .github/rebuild-gap.sh decides whether it is too old,
+# unit-tested in scripts/tests/test_last_rebuild_success.sh and
+# scripts/tests/test_rebuild_gap.sh. The step below hands the first one's
+# answer, today's date and a threshold to the second, and does nothing else
+# (the keepalive.sh pattern).
 
 on:
   # Mondays at 12:00 UTC, six hours after docker.yml's 06:00 rebuild, so the
@@ -58,41 +61,13 @@ jobs:
           THRESHOLD: ${{ inputs.threshold_days || '8' }}
         run: |
           set -euo pipefail
-          # The newest SUCCESSFUL SCHEDULED docker.yml run, and only that: a
-          # push-triggered or dispatched build proves someone was here, not
-          # that the unattended lane still works, and the unattended lane is
-          # what this checks.
-          if ! gh run list --workflow docker.yml --event schedule \
-                 --status success --limit 1 --json createdAt \
-                 --jq '.[0].createdAt // empty' > created_at.txt; then
-            # The lookup itself failed. Not a measured gap and not a clean
-            # bill of health, so it is neither reported as one: `unknown` is
-            # the sentinel the script renders as its own alert.
-            echo "::warning::gh run list failed; reporting an unreadable rebuild history"
-            last_success=unknown
-          else
-            created_at="$(cat created_at.txt)"
-            if [ -z "$created_at" ]; then
-              # The query worked and matched nothing: no successful scheduled
-              # run is on record. That is a gap, and saying so explicitly is
-              # what keeps an empty string from reaching the script as a
-              # mis-shaped date and being refused instead of reported.
-              last_success=none
-            elif [[ $created_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
-              # `createdAt` is RFC 3339 in UTC (a trailing Z), so the date is
-              # the ten characters before the T -- no `date` parsing, whose
-              # flags differ between GNU and BSD. The shape is checked here
-              # rather than left to the script: a value with no T would reach
-              # it whole, be refused as a mis-shaped date, and end the run at
-              # exit 2 having raised nothing. Silence is the one outcome this
-              # check must never have, so an unreadable answer is the
-              # `unknown` sentinel like any other unreadable history.
-              last_success="${created_at%%T*}"
-            else
-              echo "::warning::gh run list returned an unparseable createdAt ('$created_at'); reporting an unreadable rebuild history"
-              last_success=unknown
-            fi
-          fi
+          # The date of the newest successful scheduled docker.yml run, or
+          # `none` / `unknown`: .github/last-rebuild-success.sh holds the
+          # lookup and every branch of reading its answer, unit-tested in
+          # scripts/tests/test_last_rebuild_success.sh. It exits 0 on all of
+          # them, so the gap script below is always reached.
+          bash ./.github/last-rebuild-success.sh last_success.txt
+          last_success="$(cat last_success.txt)"
           today=$(date -u +%Y-%m-%d)
           echo "last successful scheduled rebuild: $last_success; today is $today (UTC)"
           bash ./.github/rebuild-gap.sh "$last_success" "$today" "$THRESHOLD"

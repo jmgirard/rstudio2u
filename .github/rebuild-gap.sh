@@ -2,10 +2,10 @@
 #
 # Decide whether too long has passed since a scheduled rebuild last succeeded,
 # and raise the `ci-failure` issue if it has. Called by the `gap` job in
-# .github/workflows/rebuild-gap.yml, which asks `gh run list` when the newest
-# successful scheduled docker.yml run happened and hands this script that date
-# and nothing else — the staleness rule lives here, in one place, so it can be
-# unit-tested offline (the .github/keepalive.sh pattern).
+# .github/workflows/rebuild-gap.yml, which asks .github/last-rebuild-success.sh
+# when the newest successful scheduled docker.yml run happened and hands this
+# script that date and nothing else — the staleness rule lives here, in one
+# place, so it can be unit-tested offline (the .github/keepalive.sh pattern).
 #
 # The alert this raises is the one thing no single workflow run can raise for
 # itself: a run that never happens reports nothing, and docker.yml's `notify`

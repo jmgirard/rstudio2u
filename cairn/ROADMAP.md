@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M021 | Refuse to move moving tags backward | planned | — | normal | milestones/M021-no-backward-tag-moves.md |
+| M021 | Refuse to move moving tags backward | in-progress | — | normal | milestones/M021-no-backward-tag-moves.md |
 | M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
 | M019 | Take the artifact action bumps and fix the digest artifacts | done | — | normal | milestones/archive/M019-artifact-action-bumps.md |
 | M018 | Alert when no weekly rebuild has succeeded in too long | done | M017 | normal | milestones/archive/M018-rebuild-gap-alert.md |

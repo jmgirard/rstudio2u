@@ -18,6 +18,7 @@ on:
       - ".github/rebuild-gap.sh"
       - ".github/last-rebuild-success.sh"
       - ".github/date-lib.sh"
+      - ".github/tag-order.sh"
 
 jobs:
   build-smoke:
@@ -39,6 +40,7 @@ jobs:
           bash ./scripts/tests/test_keepalive.sh
           bash ./scripts/tests/test_rebuild_gap.sh
           bash ./scripts/tests/test_last_rebuild_success.sh
+          bash ./scripts/tests/test_tag_order.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.5.0

@@ -1,13 +1,13 @@
 # M021: Refuse to move moving tags backward
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — it decides which image the published Docker Hub tags point at
-- **Branch/PR:** —
+- **Branch/PR:** m021-no-backward-tag-moves
 
 ## Goal
 
@@ -75,7 +75,7 @@ this as a bound too.
 
 ## Tasks
 
-- [ ] T1: Write `scripts/tests/test_tag_order.sh` first, with a per-tag `docker` stub that answers
+- [x] T1: Write `scripts/tests/test_tag_order.sh` first, with a per-tag `docker` stub that answers
       `buildx imagetools inspect --raw <ref>`. Then write `.github/tag-order.sh <run-stamp> <out-file> <tag>...`.
       Add the test to the unit-test step of `pr-ci.yml` and add `.github/tag-order.sh` to its `paths`. Run
       shellcheck at the floor that `lint.yml` sets.
@@ -104,6 +104,9 @@ this as a bound too.
 - 2026-10-20: plan gate chose per-tag refusal over refusing the whole leg because a whole-leg refusal drops the old build's date tag (GP2); falsified by a case where a partial tag set leaves users on mixed images in one variant.
 - 2026-10-20: plan gate chose to fail on a stamp not in the fixed form over reading it as unstamped because a bad stamp would turn the guard off silently; falsified by weekly publish failures from a stamp source outside this workflow.
 - 2026-10-20: plan gate chose to record the cross-run race as a bound over a `concurrency:` group because GitHub cancels a pending job in a group, and a cancelled scheduled publish fails the run; falsified by a backward move seen from two overlapping runs.
+- 2026-10-20: started implement on branch m021-no-backward-tag-moves.
+- 2026-10-20: T1 done: `.github/tag-order.sh` and `scripts/tests/test_tag_order.sh` (16 cases, all pass), wired into `pr-ci.yml` (test step and `paths`). Live probe with buildx 0.37.2: a missing tag answers `ERROR: docker.io/<ref>: not found`, exit 1, and the live `latest` is an OCI index with no annotations. Seven planted defects (inverted compare, any not-found as absence, null as unstamped, no stamp-form check, unsettled ignored, no stale-file removal, no index check) each turned the suite red. shellcheck is not installed locally, so `lint.yml` on the PR is its first run.
+- 2026-10-20: implementation choice: the script takes full image refs, not bare tags, and keeps absence only on the not-found line that names that exact ref; it reports every unsettled ref before exiting 1.
 
 ## Decisions
 

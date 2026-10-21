@@ -25,7 +25,7 @@ The image build workflow carries its build digests with `actions/upload-artifact
 
 - [x] AC1: `.github/workflows/docker.yml` calls `actions/upload-artifact@v7` and `actions/download-artifact@v8`, and `grep -rnE 'actions/(upload|download)-artifact@' .github/workflows/` lists no other version of either action.
 - [x] AC2: The publish job's digest download step has `pattern: digests-${{ matrix.variant }}-{amd64,arm64}`, which spells out the variant's two artifact names and holds no wildcard.
-- [ ] AC3: The digest upload step sets `retention-days: 6`, and in AC4's run each of the four `digests-*` artifacts has an `expires_at` within one minute of six days after its `created_at` (`gh api repos/jmgirard/rstudio2u/actions/runs/<id>/artifacts`).
+- [x] AC3: The digest upload step sets `retention-days: 6`, and in AC4's run each of the four `digests-*` artifacts has an `expires_at` within one minute of six days after its `created_at` (`gh api repos/jmgirard/rstudio2u/actions/runs/<id>/artifacts`).
 - [x] AC4: A test-mode `docker.yml` run (`workflow_dispatch` with `test_mode: true`) on the milestone branch, at a commit whose `docker.yml` equals the version that merges, concludes `success`: all four build legs pass, and each publish leg's `Create the manifest list` step succeeds, which requires its 2-digest count check and its check that the dry-run index names both linux architectures to pass.
 
 ## Coverage
@@ -77,3 +77,14 @@ Pass 1 (2026-10-20), branch at 7687462, level with main a950dd2.
 - AC2: `grep -n 'pattern:' docker.yml` shows `236: pattern: digests-${{ matrix.variant }}-{amd64,arm64}`, the only download pattern; run 39529671936 logged it as `digests-noble-{amd64,arm64}` and `digests-resolute-{amd64,arm64}`. Pass.
 - AC3: `docker.yml:189 retention-days: 6`; in run 39529671936 each of the four `digests-*` artifacts has `expires_at` = `created_at` + 6 days − 1 second (e.g. resolute-amd64 created 2026-10-21T01:55:19Z, expires 2026-10-27T01:55:18Z). Fails as written at second resolution; the setting is right and the wording is too exact. Routed as an amendment return, not ticked.
 - AC4: run https://github.com/jmgirard/rstudio2u/actions/runs/39529671936, `workflow_dispatch` with `test_mode: true` (logged in the build legs), head 7ba240a, conclusion success; four build legs success; `publish (noble)` and `publish (resolute)` success, each with `Create the manifest list` success; `git diff --quiet 7ba240a HEAD -- .github/workflows/docker.yml` exits 0. Pass.
+
+Pass 2 (2026-10-20), after the AC3 amendment at 722b24a; main still a950dd2, `docker.yml` unchanged since pass 1, so AC1, AC2 and AC4 evidence stands.
+
+- AC3 (amended): `docker.yml:189 retention-days: 6`; for run 39529671936, `expires_at − created_at − 518400 s` is −1 s for each of digests-noble-amd64, digests-noble-arm64, digests-resolute-amd64, digests-resolute-arm64, inside one minute. Pass.
+
+Consistency gate (pass 2):
+- `cairn_validate.py`: all checks passed; 1 advisory (the old `cairn/references/pdf/` .gitignore entry, an existing candidate row).
+- `cairn_impact.py`: skipped, no principle changed.
+- docker build: `Dockerfile`, `.dockerignore`, `scripts/` are byte-identical to main (`git diff --quiet main HEAD --` exits 0); run 39529671936 built all four legs from this branch with no cache (dispatch). hadolint is not installed locally; the PR lane's `build-smoke` (hadolint-action v3.5.0 + build) runs on the PR, since its paths include `.github/workflows/**`, and step 8 waits for it.
+- Base image pinned by explicit tag (`rocker/r2u:${UBUNTU_VERSION}`, `UBUNTU_VERSION=24.04`); no secrets in `ENV`/`COPY`; `.dockerignore` present and excludes `.git`. All unchanged by this diff.
+- Changelog: none as a file; no user-visible change (CI only), so the archive summary records none.

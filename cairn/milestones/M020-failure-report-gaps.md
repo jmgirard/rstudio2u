@@ -31,20 +31,20 @@ moving tags backward").
 
 ## Acceptance criteria
 
-- [ ] AC1: `.github/ci-failure-issue.sh`'s `extract_failed_names` selects jobs
+- [x] AC1: `.github/ci-failure-issue.sh`'s `extract_failed_names` selects jobs
       whose conclusion is `failure` or `timed_out`; the naming rule is
       otherwise unchanged (a build or publish leg by its variant, once per
       variant, any other job by its own name). Called with result `failure`
       and a listing whose only non-passing job timed out, the script names
       that job and prints no "names no failed job" warning.
-- [ ] AC2: `rebuild-gap.yml` has a `notify` job that needs `gap` and whose
+- [x] AC2: `rebuild-gap.yml` has a `notify` job that needs `gap` and whose
       `if:` admits only a scheduled run whose `gap` result is `failure`. It
       passes `.github/ci-failure-issue.sh` that result, the run URL, and this
       run's jobs listing, so the script opens an issue titled
       `Weekly run failed: rebuild-gap` or comments on the open `ci-failure`
       issue naming `rebuild-gap`. On any other `gap` result or event the job
       is skipped, so it never closes the issue.
-- [ ] AC3: The reduction of the `gh run list` answer to
+- [x] AC3: The reduction of the `gh run list` answer to
       `.github/rebuild-gap.sh`'s first argument lives in a script under
       `.github/`, not in `rebuild-gap.yml`. It maps an answer matching
       `^[0-9]{4}-[0-9]{2}-[0-9]{2}T` to its first ten characters, an empty
@@ -52,8 +52,8 @@ moving tags backward").
       `unknown`. A test file that `pr-ci.yml` runs covers the new script, and
       `pr-ci.yml`'s `paths` list it. The `gap` job's step in `rebuild-gap.yml`
       holds no `if`, `case`, or `[[ ]]` test over the answer.
-- [ ] AC4: `docker.yml`'s `on.push.paths` lists `.github/ci-failure-issue.sh`.
-- [ ] AC5: `docker.yml`'s `meta`, `build`, and `publish` jobs each carry a
+- [x] AC4: `docker.yml`'s `on.push.paths` lists `.github/ci-failure-issue.sh`.
+- [x] AC5: `docker.yml`'s `meta`, `build`, and `publish` jobs each carry a
       `permissions:` block granting `contents: read` and no other scope, and
       those jobs succeed under it.
 
@@ -122,3 +122,13 @@ moving tags backward").
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-10-20 at f124d07; `origin/main` had not moved (0 commits ahead of the branch base).
+
+- AC1: `.github/ci-failure-issue.sh:121` reads `select(.conclusion == "failure" or .conclusion == "timed_out")`; the variant parse and dedup after it are unchanged in the diff. `test_ci_failure_issue.sh` PASS, including 5o (timed-out `keepalive` named, no `::warning::`) and 5q (timed-out leg alone names `resolute`, no `::warning::`), both called with result `failure`; 5p names `noble` once for a failure plus timed-out leg.
+- AC2: ruby YAML parse of `rebuild-gap.yml`: `notify.needs` = `gap`, `if:` = `always() && github.event_name == 'schedule' && needs.gap.result == 'failure'`; its step passes `RESULTS: ${{ needs.gap.result }}`, `RUN_URL` and `jobs.json` from `gh run view "$GITHUB_RUN_ID" --json jobs` to `ci-failure-issue.sh`. The `if:` admits no other result or event, so the script only ever receives `failure` and never takes its close branch. Case 5r: a failed `rebuild-gap` job titles a new issue `Weekly run failed: rebuild-gap` and comments on open #41 naming it, closing nothing.
+- AC3: `.github/last-rebuild-success.sh` holds the lookup and the four branches (failed lookup → `unknown`, empty → `none`, `^[0-9]{4}-[0-9]{2}-[0-9]{2}T` → text before the T, else `unknown`). The `gap` step's `run` block (ruby parse) has 0 lines with `if`, `case` or `[[`. `pr-ci.yml` lists the script in `paths` (line 19) and runs `test_last_rebuild_success.sh` (line 41); that suite PASS (17 assertions).
+- AC4: ruby parse of `docker.yml`: `on.push.paths` includes `.github/ci-failure-issue.sh` (true).
+- AC5: ruby parse: `meta`, `build`, `publish` each `{contents: read}` and nothing else. Test-mode dispatch 39533199085 at a7866e9 (no `.github/` change between a7866e9 and f124d07): conclusion success; `meta`, all four `build` legs and both `publish` legs success.
+- Gate: `cairn_validate.py` all checks passed (one pre-existing advisory, the old pdf `.gitignore` entry). No IP/GP changed (DESIGN edit is a Conventions bullet), so `cairn_impact` skipped. Profile gate: the diff touches no `Dockerfile`, `.dockerignore` or build context; the image built from a clean context in run 39533199085; base stays `rocker/r2u:${UBUNTU_VERSION}` with versioned args; no secret added. hadolint is not installed locally and runs in `pr-ci.yml` on the PR. Shellcheck 0.11.0 runs in `lint.yml` on the PR (not installed locally).
+- spawned: diff-bug, blame-history, prior-review, ripple

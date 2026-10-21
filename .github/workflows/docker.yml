@@ -178,8 +178,10 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       # Six days, so "Re-run failed jobs" still finds the other legs' digests
-      # for the rest of the week; they expire before the next Monday scheduled
-      # run, so a late re-run cannot publish digests older than that run's.
+      # for the rest of the week. A scheduled run's digests expire before the
+      # next Monday scheduled run. A push or dispatch run has no such bound:
+      # re-running its publish after a newer run has published moves the
+      # moving tags back to this run's images.
       - name: Upload the digest
         uses: actions/upload-artifact@v7
         with:
@@ -227,8 +229,10 @@ jobs:
 
       # The pattern names both architectures, with no wildcard: a prefix
       # pattern would also pull a future variant whose name extends this one
-      # (noble-minimal into noble). A pattern that matched nothing would not
-      # pass silently: the 2-digest check below fails the leg.
+      # (noble-minimal into noble). Keep the two names in step with the build
+      # matrix's arch values. A pattern that matches fewer than two digests
+      # does not pass silently: download-artifact downloads only what matches,
+      # with no error, and the 2-digest check below fails the leg.
       - name: Download this variant's digests
         uses: actions/download-artifact@v8
         with:

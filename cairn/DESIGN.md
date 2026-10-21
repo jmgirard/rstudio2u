@@ -75,7 +75,11 @@ reproducibility.
   parse — is reported as itself, never as a measured gap and never as
   silence. The rule lives in `.github/rebuild-gap.sh`, never in the workflow,
   and shares its date validation with `keepalive.sh` through
-  `.github/date-lib.sh` (added M018).
+  `.github/date-lib.sh` (added M018); the lookup and its reading live in
+  `.github/last-rebuild-success.sh` (moved there M020). A scheduled run whose
+  gap job fails outright is reported too: `rebuild-gap.yml`'s `notify` job
+  names that job in the same issue, and runs only on that failure, so it
+  never closes the issue (added M020).
   Its bound: this check is itself on a schedule, so once GitHub has disabled
   the repository's scheduled workflows it is disabled with them — that
   failure mode belongs to the keepalive above, not here.

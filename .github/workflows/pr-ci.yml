@@ -16,6 +16,7 @@ on:
       - ".github/ci-failure-issue.sh"
       - ".github/keepalive.sh"
       - ".github/rebuild-gap.sh"
+      - ".github/last-rebuild-success.sh"
       - ".github/date-lib.sh"
 
 jobs:
@@ -37,6 +38,7 @@ jobs:
           bash ./scripts/tests/test_ci_failure_issue.sh
           bash ./scripts/tests/test_keepalive.sh
           bash ./scripts/tests/test_rebuild_gap.sh
+          bash ./scripts/tests/test_last_rebuild_success.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.5.0

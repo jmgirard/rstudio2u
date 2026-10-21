@@ -172,6 +172,38 @@ FIX_MULTIKEY=$(jobs_doc \
     "$(job 'build (resolute, 26.04, amd64, ubuntu-latest)' success)" \
     "$(job 'build (resolute, 26.04, arm64, ubuntu-24.04-arm)' success)")
 
+# A job GitHub stopped at its timeout has the conclusion `timed_out` in this
+# listing, while `needs.<job>.result` reports the same job as `failure` — so the
+# run is reported failed and the timed-out job must be named like a failed one
+# (M017's lesson). Three shapes: a job outside the matrix, a variant with one
+# failed and one timed-out leg (still named once), and a timed-out leg that is
+# the only non-passing job in the run.
+FIX_TIMED_OUT_JOB=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'publish (noble)' success)" \
+    "$(job 'keepalive' timed_out)")
+FIX_TIMED_OUT_MIX=$(jobs_doc \
+    "$(job 'build (noble, amd64)' failure)" \
+    "$(job 'build (noble, arm64)' timed_out)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' success)" \
+    "$(job 'publish (noble)' failure)" \
+    "$(job 'publish (resolute)' success)")
+FIX_TIMED_OUT_LEG=$(jobs_doc \
+    "$(job 'build (noble, amd64)' success)" \
+    "$(job 'build (noble, arm64)' success)" \
+    "$(job 'build (resolute, amd64)' success)" \
+    "$(job 'build (resolute, arm64)' timed_out)" \
+    "$(job 'publish (noble)' success)" \
+    "$(job 'publish (resolute)' success)")
+
+# rebuild-gap.yml's listing as its notify job reads it: the gap job failed, and
+# notify itself is still running, so its conclusion is empty.
+FIX_GAP_JOB_FAIL=$(jobs_doc \
+    "$(job 'rebuild-gap' failure)" \
+    "$(job 'notify' '')")
+
 # assert_call <desc> <regex>     — some logged gh call matches the regex
 assert_call() {
     local desc="$1" re="$2"
@@ -382,6 +414,38 @@ rc=$(run_script failure "$NONE" "" "$(printf 'First line\nSecond line')")
 assert_rc      "a multi-line subject exits 0" 0 "$rc"
 assert_call    "only the first line becomes the title"   '^issue create .*--title First line --body '
 assert_no_call "  ... and the second line is dropped"    'Second line'
+
+# 5o. A timed-out job outside the matrix is named by its own name, and the run
+# is not treated as one whose listing explains nothing.
+rc=$(run_script failure "$NONE" "$FIX_TIMED_OUT_JOB")
+assert_rc      "failure/timed-out-job exits 0" 0 "$rc"
+assert_call    "a timed-out non-matrix job is named by its own name" '^issue create .*--title Weekly run failed: keepalive --body '
+assert_no_out  "  ... with no contradiction warning"         '::warning::'
+
+# 5p. One failed and one timed-out leg of the same variant: one name.
+rc=$(run_script failure "$NONE" "$FIX_TIMED_OUT_MIX")
+assert_rc      "failure/timed-out-mix exits 0" 0 "$rc"
+assert_call    "a failed and a timed-out leg of one variant name it once" '^issue create .*--title Weekly run failed: noble --body '
+assert_no_call "  ... and never name the all-green variant"  '^issue create .*resolute'
+
+# 5q. A timed-out leg alone names its variant, with no contradiction warning.
+rc=$(run_script failure "$NONE" "$FIX_TIMED_OUT_LEG")
+assert_rc      "failure/timed-out-leg exits 0" 0 "$rc"
+assert_call    "a timed-out leg alone names its variant" '^issue create .*--title Weekly run failed: resolute --body '
+assert_no_call "  ... and never the all-green variant"  '^issue create .*noble'
+assert_no_out  "  ... with no contradiction warning"    '::warning::'
+
+# 5r. rebuild-gap.yml's notify job: a failed gap job is named, the running
+# notify job is not, and an open issue gets a comment naming the gap job.
+rc=$(run_script failure "$NONE" "$FIX_GAP_JOB_FAIL")
+assert_rc      "failure/gap-job exits 0" 0 "$rc"
+assert_call    "a failed gap job titles the issue" '^issue create .*--title Weekly run failed: rebuild-gap --body '
+assert_no_call "  ... and the running notify job is not named" '^issue create .*notify'
+assert_no_out  "  ... warning about nothing, having named the gap job" '::warning::'
+rc=$(run_script failure "$TWO" "$FIX_GAP_JOB_FAIL")
+assert_rc      "failure/gap-job/open exits 0" 0 "$rc"
+assert_call    "a failed gap job comments on the open issue naming it" '^issue comment 41 .*rebuild-gap'
+assert_no_call "  ... and opens no second issue" '^issue create '
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")

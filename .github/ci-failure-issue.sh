@@ -7,7 +7,9 @@
 # maintainer as an issue, and the next fully green run closes it (GP7). Also
 # called by .github/rebuild-gap.sh, which reports something no single run can
 # see — that no scheduled run has succeeded in too long — through this same
-# issue, since the next fully green run is the right close condition for both.
+# issue, since the next fully green run is the right close condition for both;
+# and by the `notify` job in .github/workflows/rebuild-gap.yml when that check's
+# own job fails, which it calls only with a failed result, never to close.
 #
 # Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json] [subject]
 #   results   the needed jobs' results, space-separated (`needs.<job>.result`
@@ -21,8 +23,9 @@
 #             they always did.
 #   run-url   link to the workflow run, put in the issue/comment body.
 #   jobs-json path to `gh run view --json jobs` output (or "-" for stdin). The
-#             failed job names are extracted from it here — this is the one copy
-#             of that parsing, so it can be unit-tested. A build or publish leg
+#             failed job names (conclusion `failure` or `timed_out`) are
+#             extracted from it here — this is the one copy of that parsing,
+#             so it can be unit-tested. A build or publish leg
 #             is named by its variant rather than its own leg name, since a
 #             variant with several failed legs is one thing wrong; every other
 #             failed job contributes its own name. Omitted, empty, or
@@ -35,7 +38,7 @@
 #             other than a failed job in this run says what it means instead of
 #             borrowing wording that would be wrong. Omitted or empty, every
 #             rendering is exactly what it was before this argument existed —
-#             the notify job passes three arguments and is unaffected. It is a
+#             both notify jobs pass three arguments and are unaffected. It is a
 #             title, so it is trimmed to one line and to what a GitHub issue
 #             title holds; a caller passing a subject usually has no jobs
 #             document and passes "" in that position.
@@ -108,11 +111,14 @@ subject="${subject:0:256}"
 # with several keys carries the extra keys after the first comma, which the
 # same parse discards. Every other failed job — `meta`, `keepalive`, whatever
 # a later lane adds — has no variant to recover and is named by itself, so a
-# reportable job never has to be enumerated here to be reported.
+# reportable job never has to be enumerated here to be reported. A job GitHub
+# stopped at its timeout counts as failed: its conclusion here is `timed_out`,
+# but `needs.<job>.result` reports it as `failure`, so the run is reported
+# failed and the job that caused it must be named.
 extract_failed_names() {
     jq -r '
         .jobs[]
-        | select(.conclusion == "failure")
+        | select(.conclusion == "failure" or .conclusion == "timed_out")
         | .name
         | if test("^(build|publish) \\(") then
               sub("^(build|publish) \\("; "") | sub("[,)].*$"; "")

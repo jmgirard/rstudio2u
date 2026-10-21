@@ -191,9 +191,10 @@ assert_call    "  ... comments on the oldest open issue (#41)" '^issue comment 4
 assert_call    "  ... naming the gap"              '^issue comment 41 .*No successful weekly rebuild in 16 days'
 assert_no_call "  ... and opens no second issue"   '^issue create '
 
-# 5. No successful scheduled run is on record at all. The workflow reduces an
-#    empty `gh run list` to this sentinel rather than an empty date, so the gap
-#    is reported as what it is instead of being refused as a bad date.
+# 5. No successful scheduled run is on record at all.
+#    .github/last-rebuild-success.sh reduces an empty `gh run list` to this
+#    sentinel rather than an empty date, so the gap is reported as what it is
+#    instead of being refused as a bad date.
 rc=$(run_script none 2026-01-17 15)
 assert_rc      "the 'none' sentinel exits 0" 0 "$rc"
 assert_offline "  ... having called neither curl nor wget"

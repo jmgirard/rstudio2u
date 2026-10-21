@@ -87,7 +87,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       stderr only.
 - [x] T3: Add the clock read, its log line, the `TAG_ORDER_NOW` and run-stamp checks after `rm -f "$out"`, and the
       refusal of a later stamp.
-- [ ] T4: Update the header comment and the inline comments of `tag-order.sh`, and in `docker.yml` the `test_mode`
+- [x] T4: Update the header comment and the inline comments of `tag-order.sh`, and in `docker.yml` the `test_mode`
       input description and the comments above and in the `Create the manifest list` step. Update the tag-order
       bullet of `cairn/DESIGN.md`. Its bounds name the refusal and the hand re-point remedy. They also name that a
       future stamp on one moving tag now blocks the date and version tags of that variant each week, that the retry
@@ -117,6 +117,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 - 2026-10-20: T1 done: docker stub fails read n of a ref from a `fail<n>.err` file, `sleep` stub logs pauses, `date` stub in its own PATH dir; cases 18a-21b added and seen red (65 failures, all in new cases). `TAG_ORDER_NOW` is exported for the whole file rather than set in `run_script`, so direct `bash "$SCRIPT"` calls (case 15) get it too.
 - 2026-10-20: T2 and T3 done in one commit: retry loop (3 reads, `::warning::` per retried failure, pause validated before the clock), clock read logged with its source, run-stamp-later-than-clock exit, future-stamp refusal pointing at the re-point command now in the script header. Header comment rewritten with them. test_tag_order.sh 168 ok, 0 FAIL (local bash 3.2). shellcheck 0.11.0 `-x -S info` clean on both files (local koalaman/shellcheck:v0.11.0 image).
 - 2026-10-20: implementation choice: retried failures log as `::warning::` so an absorbed failure shows in the run's annotations. The future-stamp error points at the script header for the re-point command rather than repeating it.
+- 2026-10-20: T4 done: docker.yml `test_mode` description and the two comments at the `Create the manifest list` step updated; DESIGN.md tag-order bullet states the clock, retry, refusal, test variables, and the new bounds (corrected M022 on the old future-stamp sentence). Plants, each restored after: retry cut to one read 17 FAIL, clock check removed 7 FAIL, delay check removed 20 FAIL; restored suite all pass. `git grep` for tag-order and "cannot read" found no other stale site.
 
 ## Decisions
 

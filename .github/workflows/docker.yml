@@ -177,13 +177,16 @@ jobs:
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
+      # Six days, so "Re-run failed jobs" still finds the other legs' digests
+      # for the rest of the week; they expire before the next Monday scheduled
+      # run, so a late re-run cannot publish digests older than that run's.
       - name: Upload the digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digests-${{ matrix.variant }}-${{ matrix.arch }}
           path: /tmp/digests/*
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 6
 
   # One publish leg per variant: assemble the multi-arch manifest list from that
   # variant's two verified digests and attach every tag to it in a single
@@ -222,11 +225,15 @@ jobs:
           username: jmgirard
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # The pattern names both architectures, with no wildcard: a prefix
+      # pattern would also pull a future variant whose name extends this one
+      # (noble-minimal into noble). A pattern that matched nothing would not
+      # pass silently: the 2-digest check below fails the leg.
       - name: Download this variant's digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
-          pattern: digests-${{ matrix.variant }}-*
+          pattern: digests-${{ matrix.variant }}-{amd64,arm64}
           merge-multiple: true
 
       # Mutable tags (latest/noble/resolute) plus immutable tags that pin the

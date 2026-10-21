@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M019: Take the artifact action bumps and fix the digest artifacts
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP3
 - **Resolves:** —
 - **Surface tier:** internal — a change to the CI workflow only; the image contents and its tags do not change
-- **Branch/PR:** —
+- **Branch/PR:** m019-artifact-action-bumps
 
 ## Goal
 
@@ -37,9 +37,9 @@ The image build workflow carries its build digests with `actions/upload-artifact
 
 ## Tasks
 
-- [ ] T1: Move `actions/upload-artifact@v4` to `@v7` (`docker.yml:181`) and `actions/download-artifact@v4` to `@v8` (`docker.yml:226`). Read the v5 to v8 release notes for any change to the inputs this file uses (`name`, `path`, `if-no-files-found`, `retention-days`, `pattern`, `merge-multiple`); the v8 hash-mismatch default (error) needs no input.
-- [ ] T2: Change the download `pattern:` (`docker.yml:229`) to `digests-${{ matrix.variant }}-{amd64,arm64}`, and say in the step's comment why it names both architectures: a prefix pattern would also pull a future variant whose name extends this one (for example `noble-minimal`), and a brace pattern that matched nothing would fail the 2-digest check, not pass silently.
-- [ ] T3: Change `retention-days: 1` to `6` (`docker.yml:186`), with a comment: six days lets "Re-run failed jobs" find the other legs' digests for the rest of the week, and the digests expire before the next Monday scheduled run, so a late re-run cannot publish digests older than that run's.
+- [x] T1: Move `actions/upload-artifact@v4` to `@v7` (`docker.yml:181`) and `actions/download-artifact@v4` to `@v8` (`docker.yml:226`). Read the v5 to v8 release notes for any change to the inputs this file uses (`name`, `path`, `if-no-files-found`, `retention-days`, `pattern`, `merge-multiple`); the v8 hash-mismatch default (error) needs no input.
+- [x] T2: Change the download `pattern:` (`docker.yml:229`) to `digests-${{ matrix.variant }}-{amd64,arm64}`, and say in the step's comment why it names both architectures: a prefix pattern would also pull a future variant whose name extends this one (for example `noble-minimal`), and a brace pattern that matched nothing would fail the 2-digest check, not pass silently.
+- [x] T3: Change `retention-days: 1` to `6` (`docker.yml:186`), with a comment: six days lets "Re-run failed jobs" find the other legs' digests for the rest of the week, and the digests expire before the next Monday scheduled run, so a late re-run cannot publish digests older than that run's.
 - [ ] T4: Push the branch and start a test-mode run: `gh workflow run docker.yml --ref <branch> -f test_mode=true`. Watch it, then record the run URL, its conclusion, each publish leg's `Create the manifest list` result, and the four `digests-*` artifacts' `created_at` and `expires_at` from the run's artifact listing. The dispatch also runs the keepalive job, which commits only after 50 quiet days on the default branch.
 - [ ] T5: Append a D-entry recording the approved move to upload-artifact v7 and download-artifact v8, in D-010's form, naming the test-mode run as the evidence that `docker.yml` works with them.
 
@@ -56,6 +56,8 @@ The image build workflow carries its build digests with `actions/upload-artifact
 - 2026-10-20: plan gate chose a brace pattern over two exact-`name:` downloads because a missing artifact under `name:` fails the step before the 2-digest check can report the failed leg; falsified by a test-mode publish leg that finds other than 2 digests while all four legs uploaded.
 - 2026-10-20: plan gate chose 6 retention days over 7 or more because a longer retention lets a late re-run publish digests older than the next scheduled run's; falsified by a maintainer need to re-run a failed job more than six days after it ran.
 - 2026-10-20: criteria audit (reduced mode, fresh Opus reader): AC1 passed; AC2's "cannot be pulled" clause was unbounded, narrowed to the exact pattern text; AC3's "each run" claim was unbounded, narrowed to the setting plus AC4's run; AC4 bound log text the workflow never prints, narrowed to the `Create the manifest list` step succeeding. All three fixed as suggested.
+- 2026-10-20: started; branch m019-artifact-action-bumps cut from main at a950dd2.
+- 2026-10-20: T1–T3 done: upload-artifact v7, download-artifact v8, pattern `digests-${{ matrix.variant }}-{amd64,arm64}`, retention 6 days, each with a comment; the v8 and v7 `action.yml` (read via `gh api`) keep every input the file uses with unchanged defaults. The verify slot does not fire (no Dockerfile or build-context change); no local YAML parser or actionlint is installed, so T4's run is the first parse.
 
 ## Decisions
 

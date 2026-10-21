@@ -217,10 +217,24 @@ assert_rc "not settled" 1 "$(run_script "$R" "$T1" "$T2")"
 assert_no_attach "nothing to attach"
 assert_line "error names the tag and the cause" "::error::" "$T2" "toomanyrequests"
 
+echo "== 8b. the ERROR line is named even after a WARNING line"
+reset
+printf '%s\n' "WARNING: config file is old" "ERROR: unexpected status: 503 Service Unavailable" > "$WORK/answers/$(key "$T1").err"
+echo 1 > "$WORK/answers/$(key "$T1").rc"
+assert_rc "not settled" 1 "$(run_script "$R" "$T1")"
+assert_line "error names the ERROR line, not the warning" "::error::" "$T1" "503 Service Unavailable"
+
+echo "== 8c. the not-found form without the docker.io prefix is absence"
+reset
+answer_error "$T1" "ERROR: $T1: not found"
+assert_rc "settled" 0 "$(run_script "$R" "$T1")"
+assert_attach "absent tag kept" "$T1"
+
 echo "== 9. a not-found line for another ref is not absence"
 reset
 answer_error "$T1" "ERROR: docker.io/$IMG:other: not found"
 assert_rc "not settled" 1 "$(run_script "$R" "$T1")"
+assert_no_attach "nothing to attach"
 assert_line "error names the tag" "::error::" "$T1"
 
 echo "== 10. output that is not JSON"
@@ -248,8 +262,8 @@ for bad in "2026-10-20T06:00:00.5Z" "2026-10-20" ""; do
     assert_rc "run stamp '$bad': not settled" 1 "$(run_script "$bad" "$T1")"
     assert_line "run stamp '$bad': error names the cause" "::error::" "run stamp" "fixed form"
     assert_queried "run stamp '$bad': no registry read"
+    assert_no_attach "run stamp '$bad': nothing to attach"
 done
-assert_no_attach "nothing to attach"
 
 echo "== 14. a later stamp and an unsettled tag in one list: failure wins"
 reset
@@ -265,7 +279,7 @@ bash "$SCRIPT" "$R" "$WORK/attach" "$T1" >"$WORK/out" 2>&1
 assert_no_attach "failed call leaves no attach list"
 
 echo "== 16. annotations that are not an object"
-for bad in '"a string"' '["2026-10-20T06:00:00Z"]'; do
+for bad in '"a string"' '["2026-10-20T06:00:00Z"]' 'null' 'false'; do
     reset
     answer_raw "$T1" "{\"schemaVersion\":2,\"manifests\":[],\"annotations\":$bad}"
     assert_rc "annotations $bad: not settled" 1 "$(run_script "$R" "$T1")"

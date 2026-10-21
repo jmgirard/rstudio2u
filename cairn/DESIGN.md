@@ -104,8 +104,11 @@ reproducibility.
   moment can interleave the read and the create, because nothing
   serializes publish legs across runs. A tag whose stamp is not in the
   fixed form fails its variant's publish each week until someone re-points
-  it by hand with `docker buildx imagetools create --annotation
-  "index:org.opencontainers.image.created=<stamp in the fixed form>"`.
+  it by hand: `docker buildx imagetools create --annotation
+  "index:org.opencontainers.image.created=<stamp>" -t <image>:<tag>
+  <image>:<tag>` rebuilds the tag's own list with a new stamp. Use the
+  current UTC time in the fixed form: a stamp later than the next run's
+  makes every later run leave that tag out, with only a warning.
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while

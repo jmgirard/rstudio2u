@@ -27,8 +27,9 @@
 #   left out   its index carries a later stamp, with a ::warning:: naming the
 #              ref and both stamps;
 #   unsettled  anything else: a failed read other than "not found", output that
-#              is not JSON or not an index, annotations that are not an object,
-#              or a stamp not in the fixed form.
+#              is not JSON or not an index, an annotations value that is not an
+#              object (null and false included), or a stamp not in the fixed
+#              form.
 # Exit 0 when every ref is kept or left out (an empty file means attach
 # nothing). Exit 1 with a ::error:: per unsettled ref, or for a bad run stamp,
 # and no output file: the leg must then attach no tag at all. Exit 2 on a
@@ -74,7 +75,10 @@ for ref in "$@"; do
             || grep -qxF -- "ERROR: $ref: not found" "$err_file"; then
             keep+=("$ref")
         else
-            echo "::error::cannot read the index $ref points at: $(head -n 1 "$err_file")"
+            # Name the cause: the first ERROR line, since buildx can print a
+            # WARNING line before it; else the first line of whatever it said.
+            cause="$(grep -m 1 '^ERROR' "$err_file" || head -n 1 "$err_file")"
+            echo "::error::cannot read the index $ref points at: $cause"
             unsettled=1
         fi
         continue
@@ -91,9 +95,10 @@ for ref in "$@"; do
         unsettled=1
         continue
     fi
-    # Annotations that are not an object would make `has` below error, which
-    # its `if !` would read as unstamped; refuse them instead.
-    if ! jq -e '(.annotations // {}) | type == "object"' >/dev/null <<< "$raw"; then
+    # Annotations that are present but not an object (null and false
+    # included) would make `has` below error or read as unstamped; refuse them
+    # instead. Only an index with no annotations key at all is unstamped that way.
+    if ! jq -e 'if has("annotations") then .annotations | type == "object" else true end' >/dev/null <<< "$raw"; then
         echo "::error::$ref points at an index whose annotations are not an object"
         unsettled=1
         continue

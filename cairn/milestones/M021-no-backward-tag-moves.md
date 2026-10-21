@@ -125,3 +125,28 @@ this as a bound too.
 - 2026-10-20 AC5: `cairn/DESIGN.md` Conventions bullet "A publish never moves a tag backward" states the rule and all six bounds: pre-change tags unstamped (protected from the first stamped publish), pre-merge runs re-run their old workflow, "Re-run all jobs" takes a new stamp, equal stamps publish, simultaneous runs can interleave, and a bad stamp fails weekly with the hand re-point as recovery. The `Upload the digest` comment (`docker.yml:200-207`) says a "Re-run failed jobs" after a newer publish leaves out each later-stamped tag with a warning and "Re-run all jobs" takes a new stamp and publishes. Pass.
 - 2026-10-20 AC6 (local, CI pending): `pr-ci.yml:43` runs `bash ./scripts/tests/test_tag_order.sh` and `:21` adds the script to `paths`; the test passes locally (AC2 line). Pinned shellcheck 0.11.0 with `lint.yml`'s flags (`-x -S info`) exits 0 on both files. The box waits for the PR's `pr-ci.yml` and `lint.yml` runs at step 8.
 - 2026-10-20 gate: `cairn_validate.py` all checks passed (1 advisory: the old `.gitignore` pdf entry, a standing candidate row); no DESIGN principle changed, so `cairn_impact` is not owed. Profile gate: `hadolint` (v2.12.0 image) clean on the unchanged Dockerfile; base `rocker/r2u:${UBUNTU_VERSION}` pinned to a version tag; no secret added; `.dockerignore` present and excludes `.github` and `scripts/tests`, so the build context is unchanged and `pr-ci.yml`'s noble build and smoke at step 8 is the `docker build` check. User-visible change for the archive summary: a re-run of an older build can no longer move a published tag back to older images.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: a future or garbage stamp in the fixed form (a hand re-point typo) freezes that tag silently, every run green with a warning — follow-up, candidate row "Refuse tag stamps later than the clock"; the DESIGN recovery text now says to use the current UTC time and names the risk (fix-now part)
+- diff-bug #2: the 7 registry reads have no retry, and absence rests on buildx's exact not-found wording — follow-up, candidate row "Retry the tag-order registry reads"
+- diff-bug #3: the all-tags-left-out path has never run in CI — follow-up, candidate row "Run the empty attach path in CI"
+- diff-bug #4: `annotations: false` or `null` read as unstamped — fix now: present-but-not-object annotations are now unsettled, with test case 16 extended; reverting the check turns 6 assertions red
+- diff-bug #5: the DESIGN recovery command had no `-t` or source — fix now: full command, checked by a local dry run that prints the stamped index with both architectures
+- diff-bug #6: stale "two run-wide values" and "attach every tag" comments and a broken comment wrap in `docker.yml` — fix now
+- diff-bug #7: with every tag left out, test mode printed only the warning, and an empty list printed a blank line — fix now: prints "(none)" and the test-mode line
+- diff-bug #8: the error named the first stderr line, which can be a WARNING — fix now: names the first ERROR line, test case 8b; removing the change turns 1 assertion red
+- diff-bug #9: test gaps (the bare not-found form, per-iteration no-file checks in case 13, a no-file check in case 9) — fix now: cases 8c, 9, and 13 extended
+- diff-bug #10: the `test_mode` input description did not say the tag list is filtered against the live registry — fix now
+- diff-bug #11: the empty-STAMP check sits in `tag-order.sh`, not beside the RSVER/DATE check — reject, false as a defect: the script refuses an empty stamp before any read or tag move (test case 13)
+- blame-history #1: the DESIGN heading "never moves a tag backward" overstated its own bounds — fix now: heading is "A re-run does not move a stamped tag backward"
+- blame-history #2: the read and the create are not atomic, and a `concurrency:` group would close the race — reject, planned change: the plan gate recorded the race as a bound because GitHub cancels a pending job in a group
+- blame-history #3: the new publish checkout reverses M015's no-checkout stance — reject, planned change: the plan put the rule in a repo script, which the job must check out
+- blame-history #4: the meta comment's "two run-wide values" and "keeps the network out of the publish job" — fix now (same edit as diff-bug #6; the second now says "the version scrape")
+- blame-history #5: the empty-attach path passes green with a warning and has not run in CI — follow-up, same row as diff-bug #3
+- blame-history #6: the retention comment no longer states M019's reason — reject, false: `docker.yml` still states the six-day reason in the same comment
+- prior-review: no regressions; M015, M019, M020, M09/M10, M011, M016 lessons kept; no human PR review comments on GitHub
+- ripple #1: `docker.yml` publish header said "attach every tag" — fix now (diff-bug #6)
+- ripple #2: meta header said "two run-wide values" — fix now (diff-bug #6)
+- ripple #3: the "Refuse to move moving tags backward" candidate row proposes a date-tag comparison — reject, planned change: the row is absorbed by this milestone and graduates at post-merge hygiene
+- ripple #4: meta "keeps the network out of the publish job" — fix now (blame-history #4)
+- ripple #5: the `test_mode` description says "the tag list it would apply" — fix now (diff-bug #10)
+- re-check after fixes: `bash scripts/tests/test_tag_order.sh` exit 0, 89 ok, 0 FAIL; pinned shellcheck 0.11.0 `-x -S info` clean on both files; `docker.yml` parses as YAML; AC5's bullet re-read under its new heading and still states the rule and all six bounds.

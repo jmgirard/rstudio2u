@@ -99,8 +99,8 @@ reproducibility.
   answer that is not an index, a stamp not in the fixed form, a stamp later
   than the current time) fails the leg, and no tag is attached. The
   environment variables `TAG_ORDER_NOW` and `TAG_ORDER_RETRY_DELAY` replace
-  the clock and the pause for the tests, and the workflow sets neither. The case this exists for is "Re-run failed jobs" of an older
-  run's publish within the six days its digests last: that re-run keeps its
+  the clock and the pause for the tests, and the workflow sets neither.
+  The case this exists for is "Re-run failed jobs" of an older run's publish within the six days its digests last: that re-run keeps its
   original stamp (added M021). Its bounds: a tag published before M021
   carries no stamp, so the rule protects a tag from its first stamped
   publish on. A re-run of a run that started before M021 merged uses that
@@ -112,8 +112,8 @@ reproducibility.
   by up to 20 seconds per tag. A tag whose stamp is not in the fixed form
   fails its variant's publish each week until someone re-points it by hand.
   A tag stamped later than the current time does the same until the clock
-  passes that stamp, which for a typo such as 2062 is never. The re-point: `docker buildx imagetools create
-  --annotation "index:org.opencontainers.image.created=<stamp>" -t
+  passes that stamp, which for a typo such as 2062 is never. The re-point:
+  `docker buildx imagetools create --annotation "index:org.opencontainers.image.created=<stamp>" -t
   <image>:<tag> <image>:<tag>` rebuilds the tag's own list with a new
   stamp. Use the current UTC time in the fixed form. Until then the
   variant's new date and version tags do not publish either, so one bad

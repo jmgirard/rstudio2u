@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries, the answer is not a well-formed stamped index, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries 10 seconds apart, the answer is not a well-formed stamped index, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
         type: boolean
         default: false
       keepalive_threshold:
@@ -348,7 +348,7 @@ jobs:
           fi
           echo "tags for ${{ matrix.variant }}:"
           printf '  %s\n' "${tags[@]}"
-          # A non-zero exit (a tag it cannot settle: 3 failed reads, a bad
+          # A non-zero exit (a tag it cannot settle: 3 failed reads 10 s apart, a bad
           # answer, a stamp later than the clock; or a bad run stamp) fails the
           # leg here under set -e, before any tag moves.
           bash "$GITHUB_WORKSPACE/.github/tag-order.sh" "$STAMP" /tmp/attach "${tags[@]}"

@@ -67,6 +67,7 @@ The image build workflow carries its build digests with `actions/upload-artifact
 - 2026-10-20: amendment return: AC3 — "each of the four `digests-*` artifacts has an `expires_at` within one minute of six days after its `created_at`"
 - 2026-10-20: amendment done, no code change; status review.
 - 2026-10-20: review fix-now: narrowed the retention comment and extended the download comment in `docker.yml` (comments only); added candidate row "Refuse to move moving tags backward"; AC4 needs a new test-mode run at this `docker.yml`.
+- 2026-10-20: step-7 approval: m019-artifact-action-bumps approved for merge
 
 ## Decisions
 

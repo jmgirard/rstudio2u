@@ -122,6 +122,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 - 2026-10-20: claim audit: 57 claims read, 5 corrected — .github/tag-order.sh, .github/workflows/docker.yml, scripts/tests/test_tag_order.sh. A future stamp clears once the clock passes it (header, error text, DESIGN.md said "until re-pointed"); "not written by a run" softened to "most likely"; only reads 1 and 2 log a warning; `test_mode` description lists the other failures; test clock comment. Also added the missing-jq exit to the header. Message and comment text only; the dispatch run tests 6bf5c91, whose logic is unchanged.
 - 2026-10-20: T5 done: run 39540657484 at 6bf5c91 concluded success. publish (noble) logged `current UTC time: 2026-10-21T03:54:03Z (from date -u)` and 4 tags to attach; publish (resolute) `03:54:07Z (from date -u)` and 3 tags; 0 emitted `::error::` lines in either leg.
 - 2026-10-20: verify slot: no Dockerfile or build-context change, so hadolint and docker build are not owed; the dispatch built both variants anyway. Status set to review.
+- 2026-10-20: step-7 approval: m022-harden-tag-order approved for merge
 
 ## Decisions
 

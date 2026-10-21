@@ -44,6 +44,6 @@ milestone end, surfaced at plan time. Capped at 50 lines (D-015)._
   the workflow's own ref for the code, the target ref for the write; only a real dispatch shows the gap.
 - 2026-09-07 (M016): `^[0-9]+$` is not a bound — `10#$n` on 19+ digits wraps negative and inverts
   the comparison; bound by digit width, and drive over-wide, zero-padded and widest-in-range.
-- 2026-09-07 (M017): a job's `.conclusion` in `gh run view --json jobs` has values `needs.<job>.result` does not — `timed_out` there is `failure` here — so a script reading both must not filter the listing on `== "failure"` alone.
 - 2026-09-07 (M018): a watchdog on the same weekly cadence as the thing it watches can only ever see gaps that are multiples of seven days, so its threshold picks a *week*, not a day — state the week it means, or a 15-day rule silently becomes a 21-day one.
 - 2026-10-21 (M019): GitHub sets an artifact's `expires_at` 0–1 s short of `created_at` + `retention-days`, so a criterion on expiry needs a stated tolerance; download-artifact's `pattern` (minimatch) expands `{a,b}` braces and, matching nothing, downloads nothing with no error — a count check after it must catch the miss.
+- 2026-10-21 (M020): a script whose answer a workflow step captures with `$(...)` swallows its own `::warning::` lines into that answer; have it write the answer to a file named by an argument and keep stdout for the run log.

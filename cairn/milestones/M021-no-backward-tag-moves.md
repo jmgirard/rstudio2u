@@ -113,6 +113,7 @@ this as a bound too.
 - 2026-10-20: claim audit: 31 claims read, 6 corrected — .github/tag-order.sh (annotations that are not an object were read as unstamped: now an error, with test case 16, and a planted removal turns 6 checks red; "a failed call has no file" narrowed to exit 1), .github/workflows/docker.yml (the publish comment no longer says "never" or "read back raw"), scripts/tests/test_tag_order.sh (lesson citation, and the header no longer says every case asserts the file and the message). Pinned shellcheck is clean on both scripts after the fix. The running dispatch predates these edits; the docker.yml edit is comment-only.
 - 2026-10-20: T4 done: dispatch 39536881154 succeeded on every job (notify skipped, as on any dispatch). `meta` printed run stamp 2026-10-21T03:08:09Z and date 2026-10-21. Both publish legs printed the full tag list as their attach list (4 noble tags, 3 resolute tags; live tags absent or unstamped) and a dry-run index with top-level `"annotations": {"org.opencontainers.image.created": "2026-10-21T03:08:09Z"}`, both architectures, no tag attached. No resolute fallback dispatch was needed.
 - 2026-10-20: implement done: all nine unit-test files that `pr-ci.yml` runs pass locally; the profile's verify slot (hadolint and `docker build`) is not owed, since no Dockerfile or build-context file changed. Status set to review.
+- 2026-10-20: step-7 approval: m021-no-backward-tag-moves approved for merge
 
 ## Decisions
 

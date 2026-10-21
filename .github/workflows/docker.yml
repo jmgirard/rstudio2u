@@ -297,10 +297,12 @@ jobs:
       # Before anything is assembled, .github/tag-order.sh reads the list each
       # tag points at now and returns the tags this leg may attach: a tag
       # already on a list stamped later than this run's is left out with a
-      # warning, so a re-run of an older run never moves it backward, and a tag
-      # it cannot read fails the leg. In test mode --dry-run prints the
-      # manifest list it would push and attaches nothing; otherwise the
-      # returned tags are created and the pushed index is read back raw. Either
+      # warning, so a re-run of an older run does not move it backward (the
+      # read and the create are not atomic, and nothing serializes publish legs
+      # across runs), and a tag it cannot read fails the leg. In test mode
+      # --dry-run prints the manifest list it would push and attaches nothing;
+      # otherwise the returned tags, if any, are created and the first is
+      # inspected for the log. Either
       # way the resulting index is parsed and required to name both linux
       # architectures — counting two digest files proves only that two legs
       # uploaded something, not that the assembled list is multi-arch.

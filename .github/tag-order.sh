@@ -27,7 +27,8 @@
 #   left out   its index carries a later stamp, with a ::warning:: naming the
 #              ref and both stamps;
 #   unsettled  anything else: a failed read other than "not found", output that
-#              is not JSON or not an index, or a stamp not in the fixed form.
+#              is not JSON or not an index, annotations that are not an object,
+#              or a stamp not in the fixed form.
 # Exit 0 when every ref is kept or left out (an empty file means attach
 # nothing). Exit 1 with a ::error:: per unsettled ref, or for a bad run stamp,
 # and no output file: the leg must then attach no tag at all. Exit 2 on a
@@ -43,7 +44,8 @@ if [ $# -lt 3 ] || [ -z "$2" ]; then
 fi
 run_stamp="$1"; out="$2"; shift 2
 
-# Never leave an earlier call's answer behind: a failed call has no file.
+# Never leave an earlier call's answer behind: a call that exits 1 leaves no
+# file.
 rm -f "$out"
 
 # The fixed form, and only it: every stamp this workflow writes has it, and two
@@ -86,6 +88,13 @@ for ref in "$@"; do
     # single-platform manifest does not, and is not what a publish leg tags.
     if ! jq -e '.manifests | type == "array"' >/dev/null 2>&1 <<< "$raw"; then
         echo "::error::$ref points at JSON that is not an index"
+        unsettled=1
+        continue
+    fi
+    # Annotations that are not an object would make `has` below error, which
+    # its `if !` would read as unstamped; refuse them instead.
+    if ! jq -e '(.annotations // {}) | type == "object"' >/dev/null <<< "$raw"; then
+        echo "::error::$ref points at an index whose annotations are not an object"
         unsettled=1
         continue
     fi

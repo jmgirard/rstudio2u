@@ -5,14 +5,16 @@
 # A stub `docker` on PATH logs every invocation and answers only the one query
 # the script is meant to make: `buildx imagetools inspect --raw <ref>`. Each ref
 # gets its own canned answer (stdout, stderr and exit status) from a per-ref
-# file set, so a list of tags can mix every shape the registry can return (M09's
-# lesson: a stub answering a looped query must be argument-sensitive and
-# multi-item). Any other argument list exits 97, which the script must report as
-# a read it cannot settle. Runs offline: no network, no registry login.
+# file set, so a list of tags can mix every shape the registry can return (the
+# M09/M10 stub lesson in cairn/LESSONS.md: a stub answering a looped query must
+# be argument-sensitive and multi-item). Any other argument list exits 97,
+# so a query that drifted reads as a failed lookup the script cannot settle
+# rather than being answered as if it were right. Runs offline: no network, no
+# registry login.
 #
-# Every verdict is asserted on the file the script writes — the tags the publish
-# leg may attach — and on the warning or error that names each tag it leaves out
-# or cannot settle.
+# Each case asserts the exit status and, in most, the file the script writes
+# (the tags the publish leg may attach) and the warning or error that names
+# each tag it leaves out or cannot settle.
 #
 set -uo pipefail
 
@@ -262,7 +264,16 @@ printf '%s\n' "$T1" > "$WORK/attach"; answer_raw "$T1" 'not json'
 bash "$SCRIPT" "$R" "$WORK/attach" "$T1" >"$WORK/out" 2>&1
 assert_no_attach "failed call leaves no attach list"
 
-echo "== 16. usage"
+echo "== 16. annotations that are not an object"
+for bad in '"a string"' '["2026-10-20T06:00:00Z"]'; do
+    reset
+    answer_raw "$T1" "{\"schemaVersion\":2,\"manifests\":[],\"annotations\":$bad}"
+    assert_rc "annotations $bad: not settled" 1 "$(run_script "$R" "$T1")"
+    assert_no_attach "annotations $bad: nothing to attach"
+    assert_line "annotations $bad: error names the tag and the cause" "::error::" "$T1" "not an object"
+done
+
+echo "== 17. usage"
 assert_rc "no tags" 2 "$(bash "$SCRIPT" "$R" "$WORK/attach" >"$WORK/out" 2>&1; echo $?)"
 assert_rc "no arguments" 2 "$(bash "$SCRIPT" >"$WORK/out" 2>&1; echo $?)"
 assert_rc "empty output path" 2 "$(bash "$SCRIPT" "$R" "" "$T1" >"$WORK/out" 2>&1; echo $?)"

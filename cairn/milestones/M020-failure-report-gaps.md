@@ -118,6 +118,7 @@ moving tags backward").
 - 2026-10-20: T5 done: all nine `scripts/tests/test_*.sh` suites exit 0. Test-mode dispatch 39533199085 at a7866e9: `meta`, the four `build` legs and both `publish` legs succeeded, `keepalive` succeeded with main unchanged at 85dd3e3, `notify` skipped (dispatch). Shellcheck is not installed locally; pulling its image was not granted, so the PR's shell-lint lane runs it at review (minor amendment of T5).
 - 2026-10-20: claim audit: not owed — internal tier.
 - 2026-10-20: implement complete; status review.
+- 2026-10-20: step-7 approval: m020-failure-report-gaps approved for merge
 
 ## Decisions
 

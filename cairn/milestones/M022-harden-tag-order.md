@@ -1,6 +1,6 @@
 # M022: Harden the tag-order check
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -95,7 +95,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       that a buildx release that rewords its not-found line fails every publish, because the date tag of each run is
       new. Plant each defect (the retry cut to one read, the clock check removed, the delay check removed) and see
       the suite fail.
-- [ ] T5: Push the branch and dispatch `docker.yml` in test mode on it once (`gh workflow run docker.yml --ref
+- [x] T5: Push the branch and dispatch `docker.yml` in test mode on it once (`gh workflow run docker.yml --ref
       <branch> -f test_mode=true`). The user granted one dispatch, so a second dispatch needs the user's yes.
 
 ## Work log
@@ -120,6 +120,8 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 - 2026-10-20: T4 done: docker.yml `test_mode` description and the two comments at the `Create the manifest list` step updated; DESIGN.md tag-order bullet states the clock, retry, refusal, test variables, and the new bounds (corrected M022 on the old future-stamp sentence). Plants, each restored after: retry cut to one read 17 FAIL, clock check removed 7 FAIL, delay check removed 20 FAIL; restored suite all pass. `git grep` for tag-order and "cannot read" found no other stale site.
 - 2026-10-20: T5 started: branch pushed at 6bf5c91, test-mode dispatch run 39540657484 (https://github.com/jmgirard/rstudio2u/actions/runs/39540657484).
 - 2026-10-20: claim audit: 57 claims read, 5 corrected — .github/tag-order.sh, .github/workflows/docker.yml, scripts/tests/test_tag_order.sh. A future stamp clears once the clock passes it (header, error text, DESIGN.md said "until re-pointed"); "not written by a run" softened to "most likely"; only reads 1 and 2 log a warning; `test_mode` description lists the other failures; test clock comment. Also added the missing-jq exit to the header. Message and comment text only; the dispatch run tests 6bf5c91, whose logic is unchanged.
+- 2026-10-20: T5 done: run 39540657484 at 6bf5c91 concluded success. publish (noble) logged `current UTC time: 2026-10-21T03:54:03Z (from date -u)` and 4 tags to attach; publish (resolute) `03:54:07Z (from date -u)` and 3 tags; 0 emitted `::error::` lines in either leg.
+- 2026-10-20: verify slot: no Dockerfile or build-context change, so hadolint and docker build are not owed; the dispatch built both variants anyway. Status set to review.
 
 ## Decisions
 

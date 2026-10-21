@@ -82,10 +82,10 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       number). Add a `sleep` stub that logs its argument and a `date` stub for AC4 that exits 97 on any other
       arguments. Make `run_script` set `TAG_ORDER_NOW=9999-12-31T23:59:59Z` by default, so the existing 2026 and
       2027 stamps stay earlier than the time. Write the AC1 to AC4 cases first and see them fail.
-- [ ] T2: Put the retry loop inside `tag-order.sh`, not in `scripts/retry.sh`, because a not-found answer must end
+- [x] T2: Put the retry loop inside `tag-order.sh`, not in `scripts/retry.sh`, because a not-found answer must end
       the loop. Validate `TAG_ORDER_RETRY_DELAY` first. Read the cause for the `::error::` from the last read's
       stderr only.
-- [ ] T3: Add the clock read, its log line, the `TAG_ORDER_NOW` and run-stamp checks after `rm -f "$out"`, and the
+- [x] T3: Add the clock read, its log line, the `TAG_ORDER_NOW` and run-stamp checks after `rm -f "$out"`, and the
       refusal of a later stamp.
 - [ ] T4: Update the header comment and the inline comments of `tag-order.sh`, and in `docker.yml` the `test_mode`
       input description and the comments above and in the `Create the manifest list` step. Update the tag-order
@@ -115,6 +115,8 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 - 2026-10-20: plan gate chose failing on a run stamp later than the clock over letting the clock rule decide each tag, because both stamps come from runner clocks and a reversed pair means skew; falsified by a red run from sub-second skew between real runners.
 - 2026-10-20: started on branch m022-harden-tag-order, cut from main at a72d0ca.
 - 2026-10-20: T1 done: docker stub fails read n of a ref from a `fail<n>.err` file, `sleep` stub logs pauses, `date` stub in its own PATH dir; cases 18a-21b added and seen red (65 failures, all in new cases). `TAG_ORDER_NOW` is exported for the whole file rather than set in `run_script`, so direct `bash "$SCRIPT"` calls (case 15) get it too.
+- 2026-10-20: T2 and T3 done in one commit: retry loop (3 reads, `::warning::` per retried failure, pause validated before the clock), clock read logged with its source, run-stamp-later-than-clock exit, future-stamp refusal pointing at the re-point command now in the script header. Header comment rewritten with them. test_tag_order.sh 168 ok, 0 FAIL (local bash 3.2). shellcheck 0.11.0 `-x -S info` clean on both files (local koalaman/shellcheck:v0.11.0 image).
+- 2026-10-20: implementation choice: retried failures log as `::warning::` so an absorbed failure shows in the run's annotations. The future-stamp error points at the script header for the re-point command rather than repeating it.
 
 ## Decisions
 

@@ -36,10 +36,9 @@ on:
 
 jobs:
   gap:
-    # One word, no spaces. Nothing here puts this name in an issue title -- the
-    # gap alert passes a subject and no jobs document at all -- but the repo's
-    # other alert path joins failed-job names on a space, so a job name without
-    # one stays safe if this job is ever wired into that path.
+    # One word, no spaces. The gap alert itself passes a subject and no jobs
+    # document, but when this job fails the notify job below names it in the
+    # issue title, and failed-job names are joined there on a space.
     name: rebuild-gap
     runs-on: ubuntu-latest
     permissions:
@@ -71,3 +70,43 @@ jobs:
           today=$(date -u +%Y-%m-%d)
           echo "last successful scheduled rebuild: $last_success; today is $today (UTC)"
           bash ./.github/rebuild-gap.sh "$last_success" "$today" "$THRESHOLD"
+
+  # Report this check's own failure. The gap job raises the ci-failure issue
+  # when it measures a gap, but when the job itself fails -- an argument
+  # rebuild-gap.sh refuses (it exits 2 and raises nothing), a step that errors,
+  # a timeout -- the scheduled run is red and nothing reaches the issue. This
+  # job names the failed job there, as docker.yml's notify job does for a
+  # rebuild.
+  #
+  # Only on a failed gap job, and only on a schedule. A successful gap job may
+  # have just opened the issue for a measured gap, and handing the issue script
+  # `success` would close it; the close condition stays the next fully green
+  # scheduled docker.yml run. A cancelled job is nobody's failure, and a
+  # dispatched run has someone watching it.
+  notify:
+    needs: gap
+    if: always() && github.event_name == 'schedule' && needs.gap.result == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Open or update the ci-failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULTS: ${{ needs.gap.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # As in docker.yml's notify job: a failed job listing must not block
+          # the alert, so it falls back to an empty file and the issue script's
+          # generic "see the run summary" text.
+          gh run view "$GITHUB_RUN_ID" --json jobs > jobs.json || {
+            echo "::warning::gh run view failed; the issue will not name the failed job"
+            : > jobs.json
+          }
+          bash ./.github/ci-failure-issue.sh "$RESULTS" "$RUN_URL" jobs.json

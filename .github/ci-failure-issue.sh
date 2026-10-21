@@ -7,7 +7,9 @@
 # maintainer as an issue, and the next fully green run closes it (GP7). Also
 # called by .github/rebuild-gap.sh, which reports something no single run can
 # see — that no scheduled run has succeeded in too long — through this same
-# issue, since the next fully green run is the right close condition for both.
+# issue, since the next fully green run is the right close condition for both;
+# and by the `notify` job in .github/workflows/rebuild-gap.yml when that check's
+# own job fails, which it calls only with a failed result, never to close.
 #
 # Usage: .github/ci-failure-issue.sh <results> <run-url> [jobs-json] [subject]
 #   results   the needed jobs' results, space-separated (`needs.<job>.result`

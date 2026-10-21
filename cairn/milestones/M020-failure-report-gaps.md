@@ -81,7 +81,7 @@ moving tags backward").
       Add the script and test to `pr-ci.yml` (`paths` and run lines). Rewire
       the `gap` step; update the comments in `rebuild-gap.yml` and
       `rebuild-gap.sh`.
-- [ ] T3: Add the `notify` job to `rebuild-gap.yml` (`needs: gap`;
+- [x] T3: Add the `notify` job to `rebuild-gap.yml` (`needs: gap`;
       `if: always() && github.event_name == 'schedule' && needs.gap.result == 'failure'`;
       `contents: read`, `issues: write`, `actions: read`; `gh run view --json jobs`
       handed to the failure script as in `docker.yml`'s `notify`). Update the
@@ -112,6 +112,8 @@ moving tags backward").
 - 2026-10-20: implement: branch m020-failure-report-gaps cut from main at 85dd3e3; status in-progress.
 - 2026-10-20: T1 done: five new cases (5o–5r) in test_ci_failure_issue.sh; the timed-out job and timed-out leg cases were red before the fix (4 assertions), all green after widening the `select`.
 - 2026-10-20: T2 done: `.github/last-rebuild-success.sh <output-file>` writes the word to a file so its `::warning::` lines stay on stdout for the run log; every outcome exits 0, only a missing argument exits 2. `scripts/tests/test_last_rebuild_success.sh` (16 assertions) red before the script existed; five planted defects (empty→unknown, untrimmed date, shape without T, lookup failure→none, wrong event) each turned it red. Wired into `rebuild-gap.yml` and `pr-ci.yml`.
+- 2026-10-20: correction to the T2 line: the new suite has 17 assertions, not 16.
+- 2026-10-20: T3 done: `notify` job appended to `rebuild-gap.yml` (parsed with ruby's YAML: jobs `gap`, `notify`; `needs: gap`; the planned `if:`); the `gap` job's name comment, `ci-failure-issue.sh`'s caller list and the DESIGN rebuild-gap bullet updated. The job runs only on a schedule, so no pre-merge run exercises it; its script path is covered by T1's case 5r.
 
 ## Decisions
 

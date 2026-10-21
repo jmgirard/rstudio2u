@@ -71,7 +71,7 @@ EOF
 chmod +x "$WORK/datebin/date"
 export DOCKER_STUB_LOG="$DOCKER_LOG" DOCKER_STUB_ANSWERS="$WORK/answers" SLEEP_STUB_LOG="$SLEEP_LOG"
 export PATH="$WORK/bin:$PATH"
-# Every case runs against this clock unless it removes the variable: the
+# Every case runs against this clock unless it sets or removes the variable: the
 # fixture stamps below (2026, 2027) are then always earlier than the time.
 export TAG_ORDER_NOW=9999-12-31T23:59:59Z
 unset TAG_ORDER_RETRY_DELAY

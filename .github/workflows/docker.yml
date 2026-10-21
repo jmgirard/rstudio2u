@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries, or carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries, the answer is not a well-formed stamped index, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
         type: boolean
         default: false
       keepalive_threshold:
@@ -303,9 +303,10 @@ jobs:
       # read and the create are not atomic, and nothing serializes publish legs
       # across runs). A failed read is retried after a 10-second pause, up to 3
       # reads in all; a tag still unread after 3 reads, or stamped later than
-      # the current UTC time (a hand re-point gone wrong), fails the leg. The
-      # script logs the time it read from `date -u`; this step sets neither of
-      # its test variables (TAG_ORDER_NOW, TAG_ORDER_RETRY_DELAY). In test mode
+      # the current UTC time (most likely a hand re-point gone wrong), fails
+      # the leg. The script logs the time it read from `date -u`; this step
+      # sets neither of its test variables (TAG_ORDER_NOW,
+      # TAG_ORDER_RETRY_DELAY). In test mode
       # --dry-run prints the manifest list it would push and attaches nothing;
       # otherwise the returned tags, if any, are created and the first is
       # inspected for the log. Either way the resulting index is parsed and

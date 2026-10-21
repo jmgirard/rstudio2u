@@ -109,9 +109,10 @@ reproducibility.
   older recipe. Equal stamps publish. Two runs that publish at the same
   moment can interleave the read and the create, because nothing
   serializes publish legs across runs, and the retry pauses widen that gap
-  by up to 20 seconds per tag. A tag whose stamp is not in the fixed form,
-  or is later than the current time, fails its variant's publish each week
-  until someone re-points it by hand: `docker buildx imagetools create
+  by up to 20 seconds per tag. A tag whose stamp is not in the fixed form
+  fails its variant's publish each week until someone re-points it by hand.
+  A tag stamped later than the current time does the same until the clock
+  passes that stamp, which for a typo such as 2062 is never. The re-point: `docker buildx imagetools create
   --annotation "index:org.opencontainers.image.created=<stamp>" -t
   <image>:<tag> <image>:<tag>` rebuilds the tag's own list with a new
   stamp. Use the current UTC time in the fixed form. Until then the

@@ -26,9 +26,10 @@
 #
 # For each ref the index it points at now is read with
 # `docker buildx imagetools inspect --raw`. A read that exits non-zero with
-# anything but the not-found line for that ref is a failed read: it is logged
-# with a ::warning:: naming the ref, the read number and the cause, and after a
-# pause the ref is read again, up to 3 reads in all. The first read that exits
+# anything but the not-found line for that ref is a failed read. A failed read
+# 1 or 2 is logged with a ::warning:: naming the ref, the read number and the
+# cause, and after a pause the ref is read again, up to 3 reads in all; a
+# failed read 3 is the ::error:: below. The first read that exits
 # 0 or answers not-found decides the ref, which is:
 #   kept       absent from the registry, or its index carries no stamp, or a
 #              stamp equal to or earlier than this run's;
@@ -41,13 +42,15 @@
 #              than the current time.
 # Exit 0 when every ref is kept or left out (an empty file means attach
 # nothing). Exit 1 with a ::error:: per unsettled ref, or for a bad run stamp,
-# time or pause, and no output file: the leg must then attach no tag at all.
-# Exit 2 on a usage error.
+# time or pause, or a missing jq, and no output file: the leg must then attach
+# no tag at all. Exit 2 on a usage error.
 #
-# A stamp later than the current time was not written by a run (a run's stamp
-# is its own clock reading, minutes before it publishes), so it is a hand
-# re-point gone wrong. It fails the leg each run until the tag is re-pointed
-# by hand with a stamp that is the current UTC time in the fixed form:
+# A stamp later than the current time was most likely not written by a run (a
+# run's stamp is its meta job's clock reading, taken before it publishes), so
+# it most likely comes from a hand re-point gone wrong, though a runner clock
+# that is behind gives the same result. It fails every leg that reads the tag
+# until the current time passes the stamp. To clear it sooner, re-point the
+# tag by hand with a stamp that is the current UTC time in the fixed form:
 #   docker buildx imagetools create \
 #     --annotation "index:org.opencontainers.image.created=<stamp>" \
 #     -t <image>:<tag> <image>:<tag>
@@ -179,7 +182,7 @@ for ref in "$@"; do
         continue
     fi
     if [[ $stamp > $now ]]; then
-        echo "::error::$ref carries the stamp $stamp, later than the current UTC time $now: no run can settle it until it is re-pointed by hand (the command is in the header of .github/tag-order.sh)"
+        echo "::error::$ref carries the stamp $stamp, later than the current UTC time $now: every run fails on it until the clock passes that stamp or the tag is re-pointed by hand (the command is in the header of .github/tag-order.sh)"
         unsettled=1
         continue
     fi

@@ -28,13 +28,14 @@ env:
   IMAGE: jmgirard/rstudio2u
 
 jobs:
-  # Resolve the two run-wide values ONCE, before anything builds: the current
-  # stable RStudio version and the UTC date. Every build leg consumes the
+  # Resolve the run-wide values ONCE, before anything builds: the current
+  # stable RStudio version, the UTC date, and the run stamp the date is taken
+  # from (see the step below). Every build leg consumes the
   # version as its RSTUDIO_VERSION build-arg and every publish leg builds the
   # immutable `<variant>-<version>` / `<variant>-<date>` tags from these same
   # outputs, so a stable release or a midnight-UTC crossing part-way through a
   # run can never attach a tag naming something other than what was built. It
-  # also keeps the network out of the publish job, where a failed scrape would
+  # also keeps the version scrape out of the publish job, where a failed scrape would
   # discard four finished builds.
   meta:
     name: meta
@@ -214,8 +215,9 @@ jobs:
           retention-days: 6
 
   # One publish leg per variant: assemble the multi-arch manifest list from that
-  # variant's two verified digests and attach every tag to it in a single
-  # imagetools call. always() with a per-variant digest check is what keeps the
+  # variant's two verified digests and attach to it, in a single imagetools
+  # call, every tag that .github/tag-order.sh allows (each tag not already on
+  # a newer list; possibly none). always() with a per-variant digest check is what keeps the
   # variants independent — GitHub cannot express "needs only my variant's build
   # legs", so each publish leg instead requires exactly two digests of its own
   # and fails loudly when a leg of its variant did not produce one.

@@ -83,7 +83,7 @@ reproducibility.
   Its bound: this check is itself on a schedule, so once GitHub has disabled
   the repository's scheduled workflows it is disabled with them — that
   failure mode belongs to the keepalive above, not here.
-- **A publish never moves a tag backward:** `docker.yml`'s `meta` job reads
+- **A re-run does not move a stamped tag backward:** `docker.yml`'s `meta` job reads
   the clock once for the run's stamp (`YYYY-MM-DDTHH:MM:SSZ`, UTC) and the
   date tag's date, and every manifest list the `publish` job creates carries
   that stamp as the index annotation `org.opencontainers.image.created`.

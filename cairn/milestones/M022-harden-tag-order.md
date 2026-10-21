@@ -27,7 +27,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 
 ## Acceptance criteria
 
-- [ ] AC1: A read is a failed read when `docker buildx imagetools inspect --raw` exits non-zero with stderr that is
+- [x] AC1: A read is a failed read when `docker buildx imagetools inspect --raw` exits non-zero with stderr that is
       not the buildx not-found line for that ref. After a failed read, `.github/tag-order.sh` pauses and reads the
       ref again, up to 3 reads in all. Each retried failure logs a line that names the ref, the read number, and the
       cause. The first read that exits 0 or answers not-found decides the ref as before. If all 3 reads fail, the ref
@@ -38,11 +38,11 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       that names its read number: unsettled, 3 reads, and the `::error::` holds the text of read 3. 1 failure, then
       a not-found answer: kept, 2 reads. A not-found ref and a stamped ref with no failures: 1 read of each. An
       exit-0 answer that is not JSON: unsettled after 1 read.
-- [ ] AC2: The pause between reads is `TAG_ORDER_RETRY_DELAY` seconds, with a default of 10. If the value is set and
+- [x] AC2: The pause between reads is `TAG_ORDER_RETRY_DELAY` seconds, with a default of 10. If the value is set and
       is not a whole number of 1 to 3 digits, the script exits 1 with an `::error::` before any read and leaves no
       output file. The tests show 2 pauses of 10 seconds for the 3-failure case with the variable unset, and exit 1
       for the values `-1`, `1.5`, `abc`, and `1000`.
-- [ ] AC3: Before any read, the script takes the current UTC time in the fixed form `YYYY-MM-DDTHH:MM:SSZ`. If
+- [x] AC3: Before any read, the script takes the current UTC time in the fixed form `YYYY-MM-DDTHH:MM:SSZ`. If
       `TAG_ORDER_NOW` is set (empty included), it uses that value. Otherwise it uses `date -u +%Y-%m-%dT%H:%M:%SZ`.
       It logs the time and its source. A `TAG_ORDER_NOW` not in the fixed form, or a run stamp later than the time,
       exits 1 with an `::error::`, makes no read, and leaves no output file, a stale one included. A ref whose index
@@ -52,7 +52,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       stamp equal to the time and later than the run stamp (left out with a warning), a run stamp 1 second later than
       the time (exit 1, no read), and the values `2026-10-20T06:00:00.5Z`, `2026-10-20`, and empty (exit 1, no read,
       a stale file removed).
-- [ ] AC4: With `TAG_ORDER_NOW` removed from the environment (`env -u`), the script reads `date -u`. With a `date`
+- [x] AC4: With `TAG_ORDER_NOW` removed from the environment (`env -u`), the script reads `date -u`. With a `date`
       stub that answers only `-u +%Y-%m-%dT%H:%M:%SZ`, the tests show a stamp 1 second later than the stub's time
       unsettled, and a stamp equal to it decided as before. With the real `date`, the tests show a stamp
       `2999-01-01T00:00:00Z` unsettled.
@@ -61,7 +61,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
       `TAG_ORDER_RETRY_DELAY`. In a test-mode dispatch of `docker.yml` on the branch, both publish legs log the time
       `tag-order.sh` read from `date -u` and the tags they can attach, show no `::error::` from the script, and
       conclude `success`. This run covers the path with no failed read.
-- [ ] AC6: A whole read of `.github/tag-order.sh`, `docker.yml`, and the tag-order bullet of `cairn/DESIGN.md` finds
+- [x] AC6: A whole read of `.github/tag-order.sh`, `docker.yml`, and the tag-order bullet of `cairn/DESIGN.md` finds
       that each comment, input description, and bullet sentence that says when a read or a stamp fails the leg
       states the 3-read retry and its pause, and the refusal of a stamp later than the clock. The header comment of
       the script names both environment variables. No such text still says that one failed read fails the leg.
@@ -126,3 +126,13 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-10-20 at 4a28bf0 (branch level with origin/main a72d0ca). `bash scripts/tests/test_tag_order.sh`: rc 0, 168 ok, 0 FAIL.
+
+- AC1: cases 18a (5 ok: 502 ERROR then stamp, 2 reads, warning holds ref, "read 1 of 3", cause), 18b (6 ok: two empty-stderr failures then later stamp, left out, 3 reads, "read 2 of 3"), 18c (6 ok: 3 failures, exit 1, no file, 3 reads, `::error::` holds "read-3", no error line holds "read-1"), 18d (3 ok: 2 reads, kept), 18e (3 ok: 1 read each), 18f (2 ok: non-JSON, exit 1, 1 read). All pass.
+- AC2: case 18c pauses logged by the `sleep` stub are exactly `10`,`10` with the variable unset; case 19 (22 ok): `TAG_ORDER_RETRY_DELAY=5` pauses 5; values `-1`, `1.5`, `abc`, `1000` and empty each exit 1 with an `::error::` naming the variable, no registry read, stale attach file removed.
+- AC3: case 20a (4 ok: stamp 07:00:01 vs time 07:00:00, exit 1, no file, `::error::` holds ref, stamp, time; log line holds the time and "TAG_ORDER_NOW"), 20b (3 ok: stamp equal to the time, left out with warning, other tag kept), 20c (4 ok: run stamp 1 s later than the time, exit 1, error holds both, no read, no file), 20d (12 ok: `2026-10-20T06:00:00.5Z`, `2026-10-20`, empty each exit 1, error names TAG_ORDER_NOW and "fixed form", no read, stale file removed).
+- AC4: case 21a (5 ok) runs `env -u TAG_ORDER_NOW` with the `date` stub, which exits 97 on any argument list but `-u +%Y-%m-%dT%H:%M:%SZ`: a stamp 1 s later than the stub's time exits 1 with the error line, the log names "date -u", and an equal stamp is left out as before. Case 21b (2 ok) with the real `date`: a 2999 stamp exits 1 with an error naming it.
+- AC6: whole read of `.github/tag-order.sh`, the `docker.yml` `test_mode` description and publish-job comments, and the DESIGN.md tag-order bullet at 4a28bf0. Each text that says when a read or stamp fails the leg names the 3 reads with the 10-second pause and the refusal of a stamp later than the clock (the `test_mode` description and the run-block comment gained the pause in 4a28bf0). The header names `TAG_ORDER_NOW` and `TAG_ORDER_RETRY_DELAY`. No text says one failed read fails the leg.
+- AC5 (partial, box unticked until the PR's checks): `grep` finds no assignment of `TAG_ORDER_NOW` or `TAG_ORDER_RETRY_DELAY` in `docker.yml`. Test-mode dispatch 39540657484 at 6bf5c91 concluded success: publish (noble) logged `current UTC time: 2026-10-21T03:54:03Z (from date -u)` and 4 tags, publish (resolute) `03:54:07Z (from date -u)` and 3 tags, 0 `::error::` lines emitted by either leg. Commits after 6bf5c91 change comments and message text only. Local shellcheck 0.11.0 `-x -S info` clean on both changed shell files. The `pr-ci.yml` and `lint.yml` runs on the PR are pending until step 8.
+- Gate: `cairn_validate.py` all checks passed (1 advisory, the old `cairn/references/pdf/` ignore entry, already a candidate row). No principle text changed, so `cairn_impact` is skipped. Profile checks: the diff touches no Dockerfile or build context (`git diff main...HEAD -- Dockerfile` empty); base image `rocker/r2u:${UBUNTU_VERSION}` is an explicit tag; `.dockerignore` present; no secrets added; hadolint not installed locally, and the Dockerfile is unchanged since its last clean lint run; both variants built in dispatch 39540657484. Changelog none: the user-visible change goes in the archive summary.

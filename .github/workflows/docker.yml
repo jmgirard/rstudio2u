@@ -199,9 +199,12 @@ jobs:
 
       # Six days, so "Re-run failed jobs" still finds the other legs' digests
       # for the rest of the week. A scheduled run's digests expire before the
-      # next Monday scheduled run. A push or dispatch run has no such bound:
-      # re-running its publish after a newer run has published moves the
-      # moving tags back to this run's images.
+      # next Monday scheduled run. A push or dispatch run has no such bound,
+      # so a "Re-run failed jobs" of its publish can come after a newer run
+      # has published. That re-run keeps this run's stamp, and the publish job
+      # leaves out each tag whose list carries a later stamp, with a warning,
+      # rather than moving it back to this run's images. "Re-run all jobs"
+      # runs meta again, takes a new stamp, and publishes.
       - name: Upload the digest
         uses: actions/upload-artifact@v7
         with:

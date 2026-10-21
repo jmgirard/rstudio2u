@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M019: Take the artifact action bumps and fix the digest artifacts
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -40,8 +40,8 @@ The image build workflow carries its build digests with `actions/upload-artifact
 - [x] T1: Move `actions/upload-artifact@v4` to `@v7` (`docker.yml:181`) and `actions/download-artifact@v4` to `@v8` (`docker.yml:226`). Read the v5 to v8 release notes for any change to the inputs this file uses (`name`, `path`, `if-no-files-found`, `retention-days`, `pattern`, `merge-multiple`); the v8 hash-mismatch default (error) needs no input.
 - [x] T2: Change the download `pattern:` (`docker.yml:229`) to `digests-${{ matrix.variant }}-{amd64,arm64}`, and say in the step's comment why it names both architectures: a prefix pattern would also pull a future variant whose name extends this one (for example `noble-minimal`), and a brace pattern that matched nothing would fail the 2-digest check, not pass silently.
 - [x] T3: Change `retention-days: 1` to `6` (`docker.yml:186`), with a comment: six days lets "Re-run failed jobs" find the other legs' digests for the rest of the week, and the digests expire before the next Monday scheduled run, so a late re-run cannot publish digests older than that run's.
-- [ ] T4: Push the branch and start a test-mode run: `gh workflow run docker.yml --ref <branch> -f test_mode=true`. Watch it, then record the run URL, its conclusion, each publish leg's `Create the manifest list` result, and the four `digests-*` artifacts' `created_at` and `expires_at` from the run's artifact listing. The dispatch also runs the keepalive job, which commits only after 50 quiet days on the default branch.
-- [ ] T5: Append a D-entry recording the approved move to upload-artifact v7 and download-artifact v8, in D-010's form, naming the test-mode run as the evidence that `docker.yml` works with them.
+- [x] T4: Push the branch and start a test-mode run: `gh workflow run docker.yml --ref <branch> -f test_mode=true`. Watch it, then record the run URL, its conclusion, each publish leg's `Create the manifest list` result, and the four `digests-*` artifacts' `created_at` and `expires_at` from the run's artifact listing. The dispatch also runs the keepalive job, which commits only after 50 quiet days on the default branch.
+- [x] T5: Append a D-entry recording the approved move to upload-artifact v7 and download-artifact v8, in D-010's form, naming the test-mode run as the evidence that `docker.yml` works with them.
 
 ## Work log
 
@@ -58,6 +58,10 @@ The image build workflow carries its build digests with `actions/upload-artifact
 - 2026-10-20: criteria audit (reduced mode, fresh Opus reader): AC1 passed; AC2's "cannot be pulled" clause was unbounded, narrowed to the exact pattern text; AC3's "each run" claim was unbounded, narrowed to the setting plus AC4's run; AC4 bound log text the workflow never prints, narrowed to the `Create the manifest list` step succeeding. All three fixed as suggested.
 - 2026-10-20: started; branch m019-artifact-action-bumps cut from main at a950dd2.
 - 2026-10-20: T1–T3 done: upload-artifact v7, download-artifact v8, pattern `digests-${{ matrix.variant }}-{amd64,arm64}`, retention 6 days, each with a comment; the v8 and v7 `action.yml` (read via `gh api`) keep every input the file uses with unchanged defaults. The verify slot does not fire (no Dockerfile or build-context change); no local YAML parser or actionlint is installed, so T4's run is the first parse.
+- 2026-10-20: T4 done: test-mode run https://github.com/jmgirard/rstudio2u/actions/runs/39529671936 at 7ba240a concluded success; all four build legs and both publish legs passed, `Create the manifest list` succeeded in each publish leg; each leg's download logged "Found 8 artifact(s)" and downloaded only its own `digests-<variant>-amd64` and `-arm64`; the four `digests-*` artifacts expire 6 days less 1 second after `created_at`; keepalive made no commit (origin/main still a950dd2).
+- 2026-10-20: T5 done: D-011 records the approved bumps, citing run 39529671936.
+- 2026-10-20: claim audit: not owed — internal tier.
+- 2026-10-20: all tasks done; status review.
 
 ## Decisions
 

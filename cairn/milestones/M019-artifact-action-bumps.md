@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M019: Take the artifact action bumps and fix the digest artifacts
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -25,7 +25,7 @@ The image build workflow carries its build digests with `actions/upload-artifact
 
 - [x] AC1: `.github/workflows/docker.yml` calls `actions/upload-artifact@v7` and `actions/download-artifact@v8`, and `grep -rnE 'actions/(upload|download)-artifact@' .github/workflows/` lists no other version of either action.
 - [x] AC2: The publish job's digest download step has `pattern: digests-${{ matrix.variant }}-{amd64,arm64}`, which spells out the variant's two artifact names and holds no wildcard.
-- [ ] AC3: The digest upload step sets `retention-days: 6`, and in AC4's run each of the four `digests-*` artifacts has an `expires_at` six days after its `created_at` (`gh api repos/jmgirard/rstudio2u/actions/runs/<id>/artifacts`).
+- [ ] AC3: The digest upload step sets `retention-days: 6`, and in AC4's run each of the four `digests-*` artifacts has an `expires_at` within one minute of six days after its `created_at` (`gh api repos/jmgirard/rstudio2u/actions/runs/<id>/artifacts`).
 - [x] AC4: A test-mode `docker.yml` run (`workflow_dispatch` with `test_mode: true`) on the milestone branch, at a commit whose `docker.yml` equals the version that merges, concludes `success`: all four build legs pass, and each publish leg's `Create the manifest list` step succeeds, which requires its 2-digest count check and its check that the dry-run index names both linux architectures to pass.
 
 ## Coverage
@@ -63,6 +63,9 @@ The image build workflow carries its build digests with `actions/upload-artifact
 - 2026-10-20: claim audit: not owed — internal tier.
 - 2026-10-20: all tasks done; status review.
 - 2026-10-20: amendment routed: AC3 — in run 39529671936 each digest artifact's `expires_at` is `created_at` + 6 days − 1 second, so "six days after its `created_at`" fails at second resolution; the 6-day setting is correct, the wording needs a stated precision.
+- 2026-10-20: re-audit: AC3 (reduced) — nothing; bounded to AC4's run's four artifacts, proportionate, a deliverable property.
+- 2026-10-20: amendment return: AC3 — "each of the four `digests-*` artifacts has an `expires_at` within one minute of six days after its `created_at`"
+- 2026-10-20: amendment done, no code change; status review.
 
 ## Decisions
 

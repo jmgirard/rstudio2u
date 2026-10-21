@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M019 | Take the artifact action bumps and fix the digest artifacts | in-progress | — | normal | milestones/M019-artifact-action-bumps.md |
+| M019 | Take the artifact action bumps and fix the digest artifacts | review | — | normal | milestones/M019-artifact-action-bumps.md |
 | M017 | Report a failing keepalive job | done | — | high | milestones/archive/M017-report-failing-keepalive.md |
 | M018 | Alert when no weekly rebuild has succeeded in too long | done | M017 | normal | milestones/archive/M018-rebuild-gap-alert.md |
 | M016 | Keep the weekly rebuild alive | done | — | normal | milestones/archive/M016-weekly-rebuild-keepalive.md |

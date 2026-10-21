@@ -29,12 +29,12 @@ this as a bound too.
 
 ## Acceptance criteria
 
-- [ ] AC1: The `meta` job reads the clock once. From that read it outputs the run stamp in the fixed form
+- [x] AC1: The `meta` job reads the clock once. From that read it outputs the run stamp in the fixed form
       `YYYY-MM-DDTHH:MM:SSZ` (UTC), and its existing `date` output is the date part of the stamp. Both create calls
       in each publish leg pass the annotation `index:org.opencontainers.image.created=<stamp>` from one shared
       argument array. The two calls are the `--dry-run` assembly and the real create. A test-mode dispatch of the
       branch shows the annotation, with that run's stamp, in the dry-run output of both variants.
-- [ ] AC2: Before the `--dry-run` assembly, each publish leg runs `.github/tag-order.sh` over every tag in its tag
+- [x] AC2: Before the `--dry-run` assembly, each publish leg runs `.github/tag-order.sh` over every tag in its tag
       list. The script reads the index that each tag points at now. The script writes the tags that the leg can
       attach, one per line, to a file that an argument names. If a tag's current index carries a stamp later than
       this run's, the script leaves that tag out of the file. It then prints a `::warning::` that names the tag, its
@@ -43,17 +43,17 @@ this as a bound too.
       the file's contents and a warning for each tag left out. The cases put the later stamp on the first, on a
       middle, and on the last tag of a four-tag list. They also put later stamps on two tags at once. The later
       stamps differ from this run's stamp by one second, and by a day across a year boundary.
-- [ ] AC3: A tag that is absent from the registry, carries no stamp, or carries a stamp equal to or earlier than this
+- [x] AC3: A tag that is absent from the registry, carries no stamp, or carries a stamp equal to or earlier than this
       run's stays in the file. The unit test covers each of those three shapes alone and mixed in one list. The
       stub's answer for an absent tag is the buildx line `ERROR: docker.io/jmgirard/rstudio2u:<tag>: not found` with
       exit 1. The test-mode dispatch of AC1 shows every tag of both variants in the file.
-- [ ] AC4: If the script cannot resolve a tag's read to absent, unstamped, or a stamp in the fixed form, it exits
+- [x] AC4: If the script cannot resolve a tag's read to absent, unstamped, or a stamp in the fixed form, it exits
       non-zero with a `::error::` that names the tag and the cause. The leg then fails and attaches no tag. This
       holds even when another tag in the list has a later stamp. The unit test covers at least these causes: a
       registry error with other text (a `toomanyrequests` answer), output that is not JSON, JSON that is not an
       index, a tag stamp not in the fixed form, and a run stamp not in the fixed form. It also covers a list that
       mixes a later stamp with a tag the script cannot resolve.
-- [ ] AC5: The Conventions of `cairn/DESIGN.md` state the rule and these bounds. A tag published before this change
+- [x] AC5: The Conventions of `cairn/DESIGN.md` state the rule and these bounds. A tag published before this change
       carries no stamp, so the rule protects a tag from its first stamped publish on. A re-run of a run that started
       before the merge uses that run's old workflow. A "Re-run all jobs" runs `meta` again and takes a new stamp.
       Equal stamps publish. Two runs that publish at the same moment can interleave. A tag whose stamp is not in the
@@ -117,3 +117,11 @@ this as a bound too.
 ## Decisions
 
 ## Review
+
+- 2026-10-20 AC1: `docker.yml:72-76` takes one `date -u +%Y-%m-%dT%H:%M:%SZ` read as `STAMP`, sets `DATE=${STAMP%%T*}`, and outputs both; `:357` builds `create_args` once and `:365` (dry run) and `:381` (real create) both pass it. Dispatch 39536881154 (workflow_dispatch, a83c4a9, success), read again by `gh run view --log`: each of `publish (noble)` and `publish (resolute)` prints one top-level `"org.opencontainers.image.created": "2026-10-21T03:08:09Z"`, the stamp `meta` printed. `git diff a83c4a9..HEAD -- .github/workflows/docker.yml` holds comment lines only. Pass.
+- 2026-10-20 AC2: `bash scripts/tests/test_tag_order.sh` at 1d31bc3: exit 0, 78 ok, 0 FAIL. Cases 1-3 put a later stamp on the first, a middle, and the last tag of noble's four-tag list and assert the exact file and a warning naming that tag with both stamps; case 4 has two later tags and asserts two warnings, each by name; the later stamps are one second (cases 1, 3, 4) and a day across 2026-12-31 to 2027-01-01 (case 2); case 5 leaves every tag out with an empty file and exit 0. Workflow, by read: `docker.yml:341` runs the script over `"${tags[@]}"` before the dry run at `:365`, `tag_args` comes only from the file, and an empty list takes the `::warning::` branch at `:371` and skips both create paths, so the leg passes. The empty-list branch has not run in CI. Pass.
+- 2026-10-20 AC3: same test run. Case 6 runs absent, unstamped, equal, and earlier (and an unstamped Docker manifest list) each alone and asserts the tag stays in the file; case 7 mixes absent, unstamped, equal, and earlier in one list and asserts all four kept with no warning. `answer_absent` writes `ERROR: docker.io/jmgirard/rstudio2u:<tag>: not found` with exit 1, the line buildx 0.37.2 printed for a missing tag. Dispatch 39536881154 printed all 4 noble and all 3 resolute tags under "tags this leg may attach". Pass.
+- 2026-10-20 AC4: same test run, each asserting exit 1, no attach file, and an `::error::` naming the tag and cause: case 8 (`toomanyrequests` registry error), case 10 (not JSON), case 11 (a single-platform manifest), case 12 (five tag stamps not in the fixed form: fractional, space-separated, empty, a number, null), case 13 (three run stamps, and no registry read), case 14 (a later stamp beside an unreadable tag: failure wins). Also case 9 (a not-found line for another ref) and case 16 (annotations that are not an object). Workflow, by read: the step runs under `set -euo pipefail`, so the script's exit 1 at `:341` ends the step before any create. Pass.
+- 2026-10-20 AC5: `cairn/DESIGN.md` Conventions bullet "A publish never moves a tag backward" states the rule and all six bounds: pre-change tags unstamped (protected from the first stamped publish), pre-merge runs re-run their old workflow, "Re-run all jobs" takes a new stamp, equal stamps publish, simultaneous runs can interleave, and a bad stamp fails weekly with the hand re-point as recovery. The `Upload the digest` comment (`docker.yml:200-207`) says a "Re-run failed jobs" after a newer publish leaves out each later-stamped tag with a warning and "Re-run all jobs" takes a new stamp and publishes. Pass.
+- 2026-10-20 AC6 (local, CI pending): `pr-ci.yml:43` runs `bash ./scripts/tests/test_tag_order.sh` and `:21` adds the script to `paths`; the test passes locally (AC2 line). Pinned shellcheck 0.11.0 with `lint.yml`'s flags (`-x -S info`) exits 0 on both files. The box waits for the PR's `pr-ci.yml` and `lint.yml` runs at step 8.
+- 2026-10-20 gate: `cairn_validate.py` all checks passed (1 advisory: the old `.gitignore` pdf entry, a standing candidate row); no DESIGN principle changed, so `cairn_impact` is not owed. Profile gate: `hadolint` (v2.12.0 image) clean on the unchanged Dockerfile; base `rocker/r2u:${UBUNTU_VERSION}` pinned to a version tag; no secret added; `.dockerignore` present and excludes `.github` and `scripts/tests`, so the build context is unchanged and `pr-ci.yml`'s noble build and smoke at step 8 is the `docker build` check. User-visible change for the archive summary: a re-run of an older build can no longer move a published tag back to older images.

@@ -88,3 +88,18 @@ Consistency gate (pass 2):
 - docker build: `Dockerfile`, `.dockerignore`, `scripts/` are byte-identical to main (`git diff --quiet main HEAD --` exits 0); run 39529671936 built all four legs from this branch with no cache (dispatch). hadolint is not installed locally; the PR lane's `build-smoke` (hadolint-action v3.5.0 + build) runs on the PR, since its paths include `.github/workflows/**`, and step 8 waits for it.
 - Base image pinned by explicit tag (`rocker/r2u:${UBUNTU_VERSION}`, `UBUNTU_VERSION=24.04`); no secrets in `ENV`/`COPY`; `.dockerignore` present and excludes `.git`. All unchanged by this diff.
 - Changelog: none as a file; no user-visible change (CI only), so the archive summary records none.
+
+Independent review (pass 2):
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the retention comment's "a late re-run cannot publish digests older than that run's" holds only for the Monday scheduled run; a push or dispatch run on another day keeps its digests past the next publish — fix now (comment narrowed).
+- diff-bug #2: the arch names in the download pattern are hard-coded with no note to keep them in step with the build matrix — fix now (comment says so).
+- diff-bug #3: the download comment names only a no-match case, where the 2-digest check also catches a one-arch match — fix now (comment says "fewer than two").
+- diff-bug #4: brace pattern is valid YAML and expanded as intended (run logged 2 of 8 artifacts per leg) — reject, false as a defect (informational).
+- diff-bug #5: v7/v8 changes (archive default, digest-mismatch error, ESM, Node 24, inputs) do not affect this workflow — reject, false as a defect (informational).
+- diff-bug #6: v8 prints a Node DEP0005 deprecation warning in the publish log — reject, dependency behavior with no failure.
+- diff-bug #7: D-011's "which the PR checks do not run" could attach to the actions rather than `docker.yml` — reject, style.
+- blame-history #1: 6-day retention widens the window in which "Re-run failed jobs" of an older run moves `latest`/`noble`/`resolute` back over a newer push build — follow-up, new candidate row "Refuse to move moving tags backward"; the comment now states the risk.
+- blame-history #2: the retention comment reads as a stronger guarantee than it gives — fix now (same fix as diff-bug #1).
+- blame-history #3: the no-match claims in the comments were written from v4 behavior and unverified for v8 — reject, false: the v8 source (`src/download-artifact.ts` at ref v8, read via `gh api`) filters by pattern and throws on no match only for `name` and `artifact-ids`, so a pattern matching nothing downloads nothing and reaches the 2-digest check.
+- prior-review: no prior-review evidence (no archived Review finding on the artifact steps; PR comment probe returned `[]`).
+- ripple #1–#3: the three absorbed candidate rows (marked `— started M019`) still describe v4, the prefix pattern, and 1-day retention — reject, planned change: post-merge hygiene graduates these rows.

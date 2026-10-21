@@ -1,13 +1,13 @@
 # M020: Close the gaps in CI failure reports
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** internal — CI failure alerting and its tests; no consumer of the published image relies on it
-- **Branch/PR:** —
+- **Branch/PR:** m020-failure-report-gaps
 
 ## Goal
 
@@ -67,7 +67,7 @@ moving tags backward").
 
 ## Tasks
 
-- [ ] T1: Tests first in `scripts/tests/test_ci_failure_issue.sh`: listings for
+- [x] T1: Tests first in `scripts/tests/test_ci_failure_issue.sh`: listings for
       a timed-out non-matrix job, one variant with a `failure` leg and a
       `timed_out` leg (named once), a timed-out leg alone, and a failed
       `rebuild-gap` job; assert the title for each and no contradiction
@@ -109,6 +109,8 @@ moving tags backward").
 - 2026-10-20: plan gate chose a `notify` job that runs only on a failed `gap` over one that passes every result, because a `success` would close the issue the `gap` job just opened; falsified by a non-failure `gap` outcome that should reach the issue.
 - 2026-10-20: plan gate chose `contents: read` alone for `meta`, `build`, `publish` (gha cache, artifacts and the Docker Hub login use no `GITHUB_TOKEN` scope); falsified by a job failing for a missing token scope in the dispatch run.
 - 2026-10-20: note on AC4: `docker.yml`'s `notify` runs on schedule only, so a push run started by the new path rebuilds and publishes but does not exercise the failure script; kept as approved.
+- 2026-10-20: implement: branch m020-failure-report-gaps cut from main at 85dd3e3; status in-progress.
+- 2026-10-20: T1 done: five new cases (5o–5r) in test_ci_failure_issue.sh; the timed-out job and timed-out leg cases were red before the fix (4 assertions), all green after widening the `select`.
 
 ## Decisions
 

@@ -21,8 +21,9 @@
 #             they always did.
 #   run-url   link to the workflow run, put in the issue/comment body.
 #   jobs-json path to `gh run view --json jobs` output (or "-" for stdin). The
-#             failed job names are extracted from it here — this is the one copy
-#             of that parsing, so it can be unit-tested. A build or publish leg
+#             failed job names (conclusion `failure` or `timed_out`) are
+#             extracted from it here — this is the one copy of that parsing,
+#             so it can be unit-tested. A build or publish leg
 #             is named by its variant rather than its own leg name, since a
 #             variant with several failed legs is one thing wrong; every other
 #             failed job contributes its own name. Omitted, empty, or
@@ -108,11 +109,14 @@ subject="${subject:0:256}"
 # with several keys carries the extra keys after the first comma, which the
 # same parse discards. Every other failed job — `meta`, `keepalive`, whatever
 # a later lane adds — has no variant to recover and is named by itself, so a
-# reportable job never has to be enumerated here to be reported.
+# reportable job never has to be enumerated here to be reported. A job GitHub
+# stopped at its timeout counts as failed: its conclusion here is `timed_out`,
+# but `needs.<job>.result` reports it as `failure`, so the run is reported
+# failed and the job that caused it must be named.
 extract_failed_names() {
     jq -r '
         .jobs[]
-        | select(.conclusion == "failure")
+        | select(.conclusion == "failure" or .conclusion == "timed_out")
         | .name
         | if test("^(build|publish) \\(") then
               sub("^(build|publish) \\("; "") | sub("[,)].*$"; "")

@@ -1,6 +1,6 @@
 # M020: Close the gaps in CI failure reports
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -88,7 +88,7 @@ moving tags backward").
       DESIGN.md Conventions rebuild-gap bullet.
 - [x] T4: In `docker.yml`, add `.github/ci-failure-issue.sh` to `on.push.paths`
       and `permissions: contents: read` to `meta`, `build`, `publish`.
-- [ ] T5: Run every `scripts/tests/test_*.sh` and shellcheck 0.11.0 (`-x -S info`)
+- [x] T5: Run every `scripts/tests/test_*.sh` and shellcheck 0.11.0 (`-x -S info`)
       over the changed scripts. Dispatch `docker.yml` with `test_mode` on the
       milestone branch; its `meta`, `build`, and `publish` jobs green is
       AC5's evidence.
@@ -115,6 +115,9 @@ moving tags backward").
 - 2026-10-20: correction to the T2 line: the new suite has 17 assertions, not 16.
 - 2026-10-20: T3 done: `notify` job appended to `rebuild-gap.yml` (parsed with ruby's YAML: jobs `gap`, `notify`; `needs: gap`; the planned `if:`); the `gap` job's name comment, `ci-failure-issue.sh`'s caller list and the DESIGN rebuild-gap bullet updated. The job runs only on a schedule, so no pre-merge run exercises it; its script path is covered by T1's case 5r.
 - 2026-10-20: T4 done: `.github/ci-failure-issue.sh` added to `docker.yml`'s `on.push.paths`; `permissions: contents: read` on `meta`, `build`, `publish` (ruby YAML parse shows exactly that per job). No step in those jobs calls `gh` or passes a `GITHUB_TOKEN`; login uses Docker Hub secrets, cache and artifacts the runtime token.
+- 2026-10-20: T5 done: all nine `scripts/tests/test_*.sh` suites exit 0. Test-mode dispatch 39533199085 at a7866e9: `meta`, the four `build` legs and both `publish` legs succeeded, `keepalive` succeeded with main unchanged at 85dd3e3, `notify` skipped (dispatch). Shellcheck is not installed locally; pulling its image was not granted, so the PR's shell-lint lane runs it at review (minor amendment of T5).
+- 2026-10-20: claim audit: not owed — internal tier.
+- 2026-10-20: implement complete; status review.
 
 ## Decisions
 

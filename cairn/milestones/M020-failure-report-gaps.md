@@ -132,3 +132,22 @@ Evidence gathered 2026-10-20 at f124d07; `origin/main` had not moved (0 commits 
 - AC5: ruby parse: `meta`, `build`, `publish` each `{contents: read}` and nothing else. Test-mode dispatch 39533199085 at a7866e9 (no `.github/` change between a7866e9 and f124d07): conclusion success; `meta`, all four `build` legs and both `publish` legs success.
 - Gate: `cairn_validate.py` all checks passed (one pre-existing advisory, the old pdf `.gitignore` entry). No IP/GP changed (DESIGN edit is a Conventions bullet), so `cairn_impact` skipped. Profile gate: the diff touches no `Dockerfile`, `.dockerignore` or build context; the image built from a clean context in run 39533199085; base stays `rocker/r2u:${UBUNTU_VERSION}` with versioned args; no secret added. hadolint is not installed locally and runs in `pr-ci.yml` on the PR. Shellcheck 0.11.0 runs in `lint.yml` on the PR (not installed locally).
 - spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: while the gap check stays broken, the green Monday rebuild closes its issue and notify opens a new one each week, a cost not stated — fix now (stated in the notify job's comment), fixed f7dd3a9
+- diff-bug #2: if the gap job's own alert fails part-way, notify reports the generic "Weekly run failed: rebuild-gap" and the measured-gap subject reaches the issue only through the run link — follow-up, candidate row "Keep the gap wording when alerting fails"
+- diff-bug #3: AC5's "succeed under it" has no evidence until a run on main — reject (false: test-mode run 39533199085 ran `meta`, `build`, `publish` under the new blocks; test mode changes only whether tags attach, not token use)
+- diff-bug #4: the AC4 push path costs a full rebuild without running the script — reject (planned change; AC4, approved at the plan gate, cost logged in the work log)
+- diff-bug #5: the `timed_out` value has no real-run fixture — reject (planned change: AC1 rests on the observed value recorded in LESSONS M017)
+- diff-bug #6: "Only a missing argument exits 2" overstates — fix now, fixed f7dd3a9
+- diff-bug #7: usage test covers zero arguments only, null `createdAt` untested, the second 5r call checks no exit status and its "closes nothing" check cannot fail — fix now (empty and two-argument usage cases, a null `createdAt` case, an exit check and an "opens no second issue" check), fixed f7dd3a9
+- diff-bug #8: "the notify job passes three arguments" is ambiguous now that two exist — fix now, fixed f7dd3a9
+- diff-bug #9: mixed `--` and em dashes in the new script's comments — reject (style; the moved comments kept the `--` of the YAML they came from)
+- diff-bug #10: uncommitted milestone-file edit — reject (false: committed at bfa9678 before the findings were settled)
+- blame-history #1: adding the failure script to `push.paths` publishes on a non-image change, against the repo's paths convention — reject (planned change; AC4; surfaced at the merge question)
+- blame-history #2: shellcheck not yet run at the D-003 floor — reject (false as a defect: `lint.yml` runs it on the PR, a required green check before merge)
+- prior-review #1: 5r has no no-warning assertion, the gap M017's review closed for this script — fix now, fixed f7dd3a9
+- prior-review #2: `push.paths` adds the failure script but not the other `.github/` scripts — reject (planned change: AC4 names one script; the others affect neither the image nor a push run)
+- prior-review #3: "Weekly run failed: rebuild-gap" reuses rebuild wording for a check failure — reject (planned change: AC2 names that title; the gap check is itself weekly)
+- prior-review #4: "failed job" here vs "failed jobs" in docker.yml — reject (style; the gap workflow has one job that can fail)
+- ripple #1: `cairn/PROFILE.md` release-walk line lists the push paths without the failure script — fix now, fixed f7dd3a9
+- ripple #2: `test_rebuild_gap.sh` case 5 comment says the workflow does the reduction — fix now, fixed f7dd3a9
+- After fixes: all nine suites exit 0; `test_last_rebuild_success.sh` 23 assertions.

@@ -149,4 +149,4 @@ this as a bound too.
 - ripple #3: the "Refuse to move moving tags backward" candidate row proposes a date-tag comparison — reject, planned change: the row is absorbed by this milestone and graduates at post-merge hygiene
 - ripple #4: meta "keeps the network out of the publish job" — fix now (blame-history #4)
 - ripple #5: the `test_mode` description says "the tag list it would apply" — fix now (diff-bug #10)
-- re-check after fixes: `bash scripts/tests/test_tag_order.sh` exit 0, 89 ok, 0 FAIL; pinned shellcheck 0.11.0 `-x -S info` clean on both files; `docker.yml` parses as YAML; AC5's bullet re-read under its new heading and still states the rule and all six bounds.
+- re-check after fixes: `bash scripts/tests/test_tag_order.sh` exit 0, 91 ok, 0 FAIL; pinned shellcheck 0.11.0 `-x -S info` clean on both files; `docker.yml` parses as YAML; AC5's bullet re-read under its new heading and still states the rule and all six bounds.

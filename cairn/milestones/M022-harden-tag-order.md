@@ -1,13 +1,13 @@
 # M022: Harden the tag-order check
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — it decides which images the published Docker Hub tags point at
-- **Branch/PR:** —
+- **Branch/PR:** m022-harden-tag-order
 
 ## Goal
 
@@ -77,7 +77,7 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 
 ## Tasks
 
-- [ ] T1: In `scripts/tests/test_tag_order.sh`, extend the `docker` stub with a per-ref count of failed reads
+- [x] T1: In `scripts/tests/test_tag_order.sh`, extend the `docker` stub with a per-ref count of failed reads
       before the answer, each failure with its own stderr (an `ERROR` 5xx line, empty, or text naming the read
       number). Add a `sleep` stub that logs its argument and a `date` stub for AC4 that exits 97 on any other
       arguments. Make `run_script` set `TAG_ORDER_NOW=9999-12-31T23:59:59Z` by default, so the existing 2026 and
@@ -113,6 +113,8 @@ test stays the candidate row "Keep r2u timeouts from failing publish".
 - 2026-10-20: plan gate chose an exact clock comparison with no skew margin over a margin, because a stamp from a real run is minutes old when another run reads it; falsified by a red run whose later stamp came from a real run.
 - 2026-10-20: plan gate chose failing the leg on a future stamp over leaving the tag out with a warning, as the candidate row asked; falsified by a future stamp that a person set on purpose and that must stay.
 - 2026-10-20: plan gate chose failing on a run stamp later than the clock over letting the clock rule decide each tag, because both stamps come from runner clocks and a reversed pair means skew; falsified by a red run from sub-second skew between real runners.
+- 2026-10-20: started on branch m022-harden-tag-order, cut from main at a72d0ca.
+- 2026-10-20: T1 done: docker stub fails read n of a ref from a `fail<n>.err` file, `sleep` stub logs pauses, `date` stub in its own PATH dir; cases 18a-21b added and seen red (65 failures, all in new cases). `TAG_ORDER_NOW` is exported for the whole file rather than set in `run_script`, so direct `bash "$SCRIPT"` calls (case 15) get it too.
 
 ## Decisions
 

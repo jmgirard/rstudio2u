@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M022 | Harden the tag-order check | planned | — | normal | milestones/M022-harden-tag-order.md |
+| M022 | Harden the tag-order check | in-progress | — | normal | milestones/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |
 | M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
 | M019 | Take the artifact action bumps and fix the digest artifacts | done | — | normal | milestones/archive/M019-artifact-action-bumps.md |

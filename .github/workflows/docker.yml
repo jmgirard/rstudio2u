@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a read fails. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries 10 seconds apart, the answer is not a well-formed index, its date stamp is malformed, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
         type: boolean
         default: false
       keepalive_threshold:
@@ -204,7 +204,8 @@ jobs:
       # so a "Re-run failed jobs" of its publish can come after a newer run
       # has published. That re-run keeps this run's stamp, and the publish job
       # leaves out each tag whose list carries a later stamp, with a warning,
-      # rather than moving it back to this run's images. "Re-run all jobs"
+      # rather than moving it back to this run's images (a stamp later than
+      # the current time fails the leg instead). "Re-run all jobs"
       # runs meta again, takes a new stamp, and publishes.
       - name: Upload the digest
         uses: actions/upload-artifact@v7
@@ -298,10 +299,15 @@ jobs:
 
       # Before anything is assembled, .github/tag-order.sh reads the list each
       # tag points at now and returns the tags this leg may attach: a tag
-      # already on a list stamped later than this run's is left out with a
-      # warning, so a re-run of an older run does not move it backward (the
+      # already on a list stamped later than this run's, but not later than
+      # the current time, is left out with a warning, so a re-run of an older run does not move it backward (the
       # read and the create are not atomic, and nothing serializes publish legs
-      # across runs), and a tag it cannot read fails the leg. In test mode
+      # across runs). A failed read is retried after a 10-second pause, up to 3
+      # reads in all; a tag still unread after 3 reads, or stamped later than
+      # the current UTC time (most likely a hand re-point gone wrong), fails
+      # the leg. The script logs the time it read from `date -u`; this step
+      # sets neither of its test variables (TAG_ORDER_NOW,
+      # TAG_ORDER_RETRY_DELAY). In test mode
       # --dry-run prints the manifest list it would push and attaches nothing;
       # otherwise the returned tags, if any, are created and the first is
       # inspected for the log. Either way the resulting index is parsed and
@@ -343,8 +349,10 @@ jobs:
           fi
           echo "tags for ${{ matrix.variant }}:"
           printf '  %s\n' "${tags[@]}"
-          # A non-zero exit (a tag it cannot settle, or a bad stamp) fails the
-          # leg here under set -e, before any tag moves.
+          # A non-zero exit (a tag it cannot settle: 3 failed reads 10 s
+          # apart, a bad answer, a stamp later than the clock; or a bad run
+          # stamp, a run stamp later than the clock, or no jq) fails the leg
+          # here under set -e, before any tag moves.
           bash "$GITHUB_WORKSPACE/.github/tag-order.sh" "$STAMP" /tmp/attach "${tags[@]}"
           attach=()
           while IFS= read -r t; do

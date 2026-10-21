@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M022 | Harden the tag-order check | planned | — | normal | milestones/M022-harden-tag-order.md |
+| M022 | Harden the tag-order check | review | — | normal | milestones/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |
 | M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
 | M019 | Take the artifact action bumps and fix the digest artifacts | done | — | normal | milestones/archive/M019-artifact-action-bumps.md |
@@ -34,3 +34,4 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [parked] Pick an unambiguous job-name separator: Failed job names are joined on a space in the `ci-failure` title, so a future multi-word job name would render ambiguously; a separator change falsifies M017's AC4 wording — added 2026-09-07 — from M017 review (corrected M018: the gap check ships a one-word job name, so it is no longer the example)
+- [parked] Publish fresh tags past a future stamp: when one tag carries a stamp later than the clock, `tag-order.sh` fails the whole publish leg, so that variant's new date and version tags stop too (GP2); the alternative publishes the tags that are not future-stamped, then exits 1 so the run still goes red; promote when a run's date or version tags fail to publish because another tag carried a future stamp — added 2026-10-20 — GP2; from M022 review

@@ -179,3 +179,18 @@ does not change. Each PR passed its PR checks. The PR checks do not run
 on their own branches.
 **Consequences:** New hadolint rules reach CI only when the action version
 changes. A later action bump is still a dependency change under D-002.
+
+### D-011 (2026-10-20): Take Dependabot's two artifact action bumps, following D-010
+
+**Context:** Dependabot opened #29 (`actions/upload-artifact` v4 to v7) and
+#28 (`actions/download-artifact` v4 to v8). These two actions carry the build
+digests from the build legs to the publish legs in `docker.yml`, which the PR
+checks do not run. v8 makes a download hash mismatch fail the step by default.
+**Decision:** The maintainer approved both bumps at M019's plan. M019 applies
+them on its own branch, together with an exact digest pattern and a six-day
+retention, in place of merging the two Dependabot PRs. The actions stay on
+movable major tags, as in D-010. A test-mode `docker.yml` run on the M019
+branch, run 39529671936, passed with both versions.
+**Consequences:** Dependabot closes #28 and #29 once the default branch has
+the new versions. A later bump of either action is still a dependency change
+under D-002 and needs its own test-mode `docker.yml` run.

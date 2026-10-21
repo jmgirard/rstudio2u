@@ -79,7 +79,7 @@ this as a bound too.
       `buildx imagetools inspect --raw <ref>`. Then write `.github/tag-order.sh <run-stamp> <out-file> <tag>...`.
       Add the test to the unit-test step of `pr-ci.yml` and add `.github/tag-order.sh` to its `paths`. Run
       shellcheck at the floor that `lint.yml` sets.
-- [ ] T2: In `docker.yml`, make `meta` take one clock read and output `stamp` and `date` from it. In the publish
+- [x] T2: In `docker.yml`, make `meta` take one clock read and output `stamp` and `date` from it. In the publish
       step, run the rule before the dry run. Build `tag_args` from the out-file. Add the annotation to the shared
       argument array of both create calls. Run the dry run and the architecture check whatever the out-file holds.
       Skip the real create when the out-file is empty or in test mode. Add `.github/tag-order.sh` to `on.push.paths`.
@@ -107,6 +107,7 @@ this as a bound too.
 - 2026-10-20: started implement on branch m021-no-backward-tag-moves.
 - 2026-10-20: T1 done: `.github/tag-order.sh` and `scripts/tests/test_tag_order.sh` (16 cases, all pass), wired into `pr-ci.yml` (test step and `paths`). Live probe with buildx 0.37.2: a missing tag answers `ERROR: docker.io/<ref>: not found`, exit 1, and the live `latest` is an OCI index with no annotations. Seven planted defects (inverted compare, any not-found as absence, null as unstamped, no stamp-form check, unsettled ignored, no stale-file removal, no index check) each turned the suite red. shellcheck is not installed locally, so `lint.yml` on the PR is its first run.
 - 2026-10-20: implementation choice: the script takes full image refs, not bare tags, and keeps absence only on the not-found line that names that exact ref; it reports every unsettled ref before exiting 1.
+- 2026-10-20: T2 done: `meta` outputs `stamp` and derives `date` from it; `publish` checks out the repo, runs `tag-order.sh` before the dry run, builds `tag_args` from its file, passes one `create_args` annotation array to both create calls, and skips the real create on an empty list with a warning; `.github/tag-order.sh` joined `on.push.paths`. Local probe (buildx 0.37.2): `imagetools create --dry-run --annotation index:...` prints the annotation on the index, with and without `-t`. Pinned shellcheck 0.11.0 (local image) is clean on both new scripts at `-S info`; on the extracted step it reports only SC2153 for the env-provided `TAGS`, which predates this change. No YAML step simulation: no local Linux image has jq, so T4's dispatch is the step's first run.
 
 ## Decisions
 

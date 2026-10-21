@@ -118,12 +118,14 @@ reset() { rm -f "$WORK/answers/"*; : > "$DOCKER_LOG"; : > "$SLEEP_LOG"; rm -f "$
 
 # run_noclock <run-stamp> <ref>... — as run_script, with TAG_ORDER_NOW removed.
 run_noclock() {
+    rm -f "$WORK/answers/"*.n
     env -u TAG_ORDER_NOW bash "$SCRIPT" "$1" "$WORK/attach" "${@:2}" >"$WORK/out" 2>&1
     echo $?
 }
 
 # run_script <run-stamp> <ref>... — echoes the script's exit status.
 run_script() {
+    rm -f "$WORK/answers/"*.n
     bash "$SCRIPT" "$1" "$WORK/attach" "${@:2}" >"$WORK/out" 2>&1
     echo $?
 }
@@ -150,7 +152,7 @@ assert_attach() {
 
 assert_no_attach() {
     local desc="$1"
-    if [ ! -s "$WORK/attach" ]; then echo "ok: $desc"; else
+    if [ ! -e "$WORK/attach" ]; then echo "ok: $desc"; else
         echo "FAIL: $desc — attach file holds [$(cat "$WORK/attach")]"; show; fails=$((fails + 1))
     fi
 }
@@ -174,7 +176,8 @@ assert_count() {
     fi
 }
 
-# assert_queried <desc> <ref>... — the stub saw exactly one read per ref, in order.
+# assert_queried <desc> <ref>... — the stub saw exactly these reads, in order
+# (a ref read again appears again).
 assert_queried() {
     local desc="$1" want got r; shift
     want="$(for r in "$@"; do echo "buildx imagetools inspect --raw $r"; done)"
@@ -188,7 +191,7 @@ R=2026-10-20T06:00:00Z
 LATER1S=2026-10-20T06:00:01Z
 EARLIER1S=2026-10-20T05:59:59Z
 
-# --- Refusal: a later stamp leaves that tag out, with a warning --------------
+# --- Leave out: a later stamp leaves that tag out, with a warning ------------
 
 echo "== 1. later stamp (one second) on the first of four tags"
 reset
@@ -349,7 +352,8 @@ answer_stamp "$T1" "$R"; answer_stamp "$T2" "$R"
 assert_rc "settled" 0 "$(run_script "$R" "$T1" "$T2")"
 assert_attach "the answer decides the tag" "$T1" "$T2"
 assert_queried "2 reads of the failing tag, 1 of the other" "$T1" "$T1" "$T2"
-assert_line "the retried failure is logged with the tag, read number and cause" "$T1" "read 1 of 3" "502 Bad Gateway"
+assert_line "the retried failure is logged with the tag, read number and cause" "::notice::" "$T1" "read 1 of 3" "502 Bad Gateway"
+assert_count "a retried failure is not a warning" 0 "::warning::"
 assert_slept "one pause of the default 10 seconds" 10
 
 echo "== 18b. 2 failures (empty stderr), then a later stamp"
@@ -392,6 +396,23 @@ echo "== 18f. an exit-0 answer that is not JSON is not read again"
 reset; answer_raw "$T1" '<html>bad gateway</html>'
 assert_rc "not settled" 1 "$(run_script "$R" "$T1")"
 assert_queried "1 read" "$T1"
+
+echo "== 18g. a cause holding % or CR is escaped for the workflow command"
+reset
+for i in 1 2 3; do answer_fail "$T1" "$i" $'ERROR: denied scope=repository%3Aimg%0Apull\r'; done
+assert_rc "not settled" 1 "$(run_script "$R" "$T1")"
+assert_line "the error carries % as %25" "::error::" "$T1" "repository%253Aimg%250Apull"
+assert_line "the notice carries % as %25" "::notice::" "$T1" "repository%253Aimg%250Apull"
+assert_count "no raw CR reaches the output" 0 $'\r'
+
+echo "== 18h. the read counter starts over with each run"
+reset
+answer_fail "$T1" 1 "ERROR: timeout"; answer_stamp "$T1" "$R"
+run_script "$R" "$T1" >/dev/null
+: > "$DOCKER_LOG"
+assert_rc "second run: read 1 fails again and is retried" 0 "$(run_script "$R" "$T1")"
+assert_queried "second run: 2 reads" "$T1" "$T1"
+assert_line "second run logs read 1's failure" "::notice::" "$T1" "read 1 of 3"
 
 echo "== 19. the pause comes from TAG_ORDER_RETRY_DELAY"
 reset

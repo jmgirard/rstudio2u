@@ -91,7 +91,7 @@ reproducibility.
   over its tag list. The script first reads the current UTC time from
   `date -u` and logs it, and a run stamp later than that time fails the leg.
   A registry read that fails with anything but "not found" is logged as a
-  warning and retried after a 10-second pause, up to 3 reads in all (added
+  notice and retried after a 10-second pause, up to 3 reads in all (added
   M022). A tag whose current list carries a stamp later than the run's, but
   not later than the current time, is left out with a warning, and the leg
   attaches the rest. A tag that is absent, unstamped, or stamped equal or
@@ -100,7 +100,8 @@ reproducibility.
   than the current time) fails the leg, and no tag is attached. The
   environment variables `TAG_ORDER_NOW` and `TAG_ORDER_RETRY_DELAY` replace
   the clock and the pause for the tests, and the workflow sets neither.
-  The case this exists for is "Re-run failed jobs" of an older run's publish within the six days its digests last: that re-run keeps its
+  The case this exists for is "Re-run failed jobs" of an older run's
+  publish within the six days its digests last: that re-run keeps its
   original stamp (added M021). Its bounds: a tag published before M021
   carries no stamp, so the rule protects a tag from its first stamped
   publish on. A re-run of a run that started before M021 merged uses that
@@ -109,12 +110,16 @@ reproducibility.
   older recipe. Equal stamps publish. Two runs that publish at the same
   moment can interleave the read and the create, because nothing
   serializes publish legs across runs, and the retry pauses widen that gap
-  by up to 20 seconds per tag. A tag whose stamp is not in the fixed form
-  fails its variant's publish each week until someone re-points it by hand.
-  A tag stamped later than the current time does the same until the clock
-  passes that stamp, which for a typo such as 2062 is never. The re-point:
-  `docker buildx imagetools create --annotation "index:org.opencontainers.image.created=<stamp>" -t
-  <image>:<tag> <image>:<tag>` rebuilds the tag's own list with a new
+  by up to 20 seconds for each tag read after the first. The script reads
+  the clock once, so a hand re-point stamped with the current time while a
+  leg is still reading reads as later than the clock and fails that leg.
+  A tag whose stamp is not in the fixed form fails its variant's publish
+  each week until someone re-points it by hand. A tag stamped later than
+  the current time does the same until the clock passes that stamp, which
+  for a typo such as 2062 is never. The re-point:
+  `docker buildx imagetools create --annotation
+  "index:org.opencontainers.image.created=<stamp>" -t <image>:<tag>
+  <image>:<tag>` rebuilds the tag's own list with a new
   stamp. Use the current UTC time in the fixed form. Until then the
   variant's new date and version tags do not publish either, so one bad
   stamp on a moving tag blocks the escape hatch for that variant (GP2)

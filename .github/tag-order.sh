@@ -8,8 +8,9 @@
 #
 # Every manifest list the publish job creates carries the run's stamp as the
 # index annotation org.opencontainers.image.created. A tag whose current index
-# carries a later stamp was published by a newer run, and moving it to this
-# run's images would move it backward: "Re-run failed jobs" of an older run's
+# carries a stamp later than this run's, but not later than the current time,
+# was published by a newer run, and moving it to this run's images would move
+# it backward: "Re-run failed jobs" of an older run's
 # publish leg, within the six days its digest artifacts last, is the case this
 # exists for.
 #
@@ -27,7 +28,7 @@
 # For each ref the index it points at now is read with
 # `docker buildx imagetools inspect --raw`. A read that exits non-zero with
 # anything but the not-found line for that ref is a failed read. A failed read
-# 1 or 2 is logged with a ::warning:: naming the ref, the read number and the
+# 1 or 2 is logged with a ::notice:: naming the ref, the read number and the
 # cause, and after a pause the ref is read again, up to 3 reads in all; a
 # failed read 3 is the ::error:: below. The first read that exits
 # 0 or answers not-found decides the ref, which is:
@@ -135,8 +136,15 @@ for ref in "$@"; do
         # WARNING line before it; else the first line of whatever it said.
         # err_file is rewritten by each read, so this is this read's cause.
         cause="$(grep -m 1 '^ERROR' "$err_file" || head -n 1 "$err_file")"
+        # The cause goes into a workflow command, whose runner decodes %25,
+        # %0D and %0A in the message: escape % and drop CR so it prints as
+        # buildx wrote it. It is one line already, so it holds no LF.
+        cause="${cause//%/%25}"
+        cause="${cause//$'\r'/}"
+        # A notice, not a warning: GitHub keeps 10 warning annotations per
+        # step, and those are for the tags left out.
         if [ "$attempt" -lt 3 ]; then
-            echo "::warning::read $attempt of 3 of $ref failed: ${cause:-(no message)}; reading again in ${delay}s"
+            echo "::notice::read $attempt of 3 of $ref failed: ${cause:-(no message)}; reading again in ${delay}s"
             sleep "$delay"
         fi
     done

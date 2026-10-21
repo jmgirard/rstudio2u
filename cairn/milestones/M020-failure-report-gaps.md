@@ -86,7 +86,7 @@ moving tags backward").
       `contents: read`, `issues: write`, `actions: read`; `gh run view --json jobs`
       handed to the failure script as in `docker.yml`'s `notify`). Update the
       DESIGN.md Conventions rebuild-gap bullet.
-- [ ] T4: In `docker.yml`, add `.github/ci-failure-issue.sh` to `on.push.paths`
+- [x] T4: In `docker.yml`, add `.github/ci-failure-issue.sh` to `on.push.paths`
       and `permissions: contents: read` to `meta`, `build`, `publish`.
 - [ ] T5: Run every `scripts/tests/test_*.sh` and shellcheck 0.11.0 (`-x -S info`)
       over the changed scripts. Dispatch `docker.yml` with `test_mode` on the
@@ -114,6 +114,7 @@ moving tags backward").
 - 2026-10-20: T2 done: `.github/last-rebuild-success.sh <output-file>` writes the word to a file so its `::warning::` lines stay on stdout for the run log; every outcome exits 0, only a missing argument exits 2. `scripts/tests/test_last_rebuild_success.sh` (16 assertions) red before the script existed; five planted defects (empty→unknown, untrimmed date, shape without T, lookup failure→none, wrong event) each turned it red. Wired into `rebuild-gap.yml` and `pr-ci.yml`.
 - 2026-10-20: correction to the T2 line: the new suite has 17 assertions, not 16.
 - 2026-10-20: T3 done: `notify` job appended to `rebuild-gap.yml` (parsed with ruby's YAML: jobs `gap`, `notify`; `needs: gap`; the planned `if:`); the `gap` job's name comment, `ci-failure-issue.sh`'s caller list and the DESIGN rebuild-gap bullet updated. The job runs only on a schedule, so no pre-merge run exercises it; its script path is covered by T1's case 5r.
+- 2026-10-20: T4 done: `.github/ci-failure-issue.sh` added to `docker.yml`'s `on.push.paths`; `permissions: contents: read` on `meta`, `build`, `publish` (ruby YAML parse shows exactly that per job). No step in those jobs calls `gh` or passes a `GITHUB_TOKEN`; login uses Docker Hub secrets, cache and artifacts the runtime token.
 
 ## Decisions
 

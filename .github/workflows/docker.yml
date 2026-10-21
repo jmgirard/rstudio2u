@@ -8,6 +8,7 @@ on:
       - "scripts/**"
       - ".github/workflows/docker.yml"
       - ".github/smoke-test.sh"
+      - ".github/ci-failure-issue.sh"
   # Weekly rebuild to pick up base-image (rocker/r2u) security updates
   schedule:
     - cron: "0 6 * * 1"
@@ -37,6 +38,12 @@ jobs:
   meta:
     name: meta
     runs-on: ubuntu-latest
+    # Each job scopes its own token, as notify and keepalive do. meta, build
+    # and publish read the repository at most: the Docker Hub login uses its
+    # own secrets, and the build cache and the digest artifacts use the run's
+    # runtime token, not this one.
+    permissions:
+      contents: read
     outputs:
       rsver: ${{ steps.resolve.outputs.rsver }}
       date: ${{ steps.resolve.outputs.date }}
@@ -72,6 +79,8 @@ jobs:
     name: build (${{ matrix.variant }}, ${{ matrix.arch }})
     needs: meta
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
     strategy:
       # A resolute failure must never block noble (GP3 preview tier), and an
       # amd64 failure must not cancel the arm64 leg mid-build.
@@ -206,6 +215,8 @@ jobs:
     # is nothing to assemble and the meta outputs are empty.
     if: always() && needs.build.result != 'cancelled' && needs.build.result != 'skipped'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

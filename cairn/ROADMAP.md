@@ -8,6 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M021 | Refuse to move moving tags backward | planned | — | normal | milestones/M021-no-backward-tag-moves.md |
 | M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
 | M019 | Take the artifact action bumps and fix the digest artifacts | done | — | normal | milestones/archive/M019-artifact-action-bumps.md |
 | M018 | Alert when no weekly rebuild has succeeded in too long | done | M017 | normal | milestones/archive/M018-rebuild-gap-alert.md |
@@ -27,7 +28,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Prune untagged manifests on Docker Hub: Untagged manifests accumulate on Docker Hub: push-by-digest leaves four per run (test-mode runs tag none) with no GC step — added 2026-09-06 — from M015 review
 - Re-print the offline warning at the end: Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review
 - Keep r2u timeouts from failing publish: A timeout reaching `r2u.stat.illinois.edu` in the noble amd64 smoke test (bspm install of data.table) fails the whole noble publish. Only a later run recovers. Seen in the 2026-09-07 scheduled run and in push run 34645083284 on 2026-09-11 — added 2026-09-11 — GP7; found merging the Dependabot bumps; 2026-10-20 plan gate: if taken, retry the install and still fail when every try fails
-- Refuse to move moving tags backward: a "Re-run failed jobs" of an older `docker.yml` run's publish leg, inside the six-day digest retention, moves `latest`/`noble`/`resolute` back to that run's images over a newer publish; the publish leg could refuse when its date is older than the date tag the moving tag now carries — added 2026-10-20 — GP2; from M019 review
+- Refuse to move moving tags backward: a "Re-run failed jobs" of an older `docker.yml` run's publish leg, inside the six-day digest retention, moves `latest`/`noble`/`resolute` back to that run's images over a newer publish; the publish leg could refuse when its date is older than the date tag the moving tag now carries — added 2026-10-20 — GP2; from M019 review — started M021
 - Keep the gap wording when alerting fails: if `ci-failure-issue.sh` fails inside the `gap` job's own alert (label or issue create), `rebuild-gap.yml`'s `notify` job reports the generic "Weekly run failed: rebuild-gap" and the measured-gap subject reaches the issue only through the run link — added 2026-10-20 — GP2; from M020 review
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06

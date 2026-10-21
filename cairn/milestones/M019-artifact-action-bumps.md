@@ -104,3 +104,10 @@ Independent review (pass 2):
 - blame-history #3: the no-match claims in the comments were written from v4 behavior and unverified for v8 — reject, false: the v8 source (`src/download-artifact.ts` at ref v8, read via `gh api`) filters by pattern and throws on no match only for `name` and `artifact-ids`, so a pattern matching nothing downloads nothing and reaches the 2-digest check.
 - prior-review: no prior-review evidence (no archived Review finding on the artifact steps; PR comment probe returned `[]`).
 - ripple #1–#3: the three absorbed candidate rows (marked `— started M019`) still describe v4, the prefix pattern, and 1-day retention — reject, planned change: post-merge hygiene graduates these rows.
+- Fix-now items diff-bug #1–#3 and blame-history #2: fixed 3c0a02d (comments only).
+
+Evidence after the fixes (2026-10-20), branch `docker.yml` at 3c0a02d, equal to HEAD (`git diff --quiet 3c0a02d HEAD -- .github/workflows/docker.yml` exits 0); main still a950dd2:
+- AC1: unchanged by the fixes; `grep` still lists only `@v7` (upload) and `@v8` (download). Pass.
+- AC2: unchanged by the fixes; pattern line identical; run 39530697446 logged `digests-noble-{amd64,arm64}` and `digests-resolute-{amd64,arm64}`. Pass.
+- AC3: in run 39530697446 (AC4's run), `expires_at − created_at − 518400 s` is −1 s, −1 s, −1 s and 0 s for the four `digests-*` artifacts, inside one minute; `retention-days: 6` unchanged. Pass.
+- AC4: run https://github.com/jmgirard/rstudio2u/actions/runs/39530697446, `workflow_dispatch` with `test_mode: true`, head 3c0a02d, conclusion success; four build legs success; both publish legs success with `Create the manifest list` success; each publish leg "Found 8 artifact(s)" and downloaded only its own amd64 and arm64 digests. Pass. This run supersedes run 39529671936 as AC4's run.

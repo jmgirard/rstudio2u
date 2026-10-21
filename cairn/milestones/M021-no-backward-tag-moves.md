@@ -1,6 +1,6 @@
 # M021: Refuse to move moving tags backward
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -85,7 +85,7 @@ this as a bound too.
       Skip the real create when the out-file is empty or in test mode. Add `.github/tag-order.sh` to `on.push.paths`.
 - [x] T3: Update the Conventions of `cairn/DESIGN.md` and the `Upload the digest` comment in `docker.yml`
       (`docker.yml:189-193`), as AC5 says.
-- [ ] T4: Run one test-mode dispatch of the branch. Record the annotation and the out-file of both variants in the
+- [x] T4: Run one test-mode dispatch of the branch. Record the annotation and the out-file of both variants in the
       work log. If resolute fails for a resolute-only cause, run one more dispatch. If it fails again, log the
       failure and take resolute's evidence from the unit test.
 
@@ -111,6 +111,8 @@ this as a bound too.
 - 2026-10-20: T3 done: a new Conventions bullet in `cairn/DESIGN.md` states the rule and the six bounds AC5 names, with the hand re-point command; the `Upload the digest` comment in `docker.yml` now says a "Re-run failed jobs" leaves out each later-stamped tag with a warning and "Re-run all jobs" takes a new stamp and publishes.
 - 2026-10-20: T4 started: test-mode dispatch 39536881154 of a83c4a9 on the branch.
 - 2026-10-20: claim audit: 31 claims read, 6 corrected — .github/tag-order.sh (annotations that are not an object were read as unstamped: now an error, with test case 16, and a planted removal turns 6 checks red; "a failed call has no file" narrowed to exit 1), .github/workflows/docker.yml (the publish comment no longer says "never" or "read back raw"), scripts/tests/test_tag_order.sh (lesson citation, and the header no longer says every case asserts the file and the message). Pinned shellcheck is clean on both scripts after the fix. The running dispatch predates these edits; the docker.yml edit is comment-only.
+- 2026-10-20: T4 done: dispatch 39536881154 succeeded on every job (notify skipped, as on any dispatch). `meta` printed run stamp 2026-10-21T03:08:09Z and date 2026-10-21. Both publish legs printed the full tag list as their attach list (4 noble tags, 3 resolute tags; live tags absent or unstamped) and a dry-run index with top-level `"annotations": {"org.opencontainers.image.created": "2026-10-21T03:08:09Z"}`, both architectures, no tag attached. No resolute fallback dispatch was needed.
+- 2026-10-20: implement done: all nine unit-test files that `pr-ci.yml` runs pass locally; the profile's verify slot (hadolint and `docker build`) is not owed, since no Dockerfile or build-context file changed. Status set to review.
 
 ## Decisions
 

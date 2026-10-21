@@ -82,7 +82,10 @@ jobs:
   # have just opened the issue for a measured gap, and handing the issue script
   # `success` would close it; the close condition stays the next fully green
   # scheduled docker.yml run. A cancelled job is nobody's failure, and a
-  # dispatched run has someone watching it.
+  # dispatched run has someone watching it. The cost of that close rule: while
+  # this check stays broken, Monday's green rebuild closes the issue at 06:00
+  # and this job opens a new one at 12:00, so a lasting break shows as one new
+  # issue a week rather than one thread.
   notify:
     needs: gap
     if: always() && github.event_name == 'schedule' && needs.gap.result == 'failure'

@@ -20,7 +20,8 @@
 #               answered something without the date shape.
 # Every outcome exits 0: `none` and `unknown` are both alerts that
 # rebuild-gap.sh raises, so none of them may end the run before it is called.
-# Only a missing argument exits 2.
+# Anything but exactly one non-empty argument exits 2; an output file that
+# cannot be written fails the step like any other shell error.
 #
 set -euo pipefail
 

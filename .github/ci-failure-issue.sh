@@ -38,7 +38,7 @@
 #             other than a failed job in this run says what it means instead of
 #             borrowing wording that would be wrong. Omitted or empty, every
 #             rendering is exactly what it was before this argument existed —
-#             the notify job passes three arguments and is unaffected. It is a
+#             both notify jobs pass three arguments and are unaffected. It is a
 #             title, so it is trimmed to one line and to what a GitHub issue
 #             title holds; a caller passing a subject usually has no jobs
 #             document and passes "" in that position.

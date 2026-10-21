@@ -441,9 +441,11 @@ rc=$(run_script failure "$NONE" "$FIX_GAP_JOB_FAIL")
 assert_rc      "failure/gap-job exits 0" 0 "$rc"
 assert_call    "a failed gap job titles the issue" '^issue create .*--title Weekly run failed: rebuild-gap --body '
 assert_no_call "  ... and the running notify job is not named" '^issue create .*notify'
+assert_no_out  "  ... warning about nothing, having named the gap job" '::warning::'
 rc=$(run_script failure "$TWO" "$FIX_GAP_JOB_FAIL")
+assert_rc      "failure/gap-job/open exits 0" 0 "$rc"
 assert_call    "a failed gap job comments on the open issue naming it" '^issue comment 41 .*rebuild-gap'
-assert_no_call "  ... and closes nothing" '^issue close '
+assert_no_call "  ... and opens no second issue" '^issue create '
 
 # A cancelled run is neither: no gh call at all, exit 0.
 rc=$(run_script cancelled "$TWO" "$FIX_ARM64_FAIL")

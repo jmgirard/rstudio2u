@@ -129,11 +129,23 @@ assert_rc      "a failed lookup exits 0" 0 "$rc"
 assert_result  "  ... and yields unknown" unknown
 assert_out     "  ... warning that the lookup failed" '::warning::gh run list failed'
 
-# 7. Called without an output path: usage, exit 2, no lookup.
-: > "$GH_LOG"
-bash "$SCRIPT" >"$WORK/out" 2>&1; rc=$?
-assert_rc      "no output path is a usage error (exit 2)" 2 "$rc"
-if [ -s "$GH_LOG" ]; then echo "FAIL: a usage error still called gh"; fails=$((fails + 1)); else echo "ok: a usage error calls no gh command"; fi
+# 6b. A run listed without a createdAt (null or absent): the filter's
+# `// empty` turns it into an empty answer, so it reads as no run on record.
+rc=$(run_script '[{"createdAt":null}]')
+assert_rc      "a null createdAt exits 0" 0 "$rc"
+assert_result  "  ... and yields none" none
+
+# 7. Anything but one non-empty output path: usage, exit 2, no lookup.
+usage_case() {
+    local desc="$1"; shift
+    : > "$GH_LOG"
+    bash "$SCRIPT" "$@" >"$WORK/out" 2>&1; rc=$?
+    assert_rc "$desc is a usage error (exit 2)" 2 "$rc"
+    if [ -s "$GH_LOG" ]; then echo "FAIL: $desc still called gh"; fails=$((fails + 1)); else echo "ok:   ... and calls no gh command"; fi
+}
+usage_case "no output path"
+usage_case "an empty output path" ""
+usage_case "two arguments" "$WORK/a" "$WORK/b"
 
 if [ "$fails" -eq 0 ]; then
     echo "PASS: all last-rebuild-success assertions"

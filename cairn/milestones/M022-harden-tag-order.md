@@ -138,26 +138,27 @@ Evidence gathered 2026-10-20 at 4a28bf0 (branch level with origin/main a72d0ca).
 - Gate: `cairn_validate.py` all checks passed (1 advisory, the old `cairn/references/pdf/` ignore entry, already a candidate row). No principle text changed, so `cairn_impact` is skipped. Profile checks: the diff touches no Dockerfile or build context (`git diff main...HEAD -- Dockerfile` empty); base image `rocker/r2u:${UBUNTU_VERSION}` is an explicit tag; `.dockerignore` present; no secrets added; hadolint not installed locally, and the Dockerfile is unchanged since its last clean lint run; both variants built in dispatch 39540657484. Changelog none: the user-visible change goes in the archive summary.
 - spawned: diff-bug, blame-history, prior-review, ripple.
 - diff-bug #1: one future stamp now blocks the variant's date and version tags, a trade against GP2 with no D-entry — reject (planned change: the plan gate chose to fail the leg, and DESIGN.md states the trade); the alternative (publish the other tags, then exit 1) goes to the [parked] candidate row "Publish fresh tags past a future stamp".
-- diff-bug #2: `assert_no_attach` uses `! -s`, so an empty output file passes where AC1 and AC3 promise none — fix now (helper checks `! -e`; plant `: > "$out"` must go red).
-- diff-bug #3: the `test_mode` description says an unstamped index fails a test run — fix now.
-- diff-bug #4: retry warnings plus outcome warnings can pass GitHub's 10-warning annotation cap per step — fix now (retried reads log as `::notice::`, keeping `::warning::` for outcomes).
-- diff-bug #5: raw buildx stderr goes into `::warning::`/`::error::` data unescaped (`%`, CR) — fix now (escape `cause`, with a test).
-- diff-bug #6: the clock is read once, so a correct hand re-point made while a leg is mid-retry reads as future — fix now (DESIGN bound names the window; AC3 fixes one clock read).
+- diff-bug #2: `assert_no_attach` uses `! -s`, so an empty output file passes where AC1 and AC3 promise none — fix now, fixed 259f237 (helper checks `! -e`; plant `: > "$out"` must go red).
+- diff-bug #3: the `test_mode` description says an unstamped index fails a test run — fix now, fixed 259f237.
+- diff-bug #4: retry warnings plus outcome warnings can pass GitHub's 10-warning annotation cap per step — fix now, fixed 259f237 (retried reads log as `::notice::`, keeping `::warning::` for outcomes).
+- diff-bug #5: raw buildx stderr goes into `::warning::`/`::error::` data unescaped (`%`, CR) — fix now, fixed 259f237 (escape `cause`, with a test).
+- diff-bug #6: the clock is read once, so a correct hand re-point made while a leg is mid-retry reads as future — fix now, fixed 259f237 (DESIGN bound names the window; AC3 fixes one clock read).
 - diff-bug #7: a false not-found after a failed read is now believed — reject (planned change: AC1 says the first not-found answer decides, and a single read had the same exposure).
-- diff-bug #8: two DESIGN.md lines past the file's wrap width — fix now (rewrapped with #9).
-- diff-bug #9: DESIGN says "20 seconds per tag" where the gap adds up over later tags; the run-block comment omits the clock and jq exits — fix now.
-- diff-bug #10: the stub's per-ref read counter survives between runs inside one case — fix now (`run_script` and `run_noclock` clear it).
+- diff-bug #8: two DESIGN.md lines past the file's wrap width — fix now, fixed 259f237 (rewrapped with #9).
+- diff-bug #9: DESIGN says "20 seconds per tag" where the gap adds up over later tags; the run-block comment omits the clock and jq exits — fix now, fixed 259f237.
+- diff-bug #10: the stub's per-ref read counter survives between runs inside one case — fix now, fixed 259f237 (`run_script` and `run_noclock` clear it).
 - blame-history #1: future-stamp refusal reverses M021's per-tag choice (GP2) — reject (planned change, as diff-bug #1).
 - blame-history #2: retry pauses widen M021's read-then-create race — reject (planned change, the bound is documented).
 - blame-history #3: run stamp later than the clock is a new hard failure — reject (planned change, no conflict found).
 - blame-history #4: a second retry loop beside `scripts/retry.sh` — reject (planned change; the plan gate recorded why).
 - prior-review #1: whole-leg failure contradicts M021's per-tag decision — reject (planned change, as diff-bug #1).
-- prior-review #2: `test_mode` description overstates failures — fix now (same as diff-bug #3).
+- prior-review #2: `test_mode` description overstates failures — fix now, fixed 259f237 (same as diff-bug #3).
 - prior-review #3: retry widens M021's recorded race bound — reject (planned change, documented).
 - prior-review #4: a newer run's stamp could read as future within the read window — reject (false: that run would have to start its `meta` job after this script began and build and publish both architectures inside a read window of about 80 seconds).
-- ripple #1: `docker.yml` upload-step comment says a later-stamped tag is left out, missing the future case — fix now.
-- ripple #2: `docker.yml` publish comment says the same — fix now.
-- ripple #3: `tag-order.sh` header says a later stamp "was published by a newer run" — fix now.
-- ripple #4: `assert_queried` comment says one read per ref — fix now.
-- ripple #5: test section heading uses "Refusal" for leaving a tag out — fix now.
+- ripple #1: `docker.yml` upload-step comment says a later-stamped tag is left out, missing the future case — fix now, fixed 259f237.
+- ripple #2: `docker.yml` publish comment says the same — fix now, fixed 259f237.
+- ripple #3: `tag-order.sh` header says a later stamp "was published by a newer run" — fix now, fixed 259f237.
+- ripple #4: `assert_queried` comment says one read per ref — fix now, fixed 259f237.
+- ripple #5: test section heading uses "Refusal" for leaving a tag out — fix now, fixed 259f237.
 - ripple #6: `docker.yml` meta comment "refuses to move a tag whose current list carries a later one" — reject (false: still true in both later-stamp cases).
+- After the fixes, at 259f237: `test_tag_order.sh` 176 ok, 0 FAIL (new cases 18g escape, 18h counter reset); shellcheck 0.11.0 `-x -S info` clean on both shell files; plant `rm -f "$out"` → `: > "$out"` gave 23 FAIL, restored suite passes. AC1 to AC4 cases unchanged in what they assert, except 18a now also asserts the retry line is a `::notice::` and no `::warning::` is written. Counts: 14 fixed, 11 rejected (8 planned change, 3 false), 1 follow-up row.

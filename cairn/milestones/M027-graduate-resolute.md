@@ -1,13 +1,13 @@
 # M027: Graduate resolute under a written rule
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP2, GP3, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — the README tells image users which tags are supported and when `latest` moves
-- **Branch/PR:** —
+- **Branch/PR:** m027-graduate-resolute
 
 ## Goal
 
@@ -102,7 +102,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 
 ## Tasks
 
-- [ ] T1: Rewrite the variant paragraph in `cairn/DESIGN.md` Purpose & Scope
+- [x] T1: Rewrite the variant paragraph in `cairn/DESIGN.md` Purpose & Scope
       (lines 19-22) as the rule in AC1; run AC2's three checks and note the
       results in the work log; update the image-size bullet (lines 141, 149-150)
       and any other DESIGN line AC6's greps print.
@@ -137,6 +137,8 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 14 findings, all fixed in the wording above — ship-blocking made concrete; AC2's commands named; a job per variant required; probe PRs closed rather than deleted; size probe limit placed between the two sizes; step conclusions instead of log text; "scheduled to move"; the preview sweep widened to `git grep -i preview` with an allow-list and a noble-line sweep; lint conditional on running; build checked for both versions; tests limited to `scripts/tests/test_*.sh` (the posix/windows harnesses run in `launchers.yml`).
 - 2026-11-05: lessons used: 2026-11-05 (M026) measuring a PR build's size by rerunning build-push-action with an OCI output; 2026-11-05 (M024) a plant counts as red only when the expected check fails; 2026-11-05 (M023) PR-only workflows need a pushed branch to see them fail.
 - 2026-11-05: no release: docs and CI only under D-005; the 2027-06-07 move of `latest` is the major version.
+- 2026-11-05: implement started on branch m027-graduate-resolute, cut from main at 585b4d5.
+- 2026-11-05: T1 done: DESIGN Purpose & Scope names both variants committed and adds the graduation rule; image-size bullet names both amd64 images. AC2 checks on 2026-11-05: meta-release-lts `Version: 26.04.1 LTS`; r2u Release 200; scheduled runs 41460259596, 40318529715, 39245939988, 38259252021 each show the three resolute jobs `success`.
 
 ## Decisions
 

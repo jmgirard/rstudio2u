@@ -8,6 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M024 | Verify the launcher port on real Compose | planned | — | normal | milestones/M024-launcher-port-real-compose.md |
 | M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |
 | M022 | Harden the tag-order check | done | — | normal | milestones/archive/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |
@@ -18,11 +19,12 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - Set an image-size budget with a CI guard: Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
 - Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
-- Verify the launcher port on real Compose: Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
+- Verify the launcher port on real Compose: Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09 — started M024
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015 — added 2026-07-17 — GP3; from M05
+- [parked] Run start_windows.bat on real Compose: M024's real-Compose check covers only `start_linux.sh`, because hosted Windows runners have no Linux containers, so the batch file's own port logic meets only the stub; promote when a hosted Windows runner can run Linux containers or a user reports a wrong port on Windows — added 2026-11-05 — GP3; from M024 plan
 - [parked] Pick an unambiguous job-name separator: Failed job names are joined on a space in the `ci-failure` title, so a future multi-word job name would render ambiguously; a separator change falsifies M017's AC4 wording — added 2026-09-07 — from M017 review (corrected M018: the gap check ships a one-word job name, so it is no longer the example) — promote when a reported job name holds a space
 - [parked] Publish fresh tags past a future stamp: when one tag carries a stamp later than the clock, `tag-order.sh` fails the whole publish leg, so that variant's new date and version tags stop too (GP2); the alternative publishes the tags that are not future-stamped, then exits 1 so the run still goes red; promote when a run's date or version tags fail to publish because another tag carried a future stamp — added 2026-10-20 — GP2; from M022 review
 - [parked] Retry the keepalive push on contention: The keepalive `git push` has no contention handling: a bare push from a shallow checkout with no `concurrency:` group in `docker.yml`, so a maintainer push landing between checkout and push fails non-fast-forward with no retry; the test stub always exits 0, so no failing-push path is exercised; promote when a keepalive push fails non-fast-forward — added 2026-09-07 — from M016 review

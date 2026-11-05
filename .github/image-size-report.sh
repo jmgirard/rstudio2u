@@ -153,7 +153,7 @@ gh label create "$LABEL" --force \
 if [ -z "$open_issues" ]; then
     gh issue create --label "$LABEL" --title "$title" \
         --body "$(printf '%s\n\nThe images still publish. A pull request raises a limit by editing .github/image-size-limits and stating the reason. The next run that reads all four sizes within their limits closes this issue.' "$report")"
-    echo "opened a $LABEL issue: $title"
+    echo "opened an $LABEL issue: $title"
 else
     oldest="${open_issues%%$'\n'*}"
     gh issue comment "$oldest" --body "$report"

@@ -1,6 +1,6 @@
 # M026: Hold the image to a size limit in CI
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** M025
 - **Driving RR:** —
@@ -56,7 +56,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - [x] T4: Write `.github/image-size-report.sh` and `.github/workflows/image-size.yml`: Mondays at 12:00 UTC and on dispatch, with `issues: write`. For each tag and architecture it reads `docker buildx imagetools inspect --raw` up to 3 times 10 seconds apart, then opens, comments on, or closes the `image-size` issue. The rule stays in scripts, never in the workflow.
 - [x] T5: After M025's publish, read the four published sizes and write `.github/image-size-limits` by AC1's rule, with the date and command beside the figures. Projection from the 2026-11-05 probes: noble about 790 MB, resolute about 840 MB.
 - [x] T6: Add the DESIGN.md Conventions bullet: the metric, the 10% rule, that the pull request lane fails and the weekly check reports, and that a pull request raises a limit by editing the limits file with a stated reason (GP5).
-- [ ] T7: Run the AC6 diff. Then, with the permission granted at the plan gate, push a temporary branch with a limit set below the real size and `image-size.yml` on `on: push`, because a dispatch needs the workflow on the default branch (lesson M023). See the pull request step red naming the size and limit. See the weekly check open a real `image-size` issue, then green close it. Delete the temporary branch and confirm that the issue is closed.
+- [x] T7: Run the AC6 diff. Then, with the permission granted at the plan gate, push a temporary branch with a limit set below the real size and `image-size.yml` on `on: push`, because a dispatch needs the workflow on the default branch (lesson M023). See the pull request step red naming the size and limit. See the weekly check open a real `image-size` issue, then green close it. Delete the temporary branch and confirm that the issue is closed.
 
 ## Work log
 
@@ -79,6 +79,8 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - 2026-11-05: T4 done: `.github/image-size-report.sh` and `image-size.yml`; every report case passes, and eight planted defects (equal counted as over, empty layers as size 0, unread allowing a close, label `ci-failure`, two reads, unread lines dropped, newest issue reused, exit 1 when over) each turned the suite red on the expected check. The committed-limits cases still wait for T5.
 - 2026-11-05: T5 done: limits noble 800 MB and resolute 840 MB, from docker.yml run 42058263556 (M025's publish): noble 723.07 and 712.43 MB, resolute 759.22 and 744.28 MB. `grep -rnw` finds each number only in the limits file. The suite passes in full.
 - 2026-11-05: T6 done: DESIGN.md Conventions bullet added. It also states the bound that growth in the three images the pull request lane does not build shows only after they publish.
+- 2026-11-05: T7 done on temporary branch m026-temp-size-check, both workflows `on: push`, as granted at the plan gate. With noble's limit at 500: `pr-ci.yml` run 42062583727 failed only at its size step with "noble amd64 is 723.1 MB, over its 500 MB limit" and the raise-the-limit text; `image-size.yml` run 42062584097 opened issue #37 under `image-size`, naming both noble sizes and the limit. With the real limit restored: `image-size.yml` run 42062731641 closed #37, and `pr-ci.yml` run 42062731742 passed at 723.1 MB, the same as the published image. No `ci-failure` issue was opened or closed. The real runs covered no unread size: that outcome has stub-driven cases only. Temporary branch deleted, #37 confirmed closed, AC6 diff names none of the listed files. Local shellcheck 0.11.0 at `-S info` is clean on the three new shell files, and all 12 `scripts/tests/test_*.sh` files pass.
+- 2026-11-05: claim audit: not owed — internal tier
 
 ## Decisions
 

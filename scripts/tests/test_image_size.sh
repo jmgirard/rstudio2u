@@ -2,12 +2,9 @@
 #
 # Unit tests for .github/image-size.sh and .github/image-size-report.sh.
 #
-# Stub `docker` and `gh` commands sit on PATH and log every call. The docker
-# stub answers only `buildx imagetools inspect --raw <ref>`, from one set of
-# files per ref, and exits 97 on anything else. The gh stub answers
-# `issue list` with canned JSON through the real --jq filter. Runs offline: no
-# network, no token. Limits come from a fixture file, so raising a real limit
-# changes no case here. One case reads the committed file for its shape only.
+# Runs offline, with stub `docker`, `gh`, and `sleep` on PATH. Limits come from a
+# fixture file, so raising a real limit changes no case here. One case reads the
+# committed file for its shape only.
 #
 set -uo pipefail
 
@@ -39,8 +36,14 @@ if [ "${1:-} ${2:-}" = "issue list" ]; then
     printf '%s' "$GH_STUB_LIST" | jq -r "$jqf"
 elif [ "${1:-} ${2:-}" = "issue create" ]; then
     echo "https://github.com/o/r/issues/99"
+elif [ "${1:-} ${2:-}" = "label create" ]; then
+    [ "${GH_STUB_LABEL_FAILS:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
 fi
 exit 0
+EOF
+cat > "$WORK/bin/sleep" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$SLEEP_STUB_LOG"
 EOF
 # A ref's answer comes from <key>.out, with <key>.fail holding how many reads
 # fail before it answers (a large number means every read fails).
@@ -53,14 +56,15 @@ fail=0; [ -f "$key.fail" ] && fail="$(cat "$key.fail")"
 if [ "$fail" -gt 0 ]; then
     echo "$((fail - 1))" > "$key.fail"
     echo "WARNING: a line before the error" >&2
-    echo "ERROR: unexpected status from HEAD request: 503 Service Unavailable" >&2
+    printf '%s\n' "${DOCKER_STUB_ERROR:-ERROR: unexpected status from HEAD request: 503 Service Unavailable}" >&2
     exit 1
 fi
 [ -f "$key.out" ] || { echo "ERROR: docker.io/$5: not found" >&2; exit 1; }
 cat "$key.out"
 EOF
-chmod +x "$WORK/bin/gh" "$WORK/bin/docker"
-export GH_STUB_LOG="$GH_LOG" GH_STUB_ALL="$GH_ALL" DOCKER_STUB_LOG="$DOCKER_LOG" DOCKER_STUB_REFS="$WORK/refs"
+chmod +x "$WORK/bin/gh" "$WORK/bin/docker" "$WORK/bin/sleep"
+SLEEP_LOG="$WORK/sleep.log"
+export GH_STUB_LOG="$GH_LOG" GH_STUB_ALL="$GH_ALL" DOCKER_STUB_LOG="$DOCKER_LOG" DOCKER_STUB_REFS="$WORK/refs" SLEEP_STUB_LOG="$SLEEP_LOG"
 export GH_STUB_LIST='[]'
 export PATH="$WORK/bin:$PATH"
 export IMAGE_SIZE_RETRY_DELAY=0
@@ -85,6 +89,9 @@ resolute 200
 twice 100
 twice 200
 broken 12x
+zeropad 0100
+wide 12345678
+widest 9999999
 EOF
 export IMAGE_SIZE_LIMITS="$LIMITS"
 
@@ -101,6 +108,16 @@ assert_out() {
     if grep -qF -- "$want" "$WORK/out"; then echo "ok: $desc"; else
         echo "FAIL: $desc — no output line holding: $want"; sed 's/^/    | /' "$WORK/out"
         fails=$((fails + 1))
+    fi
+}
+
+assert_no_out() {
+    local desc="$1" unwanted="$2"
+    if grep -qF -- "$unwanted" "$WORK/out"; then
+        echo "FAIL: $desc — an output line holds: $unwanted"; sed 's/^/    | /' "$WORK/out"
+        fails=$((fails + 1))
+    else
+        echo "ok: $desc"
     fi
 }
 
@@ -144,23 +161,55 @@ assert_rc "a size equal to the limit passes" 0 "$(run_size noble amd64 "$M")"
 manifest "$M" 100000001
 assert_rc "one byte over the limit fails" 1 "$(run_size noble amd64 "$M")"
 assert_out "an over size never prints as equal to the limit" "noble amd64: 100.1 MB, over the 100 MB limit"
+assert_no_out "an over size outside --from-oci prints no workflow command, because its line goes in the issue" "::error::"
 
 manifest "$M" 150000000
 assert_rc "150 MB is over noble's limit" 1 "$(run_size noble arm64 "$M")"
+assert_out "noble's limit is the one compared" "noble arm64: 150.0 MB, over the 100 MB limit"
 assert_rc "the same 150 MB is within resolute's limit" 0 "$(run_size resolute arm64 "$M")"
+assert_out "resolute's limit is the one compared" "resolute arm64: 150.0 MB, limit 200 MB"
 
 printf '{"layers":[]}' > "$M"
 assert_rc "an empty layers list is unreadable, not a size of 0" 2 "$(run_size noble amd64 "$M")"
 assert_out "the unread line says what is wrong" "noble amd64: unread (the manifest holds no layer sizes)"
 
+NO_SIZES="the manifest holds no layer sizes"
+
 printf '{"manifests":[]}' > "$M"
 assert_rc "a missing layers list is unreadable" 2 "$(run_size noble amd64 "$M")"
+assert_out "a missing layers list says so" "$NO_SIZES"
 
 printf '{"layers":[{"size":5},{"digest":"sha256:abc"}]}' > "$M"
 assert_rc "a layer with no size is unreadable, not a smaller sum" 2 "$(run_size noble amd64 "$M")"
+assert_out "a layer with no size says so" "$NO_SIZES"
 
 printf '<html>rate limited</html>' > "$M"
 assert_rc "an answer that is not JSON is unreadable" 2 "$(run_size noble amd64 "$M")"
+assert_out "an answer that is not JSON says so" "$NO_SIZES"
+
+printf '{"layers":[{"size":5}]} <html>oops' > "$M"
+assert_rc "a valid manifest followed by junk is unreadable, not its size" 2 "$(run_size noble amd64 "$M")"
+assert_out "a manifest followed by junk says so" "$NO_SIZES"
+
+printf '{"layers":[]}{"layers":[{"size":5}]}' > "$M"
+assert_rc "two documents are unreadable, not the second one's size" 2 "$(run_size noble amd64 "$M")"
+assert_out "two documents say so" "$NO_SIZES"
+
+manifest "$M" 0
+assert_rc "a sum of zero is unreadable" 2 "$(run_size noble amd64 "$M")"
+assert_out "a sum of zero says so" "$NO_SIZES"
+
+manifest "$M" -5 10
+assert_rc "a negative layer size is unreadable" 2 "$(run_size noble amd64 "$M")"
+assert_out "a negative layer size says so" "$NO_SIZES"
+
+manifest "$M" 1000000000000000
+assert_rc "a size past the 15-digit bound is unreadable, never wrapped arithmetic" 2 "$(run_size widest amd64 "$M")"
+assert_out "a size past the bound says so" "$NO_SIZES"
+
+manifest "$M" 999999999999999
+assert_rc "the widest size in range compares correctly with the widest limit" 1 "$(run_size widest amd64 "$M")"
+assert_out "the widest size prints whole" "widest amd64: 1000000000.0 MB, over the 9999999 MB limit"
 
 assert_rc "a missing manifest file is unreadable" 2 "$(run_size noble amd64 "$WORK/absent.json")"
 assert_out "the missing-file line names the file" "cannot read $WORK/absent.json"
@@ -169,9 +218,15 @@ manifest "$M" 1
 assert_rc "a variant with no limit is unreadable" 2 "$(run_size jammy amd64 "$M")"
 assert_out "the no-limit line names the variant and the file" "no single limit for jammy in $LIMITS"
 assert_rc "a variant with two limits is unreadable" 2 "$(run_size twice amd64 "$M")"
-assert_rc "a limit that is not a whole number is unreadable" 2 "$(run_size broken amd64 "$M")"
+assert_out "two limits read as no single limit" "no single limit for twice in $LIMITS"
+for bad in broken zeropad wide; do
+    assert_rc "the limit for $bad is refused" 2 "$(run_size "$bad" amd64 "$M")"
+    assert_out "the refusal of $bad names the limit" "the limit for $bad in $LIMITS is not a whole number of MB"
+done
 assert_rc "a missing limits file is unreadable" 2 "$(IMAGE_SIZE_LIMITS="$WORK/absent" run_size noble amd64 "$M")"
+assert_out "the missing limits file is named" "cannot read $WORK/absent"
 assert_rc "too few arguments is refused" 2 "$(run_size noble amd64)"
+assert_out "too few arguments prints the usage" "usage:"
 
 for v in noble resolute; do
     rc="$( (unset IMAGE_SIZE_LIMITS; run_size "$v" amd64 "$M") )"
@@ -208,11 +263,23 @@ assert_out "the failure says how to raise the limit" "raise the limit in .github
 
 oci "$A" amd64 '{"layers":[]}'
 assert_rc "an archive whose manifest has no layers fails the check" 2 "$(run_size --from-oci noble amd64 "$A")"
-assert_out "that failure is the missing layers" "the manifest holds no layer sizes"
+assert_out "that failure is an annotation naming the missing layers" "::error::noble amd64: the size was not read (the manifest holds no layer sizes)"
 
 oci "$A" arm64 '{"layers":[{"size":1}]}'
 assert_rc "an archive with no manifest for the architecture fails the check" 2 "$(run_size --from-oci noble amd64 "$A")"
 assert_out "that failure names the architecture" "no single amd64 manifest"
+
+oci "$A" amd64 '{"layers":[{"size":1}]}'
+d="$WORK/oci"; hex="$(printf '%064d' 7)"
+printf '{"manifests":[{"digest":"sha256:%s","platform":{"architecture":"amd64","os":"linux"}},{"digest":"sha256:%s","platform":{"architecture":"amd64","os":"linux"}}]}' "$hex" "$hex" > "$d/index.json"
+tar -cf "$A" -C "$d" index.json blobs
+assert_rc "an archive with two manifests for the architecture fails the check" 2 "$(run_size --from-oci noble amd64 "$A")"
+assert_out "that failure says no single manifest" "no single amd64 manifest"
+
+printf '{"manifests":[{"digest":"sha256:%064d","platform":{"architecture":"amd64","os":"linux"}}]}' 8 > "$d/index.json"
+tar -cf "$A" -C "$d" index.json blobs
+assert_rc "an archive missing the manifest it names fails the check" 2 "$(run_size --from-oci noble amd64 "$A")"
+assert_out "that failure names the manifest" "cannot read the amd64 manifest"
 
 printf 'not a tar' > "$A"
 assert_rc "a file that is not an archive fails the check" 2 "$(run_size --from-oci noble amd64 "$A")"
@@ -278,18 +345,34 @@ reset_registry
 set_leg_size noble arm64 150000000
 GH_STUB_LIST='[]'
 assert_rc "an over size still passes the run: nothing here stops a publish" 0 "$(run_report)"
-assert_call "the label is ensured before the issue opens" "^label create image-size --force"
 assert_call "an over size opens an issue under the label" "issue create --label image-size"
+label_at="$(grep -n '^label create image-size --force' "$GH_LOG" | cut -d: -f1)"
+create_at="$(grep -n '^issue create' "$GH_LOG" | cut -d: -f1)"
+if [ -n "$label_at" ] && [ -n "$create_at" ] && [ "$label_at" -lt "$create_at" ]; then
+    echo "ok: the label exists before the issue opens"
+else
+    echo "FAIL: the label must be created before the issue"; sed 's/^/    gh /' "$GH_LOG"
+    fails=$((fails + 1))
+fi
 assert_call "the issue title names the variant and architecture" "--title Image over its size limit: noble arm64 "
 assert_call "the issue names the variant, architecture, size, and limit" "--body .*noble arm64: 150\.0 MB, over the 100 MB limit"
 assert_call "the issue names the run" "--body .*actions/runs/456"
+assert_call "the issue says the images still publish" "--body .*The images still publish"
 assert_no_call "an over size closes no issue" "issue close"
+
+: > "$GH_LOG"
+RUN_URL="" bash "$REPORT" >"$WORK/out" 2>&1
+assert_call "a missing run link is a stand-in line, never a withheld report" "--body .*this run did not receive its link"
 
 GH_STUB_LIST='[{"number":9},{"number":7}]'
 assert_rc "an over size with open issues passes the run" 0 "$(run_report)"
 assert_call "it comments on the oldest open issue" "issue comment 7 --body .*noble arm64: 150\.0 MB, over the 100 MB limit"
 assert_no_call "it opens no second issue" "issue create"
 assert_no_call "an over size with an open issue closes nothing" "issue close"
+
+rc="$(GH_STUB_LABEL_FAILS=1 run_report)"
+assert_rc "a failed label call does not stop a comment on an open issue" 0 "$rc"
+assert_call "with the label failing, the comment still lands" "issue comment 7 --body .*noble arm64: 150\.0 MB"
 
 reset_registry
 leg_fails resolute arm64 99
@@ -303,6 +386,28 @@ assert_out "the retry notice names the read and the registry's error, not its wa
 assert_call "the unread size goes in the same issue, with its cause" "issue comment 7 --body .*resolute arm64: unread \(cannot read the manifest after 3 reads: ERROR: unexpected status"
 assert_no_call "an unread size never closes the issue, though the other three are within" "issue close"
 assert_no_call "an unread size with an open issue opens no second one" "issue create"
+
+: > "$SLEEP_LOG"
+leg_fails resolute arm64 99
+rc="$( (unset IMAGE_SIZE_RETRY_DELAY; run_report) )"
+assert_rc "the default pause runs the report" 0 "$rc"
+if [ "$(tr '\n' ' ' < "$SLEEP_LOG")" = "10 10 " ]; then
+    echo "ok: reads are 10 seconds apart, with no pause after the last"
+else
+    echo "FAIL: expected two pauses of 10, got: $(tr '\n' ' ' < "$SLEEP_LOG")"; fails=$((fails + 1))
+fi
+
+leg_fails resolute arm64 99
+rc="$(DOCKER_STUB_ERROR=$'ERROR: disk 100% full\r' run_report)"
+assert_rc "an error holding % and a carriage return passes the run" 0 "$rc"
+assert_out "the % is escaped in the workflow command" "failed: ERROR: disk 100%25 full; reading again"
+assert_call "the issue keeps the % as written, with the carriage return gone" "resolute arm64: unread \(cannot read the manifest after 3 reads: ERROR: disk 100% full\)"
+
+: > "$GH_LOG"
+IMAGE_SIZE_RETRY_DELAY=1000 RUN_URL="" bash "$REPORT" >"$WORK/out" 2>&1
+assert_rc "a four-digit pause is refused" 2 $?
+assert_out "the refusal names the pause" "IMAGE_SIZE_RETRY_DELAY '1000'"
+assert_no_call "a refused pause reaches no gh call" "."
 
 GH_STUB_LIST='[]'
 leg_fails resolute arm64 99
@@ -330,6 +435,12 @@ GH_STUB_LIST='[{"number":7}]'
 assert_rc "a tag missing an architecture passes the run" 0 "$(run_report)"
 assert_call "the missing architecture reads as unread" "--body .*noble arm64: unread \(the tag's index names no single linux/arm64 manifest\)"
 assert_no_call "a missing architecture never closes the issue" "issue close"
+
+reset_registry
+printf '{"manifests":[{"digest":"%s","platform":{"architecture":"amd64","os":"linux"}},{"digest":"%s","platform":{"architecture":"arm64","os":"windows"}}]}' "$(digest_of noble amd64)" "$(digest_of noble arm64)" > "$(ref_key "$IMAGE:noble").out"
+GH_STUB_LIST='[{"number":7}]'
+assert_rc "an arm64 entry for another OS passes the run" 0 "$(run_report)"
+assert_call "an arm64 entry for another OS is not the linux image" "--body .*noble arm64: unread \(the tag's index names no single linux/arm64 manifest\)"
 
 reset_registry
 set_leg_size noble amd64 150000000

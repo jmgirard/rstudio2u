@@ -1,7 +1,8 @@
 name: PR CI (build + smoke)
 
-# Pre-merge gate: lint, build the committed noble variant (amd64), and boot it
-# to confirm RStudio Server comes up — before a branch merges. The publish
+# Pre-merge gate: lint, build the committed noble variant (amd64), boot it to
+# confirm RStudio Server comes up, and hold it to its compressed-size limit —
+# before a branch merges. The publish
 # workflow (docker.yml) runs only on push-to-main/schedule/dispatch, so without
 # this lane a broken image is caught only after merge. This lane never logs in
 # and never pushes: it verifies the branch, it does not publish (GP7).

@@ -20,6 +20,8 @@ on:
 jobs:
   image-size:
     runs-on: ubuntu-latest
+    # The script's retries take about a minute. This bounds a read that hangs.
+    timeout-minutes: 10
     permissions:
       contents: read
       issues: write

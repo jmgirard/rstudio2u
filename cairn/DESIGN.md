@@ -145,9 +145,16 @@ reproducibility.
   counts as within, and keeps the issue open. The rules live in
   `.github/image-size.sh` and `.github/image-size-report.sh`, never in the
   workflows. A pull request raises a limit by editing the limits file and stating
-  the reason beside the new figures. Its bound: the pull request lane builds
-  noble amd64 only (GP3), so growth in the other three shows only after they
-  publish (added M026).
+  the reason beside the new figures. Before a publish, the only figure it has is
+  the noble amd64 size its own run printed. Its bounds: the pull request lane
+  builds noble amd64 only (GP3), so growth in the other three shows only after
+  they publish. That lane builds the `stable` RStudio on the current base image,
+  so upstream growth can fail a pull request that changed neither, and that pull
+  request then has to raise the limit. The weekly read is anonymous, so a Docker
+  Hub rate limit reads as unread. A failed run of the report itself moves no
+  issue and shows only as a red run. buildx is not pinned, so a release that
+  changes the export's `index.json` fails every pull request's size step with
+  "no single amd64 manifest" (added M026).
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while

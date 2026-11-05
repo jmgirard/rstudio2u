@@ -47,6 +47,9 @@ variant="$1"; arch="$2"; manifest="$3"
 
 unread() {
     echo "$variant $arch: unread ($1)"
+    if [ "$from_oci" -eq 1 ]; then
+        echo "::error::$variant $arch: the size was not read ($1)"
+    fi
     exit 2
 }
 
@@ -74,10 +77,12 @@ limit="$(awk -v v="$variant" '$1 == v { print $2; n++ } END { exit (n == 1 ? 0 :
     || unread "the limit for $variant in $limits_file is not a whole number of MB"
 
 [ -r "$manifest" ] || unread "cannot read $manifest"
-size="$(jq -r '
-    if (.layers | type) == "array" and (.layers | length) > 0
-       and all(.layers[]; (.size | type) == "number" and .size >= 0 and (.size | floor) == .size)
-    then [.layers[].size] | add
+# -s reads the whole file before any output, so anything beside one JSON document
+# is unreadable, not a size taken from the valid part.
+size="$(jq -rs '
+    if length == 1 and (.[0].layers | type) == "array" and (.[0].layers | length) > 0
+       and all(.[0].layers[]; (.size | type) == "number" and .size >= 0 and (.size | floor) == .size)
+    then [.[0].layers[].size] | add
     else empty
     end' "$manifest" 2>/dev/null)"
 # The width bound keeps the sum inside bash arithmetic. No real image is near it.

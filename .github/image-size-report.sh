@@ -146,11 +146,10 @@ else
     title="Image size not read: $unread_names"
 fi
 
-gh label create "$LABEL" --force \
-    --description "Opened by the weekly image size check" \
-    --color FBCA04 >/dev/null
-
 if [ -z "$open_issues" ]; then
+    gh label create "$LABEL" --force \
+        --description "Opened by the weekly image size check" \
+        --color FBCA04 >/dev/null
     gh issue create --label "$LABEL" --title "$title" \
         --body "$(printf '%s\n\nThe images still publish. A pull request raises a limit by editing .github/image-size-limits and stating the reason. The next run that reads all four sizes within their limits closes this issue.' "$report")"
     echo "opened an $LABEL issue: $title"

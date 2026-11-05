@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M026 | Hold the image to a size limit in CI | planned | M025 | normal | milestones/M026-image-size-limit-ci.md |
+| M026 | Hold the image to a size limit in CI | in-progress | M025 | normal | milestones/M026-image-size-limit-ci.md |
 | M025 | Remove unused files from the image | done | — | normal | milestones/archive/M025-remove-unused-image-files.md |
 | M024 | Verify the launcher port on real Compose | done | — | normal | milestones/archive/M024-launcher-port-real-compose.md |
 | M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |

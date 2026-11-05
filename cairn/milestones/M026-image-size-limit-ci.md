@@ -1,13 +1,13 @@
 # M026: Hold the image to a size limit in CI
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** M025
 - **Driving RR:** —
 - **Principles touched:** GP2, GP5
 - **Resolves:** —
 - **Surface tier:** internal — CI checks over this repo's own image; no external consumer relies on them
-- **Branch/PR:** —
+- **Branch/PR:** m026-image-size-limit-ci
 
 ## Goal
 
@@ -50,7 +50,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 
 ## Tasks
 
-- [ ] T1: Write `scripts/tests/test_image_size.sh` first, with fixture manifests and stub `docker` and `gh`, in the shape of `scripts/tests/test_rebuild_gap.sh`. See it fail, then add it to the unit-test step in `pr-ci.yml`.
+- [x] T1: Write `scripts/tests/test_image_size.sh` first, with fixture manifests and stub `docker` and `gh`, in the shape of `scripts/tests/test_rebuild_gap.sh`. See it fail, then add it to the unit-test step in `pr-ci.yml`.
 - [ ] T2: Write `.github/image-size.sh`: given a variant, an architecture, and a manifest file, it reads the limit from `.github/image-size-limits`, prints the size and limit in decimal MB, and exits 0 within, 1 over, 2 unreadable. An empty or missing `layers` list is unreadable, never a size of 0.
 - [ ] T3: In `pr-ci.yml`, after the build step, export the same build as OCI through the same builder so its cache serves it, read the manifest out of the archive, and run `.github/image-size.sh`. Add the limits file and the script to `paths`. The failure message says how to raise the limit.
 - [ ] T4: Write `.github/image-size-report.sh` and `.github/workflows/image-size.yml`: Mondays at 12:00 UTC and on dispatch, with `issues: write`. For each tag and architecture it reads `docker buildx imagetools inspect --raw` up to 3 times 10 seconds apart, then opens, comments on, or closes the `image-size` issue. The rule stays in scripts, never in the workflow.
@@ -71,6 +71,9 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - 2026-11-05: plan gate chose an OCI export over `docker image inspect` `.Size` in the pull request lane because `.Size` changes meaning with the Docker image store on the runner, and the export's layer sum measured 987.0 MB against Docker Hub's 987 MB; falsified by a run where the export and the pushed manifest for one recipe differ by more than 5 MB.
 - 2026-11-05: criteria audit (reduced mode, fresh Opus reader): AC1's grep widened to whole words across `.github` and `scripts`; AC2 gained the `paths` clause; AC5 widened from a tag to any of the four sizes; AC6 lost its "so nothing can stop a publish" claim and now lists every file those workflows run; AC7 names outcomes and a stub `gh`. AC3 had no finding.
 - 2026-11-05: no RB tripwire tag. No changelog and no release: nothing changes for users, and no path in `docker.yml`'s filter changes, so the merge starts no rebuild (D-005).
+- 2026-11-05: correction to the line above: `scripts/tests/test_image_size.sh` matches `scripts/**` in `docker.yml`'s `paths`, so the merge does start one rebuild and publish, as M024's and M025's merges did. `.dockerignore` keeps `scripts/tests` out of the image. AC7 fixes the test's path, so the path stays.
+- 2026-11-05: implement started on branch m026-image-size-limit-ci, cut from origin/main at d7e4886.
+- 2026-11-05: T1 done: `test_image_size.sh` added to the `pr-ci.yml` unit-test step; it fails on every script-driven case with exit 127 because neither script exists yet. Choices: limits come from a fixture through `IMAGE_SIZE_LIMITS`, so raising a real limit edits no test; `--from-oci` mode on `image-size.sh` holds the archive reading so that it is testable; an over or unread report exits 0, as `rebuild-gap.sh` does after an alert.
 
 ## Decisions
 

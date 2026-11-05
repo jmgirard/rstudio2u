@@ -42,6 +42,7 @@ jobs:
           bash ./scripts/tests/test_rebuild_gap.sh
           bash ./scripts/tests/test_last_rebuild_success.sh
           bash ./scripts/tests/test_tag_order.sh
+          bash ./scripts/tests/test_image_size.sh
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.5.0

@@ -1,23 +1,21 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (M025 merged: the size row narrowed to M026, M022 pruned from the table, a low row filed, lessons captured; validate green)_
+_Last hygiene check: 2026-11-05 (M026 merged: the size row graduated, M023 pruned from the table, four parked rows filed, two lessons captured; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M026 | Hold the image to a size limit in CI | review | M025 | normal | milestones/M026-image-size-limit-ci.md |
+| M026 | Hold the image to a size limit in CI | done | M025 | normal | milestones/archive/M026-image-size-limit-ci.md |
 | M025 | Remove unused files from the image | done | — | normal | milestones/archive/M025-remove-unused-image-files.md |
 | M024 | Verify the launcher port on real Compose | done | — | normal | milestones/archive/M024-launcher-port-real-compose.md |
-| M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 3 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- Set an image-size budget with a CI guard: Image-size budget: baseline + CI size-regression guard — narrowed 2026-11-05: the slimming pass shipped in M025 — added 2026-07-17 — GP5 — started M026
 - Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review

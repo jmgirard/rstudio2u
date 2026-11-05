@@ -1,13 +1,13 @@
 # M028: Replace numbered Known issue citations
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** low
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — the `mirror_hint.R` header comment is appended to the image's `/etc/R/Rprofile.site`, where users can read it
-- **Branch/PR:** —
+- **Branch/PR:** m028-known-issue-citations
 
 ## Goal
 
@@ -54,7 +54,7 @@ that list changes.
 
 ## Tasks
 
-- [ ] T1: Rewrite the four comments (`Dockerfile:46`, `Dockerfile:54`,
+- [x] T1: Rewrite the four comments (`Dockerfile:46`, `Dockerfile:54`,
       `scripts/resolve-rstudio-version.sh:9`, `scripts/mirror_hint.R:2` at plan
       time), keeping each sentence's description of the problem and the `GP2`
       citation.
@@ -76,6 +76,8 @@ that list changes.
 - 2026-11-05: a merge that touches `Dockerfile` or `scripts/` starts `docker.yml`, which rebuilds and publishes the images; the merge approval covers it, and D-005 gives a comment change no release.
 - 2026-11-05: plan gate chose naming each problem in words over numbering DESIGN.md's Known issues list, because entries are added and removed and numbers would need a never-reuse rule like the principles; falsified by a Known issue that a code comment cannot describe in one clause.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 5 findings, all fixed — AC1 grep widened to "known-issue", "no." and bare-number forms (still the same 4 hits today); AC2 names sites by content, not line; AC3 names `main`, defines a comment line and excludes diff headers; `docker build .` moved from AC3 to T2 because it depends on rstudio.org and the r2u mirror, with the PR build as the gate.
+- 2026-11-05: status in-progress; branch m028-known-issue-citations cut from main at f9b9dcb.
+- 2026-11-05: T1 done: each numbered citation deleted, since every sentence already names its problem in words (Dockerfile lines 45 and 52, `mirror_hint.R` lines 1-2 and 4, `resolve-rstudio-version.sh` lines 5-9); `(Known issue #2 / GP2)` became `(GP2)`.
 
 ## Decisions
 

@@ -1,5 +1,5 @@
 ## rstudio2u: friendly hint when a package install fails because the r2u
-## binary mirror is unreachable (Known issue #1).
+## binary mirror is unreachable.
 ##
 ## bspm installs r-cran-* binaries via apt from the r2u mirror, which is
 ## occasionally down through no fault of the image; a raw wall of apt error

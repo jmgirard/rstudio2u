@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M028 | Replace numbered Known issue citations | planned | — | low | milestones/M028-known-issue-citations.md |
+| M028 | Replace numbered Known issue citations | in-progress | — | low | milestones/M028-known-issue-citations.md |
 | M027 | Graduate resolute under a written rule | done | — | normal | milestones/archive/M027-graduate-resolute.md |
 | M026 | Hold the image to a size limit in CI | done | M025 | normal | milestones/archive/M026-image-size-limit-ci.md |
 | M025 | Remove unused files from the image | done | — | normal | milestones/archive/M025-remove-unused-image-files.md |

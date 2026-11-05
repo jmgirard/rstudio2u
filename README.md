@@ -38,8 +38,8 @@ The easiest way to run the server, good for classrooms and non-technical users.
    and opens <http://localhost:8787> in your browser (no username or password).
    If that port is already taken on your machine, see the FAQ below for how to
    pick another one — the launcher will then report and open that address instead
-5. When you are done, double-click the matching `stop_...` file. Your session is
-   preserved; run the start file again to resume.
+5. When you are done, double-click the matching `stop_...` file. The files in
+   your home folder are kept. Run the start file again to start the server.
 
 The launchers just wrap the Docker Compose commands below, so Docker Desktop must
 be installed and running.
@@ -253,7 +253,9 @@ change the mapping to `-p 8888:8787` instead. If the launcher reports the server
 
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
-`docker pull jmgirard/rstudio2u`. Your work in the home volume is preserved.
+`docker pull jmgirard/rstudio2u`. The files in your home volume are kept. If
+Compose then replaces the container with the new image, the R packages that you
+installed are lost (see [Keeping installed packages](#keeping-installed-packages)).
 A launcher started without internet access reuses the last downloaded image
 and says the update was skipped; run it again once you are online to update.
 It repeats that warning once the server is ready and waits for a key press

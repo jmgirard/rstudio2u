@@ -12,9 +12,11 @@ services:
       - ROOT=true
       - DISABLE_AUTH=true
     volumes:
-      # Persist the user's home directory (files, settings, installed R
-      # packages) so work survives `docker compose down`, image updates, and
-      # pruning. The named volume is pre-populated from the image on first run.
+      # Persist the user's home directory (files and settings) so it survives
+      # `docker compose down`, image updates, and pruning. Installed R packages
+      # live outside it and are lost when Compose replaces the container (see
+      # the README). The named volume is pre-populated from the image on first
+      # run.
       - rstudio_home:/home/rstudio
 
 volumes:

@@ -67,7 +67,7 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 
 ## Tasks
 
-- [ ] T1: Hand runs on two published `noble-<date>` tags through Compose: install
+- [x] T1: Hand runs on two published `noble-<date>` tags through Compose: install
       a small package with `install.packages()`, read `.libPaths()` and
       `find.package()` (and `dpkg -s r-cran-<pkg>` for the bspm path), then run
       each of the four actions in AC1 and record kept or lost; run a saved
@@ -93,6 +93,12 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 4 findings, all fixed — AC1 needed two published tags for the changed-image case; AC2 one find.package() cannot show both folders; AC4 a word-stem grep was a proxy, now a read of every sentence; AC5 the messages already differ in verb and marker and launchers.yml never runs stop files, so the CI clause narrowed to the CRLF guard. AC3 no finding.
 - 2026-11-05: decided the stop launchers change here even though rocker-bayes syncs them, because their "resume where you left off" carries the same claim.
 - 2026-11-05: lessons used: 2026-07-18 (M05) on checking bspm's binary path with dpkg; 2026-11-05 (M023) on launchers.yml running only on pull requests.
+- 2026-11-05: T1 probe: Compose project `m029probe` on `noble-2026-11-02` (arm64 Mac, Compose from Docker 29.9.2); `.libPaths()` lists `/usr/local/lib/R/site-library`, `/usr/lib/R/site-library`, `/usr/lib/R/library`; `install.packages("praise")` went through bspm to `/usr/lib/R/site-library/praise`, `dpkg -s r-cran-praise` installed.
+- 2026-11-05: T1 outcome stop then start: same container, praise kept, home file kept.
+- 2026-11-05: T1 outcome down then up -d: new container, praise lost, home file kept.
+- 2026-11-05: T1 outcome up -d with RS_PORT 8797 → 8798: new container, praise lost, home file kept.
+- 2026-11-05: T1 outcome up -d with image changed to `noble-2026-11-05`: new container, praise lost, home file kept. A `sudo apt-get install tree` was also lost after down then up.
+- 2026-11-05: T1 saved script: in a new container of `noble-2026-11-05`, `source("~/my_packages.R")` with `sudo apt-get update && sudo apt-get install -y libfftw3-dev` and `install.packages(c("glmmTMB", "mice", "metafor"))` installed all four. Without `apt-get update`, `sudo apt-get install` in a brand-new container fails with "Unable to locate package" (empty apt lists), so the script keeps the update; README line 109's bare `sudo apt install` hint is the new candidate row "Add apt update to the README's apt hint".
 
 ## Decisions
 

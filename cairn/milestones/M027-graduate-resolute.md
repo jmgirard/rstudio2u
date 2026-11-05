@@ -39,7 +39,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 
 ## Acceptance criteria
 
-- [ ] AC1: `cairn/DESIGN.md` states the graduation rule: a new Ubuntu LTS
+- [x] AC1: `cairn/DESIGN.md` states the graduation rule: a new Ubuntu LTS
       variant starts as a preview and becomes committed when (a) Ubuntu's
       `https://changelogs.ubuntu.com/meta-release-lts` lists that release at a
       `.1` or later version, (b)
@@ -51,7 +51,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
       publishes each variant independently; it says that `latest` moves to a
       newly committed variant only on a date the README announces at least one
       academic term ahead; and it names `noble` and `resolute` as committed.
-- [ ] AC2: Each of AC1's three conditions holds for `resolute` on the day of
+- [x] AC2: Each of AC1's three conditions holds for `resolute` on the day of
       review: under `Dist: resolute`, the meta-release-lts file has a
       `Version: 26.04.N LTS` line with N ≥ 1;
       `curl -s -o /dev/null -w '%{http_code}'` of the r2u `dists/resolute/Release`
@@ -73,18 +73,18 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
       In each run, `gh run view --json jobs` shows the expected step of the
       resolute job (build, smoke test, or size check) with conclusion
       `failure`, and the noble job with conclusion `success`.
-- [ ] AC5: README.md says that `noble` and `resolute` are both supported, that
+- [x] AC5: README.md says that `noble` and `resolute` are both supported, that
       `latest` points at `noble` and is scheduled to move to `resolute` on
       2027-06-07, and that a user who wants to stay on Ubuntu 24.04 after that
       date should use the `noble` tag or an immutable `noble-` tag.
-- [ ] AC6: `git grep -n -i preview -- ':!cairn/milestones' ':!cairn/DECISIONS.md' ':!cairn/ROADMAP.md'`
+- [x] AC6: `git grep -n -i preview -- ':!cairn/milestones' ':!cairn/DECISIONS.md' ':!cairn/ROADMAP.md'`
       prints only lines in `scripts/install_rstudio.sh` (RStudio's preview
       release channel) and the rule's own definition in `cairn/DESIGN.md`; and
       every line that
       `git grep -n -i noble -- .github/workflows/pr-ci.yml .github/image-size-limits cairn/DESIGN.md`
       prints and that describes what the pull request lane builds also names
       resolute.
-- [ ] AC7: The profile's verify slot is clean: `hadolint Dockerfile` reports
+- [x] AC7: The profile's verify slot is clean: `hadolint Dockerfile` reports
       nothing, and `docker build` succeeds with `UBUNTU_VERSION=24.04` and
       with `UBUNTU_VERSION=26.04`; each `test_*.sh` directly under
       `scripts/tests/` exits 0; and if `lint.yml` runs on the milestone's pull
@@ -147,7 +147,19 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: T5 done (minor amendment: run before the milestone PR exists, since review opens that PR only after approval; the size probe's own run printed both sizes): run 42115719986 resolute job failed at "Build resolute (amd64) for smoke test" with the planted message; run 42115724132 at "Smoke-test resolute (amd64)" ("FAIL: healthcheck reported unhealthy"); run 42115727824 at "Hold resolute (amd64) to its size limit" (759.3 MB over 740; noble 723.1 MB within 800). Noble job `success` in all three. PRs #39-#41 closed unmerged, branches deleted on origin and locally.
 - 2026-11-05: claim audit: 19 claims read, 2 corrected — .github/workflows/pr-ci.yml (header said "then" for jobs that run in parallel; the unit-test comment read as covering every script); the corrected lines re-read TRUE by the same reader. Comments only, after the probe runs.
 - 2026-11-05: implement complete; status review.
+- 2026-11-05: review: evidence for AC1, AC2, AC4-AC7 and the gate recorded; AC3 and AC4's size comparison wait for the milestone PR's run at step 8; four review lenses spawned (in progress, checkpoint).
 
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-11-05 on branch m027-graduate-resolute at 741c622, main unmoved (0 commits behind origin/main).
+
+- AC1: `cairn/DESIGN.md` lines 19-41 name `noble` and `resolute` as committed and state conditions (a), (b), and (c) as worded, the not-merged rule for a failed noble or resolute `pr-ci.yml` job, independent weekly publishing, and the README-announced, one-term-ahead move of `latest`. Pass.
+- AC2: meta-release-lts under `Dist: resolute` prints `Version: 26.04.1 LTS`; `curl -w '%{http_code}'` of r2u `dists/resolute/Release` prints 200; the 4 scheduled runs `gh run list` lists (41460259596 2026-11-02, 40318529715 2026-10-26, 39245939988 2026-10-19, 38259252021 2026-10-12) each show `build (resolute, amd64)`, `build (resolute, arm64)`, `publish (resolute)` = success. Pass.
+- AC3: not yet observable. The milestone PR opens at step 8 after approval (D-138). Evidence comes from that PR's run, read at step 8 before the merge; the box stays unticked until then.
+- AC4: runs re-read with `gh run view --json jobs`: 42115719986 (probe-m027-build) resolute job failure at "Build resolute (amd64) for smoke test", noble success; 42115724132 (probe-m027-smoke) resolute failure at "Smoke-test resolute (amd64)", noble success; 42115727824 (probe-m027-size) resolute failure at "Hold resolute (amd64) to its size limit", noble success. PRs #39-#41 read CLOSED with `mergedAt` null; `git ls-remote --heads origin 'probe-*'` lists 0 branches. The probes ran on the branch at 9c404c5; later `pr-ci.yml` changes are comments only. The size probe's limit of 740 MB sat between that run's noble 723.1 MB and resolute 759.3 MB. "Strictly between the sizes AC3's run printed" is checked against the step-8 run; the box stays unticked until then.
+- AC5: README.md:21 says both tags are supported, `latest` points at `noble`, is scheduled to move to `resolute` on 2027-06-07, and to stay on 24.04 use `noble` or an immutable `noble-` tag; README.md:136-137 repeats the date. Pass.
+- AC6: the `preview` sweep prints DESIGN.md:27 (the rule's definition) and `scripts/install_rstudio.sh`:6 and :70 (RStudio's release channel), nothing else. The `noble` sweep's lines that describe the PR lane (`image-size-limits`:9, `pr-ci.yml`:4, DESIGN.md:157, 165-166) each name resolute; the rest are limit values, measured sizes, a command, the matrix entry, and the committed-variant text. Pass.
+- AC7: all 12 `scripts/tests/test_*.sh` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exits 0 with no output; local `docker build` succeeds for 24.04 and 26.04. `lint.yml` triggers only on `**.sh`, `**.command`, and `lint.yml`, and the diff touches none of them, so it does not run on this PR. Pass.
+- Gate: `cairn_validate.py` all checks passed (1 advisory: the old pdf `.gitignore` entry, which has a candidate row). No principle text changed, so `cairn_impact` is skipped. Toolchain: hadolint clean, build clean, base pinned (`FROM rocker/r2u:${UBUNTU_VERSION}`, version tags), no secret added in the diff, `.dockerignore` present; changelog none, so the user-visible change goes in the archive summary.

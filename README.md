@@ -18,6 +18,8 @@ The R version is whatever the underlying [r2u](https://github.com/rocker-org/r2u
 
 These tags **move** as new versions are released. For a frozen, identical environment (e.g. a course), pin an immutable tag instead — see [Reproducibility](#reproducibility).
 
+Both `noble` (Ubuntu 24.04) and `resolute` (Ubuntu 26.04) are supported. A pull request that changes the image is built and smoke-tested on both (amd64) before it merges. `latest` points at `noble` today. It is scheduled to move to `resolute` on 2027-06-07, between academic terms. The double-click launchers use `latest`, so they switch to Ubuntu 26.04 the first time they start with an internet connection after that date. To stay on Ubuntu 24.04 after that date, use the `noble` tag or an immutable `noble-` tag (see [Reproducibility](#reproducibility)). With the launchers, put that tag in the `image:` line of `docker-compose.yml`.
+
 ## Use Examples
 
 ### Quick start (recommended): double-click launcher
@@ -131,7 +133,8 @@ package needs an extra system library.
 ## Reproducibility
 
 `latest`, `noble`, and `resolute` are **moving** tags that update as new
-versions of R, RStudio, Pandoc, and Quarto are released. For a setting where
+versions of R, RStudio, Pandoc, and Quarto are released. `latest` is scheduled
+to move from `noble` to `resolute` on 2027-06-07. For a setting where
 everyone should get an identical environment, pin an **immutable** tag instead:
 
 | Tag pattern           | Example               | Frozen at                    |

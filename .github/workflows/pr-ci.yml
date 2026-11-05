@@ -1,8 +1,9 @@
 name: PR CI (build + smoke)
 
-# Pre-merge gate: lint, build the committed noble variant (amd64), boot it to
-# confirm RStudio Server comes up, and hold it to its compressed-size limit —
-# before a branch merges. The publish
+# Pre-merge gate: run the script unit tests and lint, and, for each committed
+# variant (noble and resolute, amd64), build the image, boot it to confirm
+# RStudio Server comes up, and hold it to its compressed-size limit, before a
+# branch merges. The jobs run in parallel. The publish
 # workflow (docker.yml) runs only on push-to-main/schedule/dispatch, so without
 # this lane a broken image is caught only after merge. This lane never logs in
 # and never pushes: it verifies the branch, it does not publish (GP7).
@@ -25,16 +26,18 @@ on:
       - ".github/image-size-report.sh"
 
 jobs:
-  build-smoke:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Fast, offline unit test of the RStudio version resolver. docker.yml's
-      # version scrape never runs on PRs (it is push/schedule/dispatch only), so
-      # this is where the guard against a mis-named tag is exercised pre-merge.
-      - name: Resolver unit tests
+      # Fast, offline unit tests from scripts/tests/ (the launcher tests run in
+      # launchers.yml instead).
+      # docker.yml's version scrape never runs on PRs (it is
+      # push/schedule/dispatch only), so this is where the guard against a
+      # mis-named tag is exercised pre-merge.
+      - name: Script unit tests
         run: |
           bash ./scripts/tests/test_resolve_rstudio_version.sh
           bash ./scripts/tests/test_resolve_download_url.sh
@@ -53,50 +56,69 @@ jobs:
         with:
           dockerfile: Dockerfile
 
+  # One job per committed variant, so each has its own pass or fail. A variant
+  # graduates into this matrix under the rule in cairn/DESIGN.md. fail-fast is
+  # off so one variant's failure does not cancel the other's run.
+  build-smoke:
+    name: build-smoke (${{ matrix.variant }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: noble
+            ubuntu_version: "24.04"
+          - variant: resolute
+            ubuntu_version: "26.04"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Build noble for amd64 only and load it into the daemon so we can boot it
-      # (arm64 is boot-checked at publish time on docker.yml, on a native arm64
-      # runner — a documented GP3 asymmetry). No login, no push, no version
-      # scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane produces no
-      # immutable tags. Reuses docker.yml's per-arch gha cache scope for speed.
-      - name: Build noble (amd64) for smoke test
+      # Build for amd64 only and load the image into the daemon so we can boot
+      # it (arm64 is boot-checked at publish time on docker.yml, on a native
+      # arm64 runner — a documented GP3 asymmetry). No login, no push, no
+      # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
+      # produces no immutable tags. Reuses docker.yml's per-variant, per-arch
+      # gha cache scope for speed.
+      - name: Build ${{ matrix.variant }} (amd64) for smoke test
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
           load: true
           build-args: |
-            UBUNTU_VERSION=24.04
-          tags: rstudio2u:pr-smoke-noble
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+          tags: rstudio2u:pr-smoke-${{ matrix.variant }}
           push: false
           provenance: false
-          cache-from: type=gha,scope=noble-amd64
+          cache-from: type=gha,scope=${{ matrix.variant }}-amd64
 
       # A non-zero exit fails the job and blocks the merge (cairn never merges
       # red CI). The script always tears the container down.
-      - name: Smoke-test noble (amd64)
+      - name: Smoke-test ${{ matrix.variant }} (amd64)
         env:
           SMOKE_TIMEOUT: "300"
-        run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-noble
+        run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-${{ matrix.variant }}
 
       # The same build again, through the same builder, so its cache serves it.
       # This export holds compressed layers, whose sizes are what a student
       # downloads. The daemon's own image size changes meaning with its image
       # store. After the smoke test, so a size failure cannot hide a smoke one.
-      - name: Export noble (amd64) as an OCI archive
+      - name: Export ${{ matrix.variant }} (amd64) as an OCI archive
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
           build-args: |
-            UBUNTU_VERSION=24.04
-          outputs: type=oci,dest=${{ runner.temp }}/noble-amd64.oci.tar
+            UBUNTU_VERSION=${{ matrix.ubuntu_version }}
+          outputs: type=oci,dest=${{ runner.temp }}/${{ matrix.variant }}-amd64.oci.tar
           provenance: false
-          cache-from: type=gha,scope=noble-amd64
+          cache-from: type=gha,scope=${{ matrix.variant }}-amd64
 
       # Fails the job over the limit, or when the archive cannot be read. The
       # rule, and the message saying how to raise a limit, are in the script.
-      - name: Hold noble (amd64) to its size limit
-        run: bash ./.github/image-size.sh --from-oci noble amd64 "$RUNNER_TEMP/noble-amd64.oci.tar"
+      - name: Hold ${{ matrix.variant }} (amd64) to its size limit
+        run: bash ./.github/image-size.sh --from-oci "${{ matrix.variant }}" amd64 "$RUNNER_TEMP/${{ matrix.variant }}-amd64.oci.tar"

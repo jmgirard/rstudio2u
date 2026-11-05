@@ -17,12 +17,31 @@ bspm/apt can cheaply deliver at runtime; no preinstalled R packages, ever —
 fast runtime binary install is the point of r2u.
 
 All tags build from a single `Dockerfile`; the Ubuntu base is selected with
-`UBUNTU_VERSION`. `noble`/`latest` (24.04) is the committed variant;
-`resolute` (26.04) is **preview tier** — a resolute-only failure does not
-block shipping noble. Both architectures are hard commitments. Published to
+`UBUNTU_VERSION`. `noble` (24.04) and `resolute` (26.04) are both committed
+variants, and `latest` points at `noble`. Both architectures are hard
+commitments. Published to
 Docker Hub as `jmgirard/rstudio2u` (single registry, by choice), with moving
 tags plus immutable `<variant>-<date>` and `<variant>-<rstudio>` tags for
 reproducibility.
+
+**How a variant graduates.** A new Ubuntu LTS variant starts as a preview.
+It becomes committed when three conditions hold: (a) Ubuntu's
+`https://changelogs.ubuntu.com/meta-release-lts` lists that release at a `.1`
+or later version, which is when Ubuntu starts to offer the LTS upgrade;
+(b) `https://r2u.stat.illinois.edu/ubuntu/dists/<codename>/Release` answers
+HTTP 200, so r2u serves its binaries; and (c) the variant's two build jobs and
+its publish job concluded `success` in each of the 4 most recent scheduled
+`docker.yml` runs. A committed variant has its own job in `pr-ci.yml`, which
+builds its amd64 image, smoke-tests it, and holds it to its size limit. Its
+arm64 image is checked only when `docker.yml` publishes. A pull request
+whose noble or resolute job fails is not merged. That is a rule of how this
+repo merges (never past red CI), not a branch protection setting, which main
+does not have. The weekly rebuild still
+publishes each variant independently, so one variant's failure never stops
+the other's tags. `latest` moves to a newly committed variant only on a date
+that the README announces at least one academic term ahead (GP1). `resolute`
+met the three conditions on 2026-11-05 (M027), and the README announces that
+`latest` moves to it on 2027-06-07.
 
 ## Function Families
 
@@ -138,17 +157,17 @@ reproducibility.
   `layers[].size`: the compressed download a student waits for, not the disk
   size after unpacking. A limit is the larger of the variant's two sizes, plus
   10%, rounded up to the next 10 MB. `pr-ci.yml` fails a pull request whose
-  noble amd64 image is over its limit. `image-size.yml` reads all four published
+  noble amd64 or resolute amd64 image is over its limit. `image-size.yml` reads all four published
   sizes on Mondays at 12:00 UTC and reports on its own `image-size` issue, and an
   image over its limit still publishes (GP2). All four read and within their
   limits closes the issue. A size it cannot read goes in the same issue, never
   counts as within, and keeps the issue open. The rules live in
   `.github/image-size.sh` and `.github/image-size-report.sh`, never in the
   workflows. A pull request raises a limit by editing the limits file and stating
-  the reason beside the new figures. Before a publish, the only figure it has is
-  the noble amd64 size its own run printed. Its bounds: the pull request lane
-  builds noble amd64 only (GP3), so growth in the other three shows only after
-  they publish. That lane builds the `stable` RStudio on the current base image,
+  the reason beside the new figures. Before a publish, the only figures it has
+  are the noble amd64 and resolute amd64 sizes its own run printed. Its bounds:
+  the pull request lane builds amd64 only for noble and resolute (GP3), so growth
+  in the two arm64 images shows only after they publish (M027). That lane builds the `stable` RStudio on the current base image,
   so upstream growth can fail a pull request that changed neither, and that pull
   request then has to raise the limit. The weekly read is anonymous, so a Docker
   Hub rate limit reads as unread. A failed run of the report itself moves no

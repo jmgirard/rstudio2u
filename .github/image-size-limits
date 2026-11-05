@@ -6,7 +6,8 @@ resolute 840
 # How a limit is set: the larger of the variant's two compressed sizes, plus 10%,
 # rounded up to the next 10 MB. A pull request raises a limit by editing this
 # file and stating the reason beside the new figures. Before a publish, the only
-# figure a pull request has is the noble amd64 size its own run printed.
+# figures a pull request has are the noble amd64 and resolute amd64 sizes its own
+# run printed.
 #
 # Measured 2026-11-05 on Docker Hub, the images published by docker.yml run
 # 42058263556. Bytes, from the command below:

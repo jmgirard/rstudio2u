@@ -1,6 +1,6 @@
 # M024: Verify the launcher port on real Compose
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -55,7 +55,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - [x] T4: Add the job to `launchers.yml`, add `docker-compose.yml` to its `paths`, and correct the workflow's header comment, which says the lane needs no Docker.
 - [x] T5: Add the `launcher-compose` job to `docker.yml` with `if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')`, add it to `notify`'s `needs` and `RESULTS`, and extend the comment there that explains why a needed job must never read `skipped`.
 - [x] T6: Reword the comment at `launcher_common.sh:167` to what was observed: Compose 5.6.1 exits 1 with `no port 8787/tcp` when nothing is published, and the `:0` check stays for a Compose that exits 0. Point the POSIX harness header at the new script. Add a `DESIGN.md` Known issues line: the real-Compose check runs only `start_linux.sh`, only on amd64, and only on the runner's Compose version.
-- [ ] T7: Stop for the user's yes, then push the branch and run `gh workflow run docker.yml --ref <branch> -f test_mode=true`. This run builds every leg and attaches no tag. The question set did not cover it. `shellcheck`, `launchers.yml`, and `lint.yml` run only on a PR, so review sees AC6 on the PR head.
+- [x] T7: Stop for the user's yes, then push the branch and run `gh workflow run docker.yml --ref <branch> -f test_mode=true`. This run builds every leg and attaches no tag. The question set did not cover it. `shellcheck`, `launchers.yml`, and `lint.yml` run only on a PR, so review sees AC6 on the PR head.
 
 ## Work log
 
@@ -77,6 +77,8 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - 2026-11-05: T3: on this Mac (Compose 5.6.1) the script passed 23 of 23 checks in 58 s. Planted in temporary copies, each run red and naming the check: hardcoded `launcher_url` (4 checks), `0.0.0.0` mapping (3), no inline-comment removal (1), and an extra 8787 mapping (3, including the refuse check). After the green run and all four red runs the marker file in `rstudio2u_rstudio_home` and the marker `.env` were intact and the project's label filters printed nothing; the markers are removed. `shellcheck` 0.11.0 from its Docker image reported two SC2030 notes, fixed by using `env` in place of subshell exports, then clean.
 - 2026-11-05: T4, T5, T6: `launcher-compose` job in `launchers.yml` with `docker-compose.yml` in its `paths`; `launcher-compose` job in `docker.yml` wired into `notify`'s `needs` and `RESULTS`; comment at `launcher_common.sh:167`, POSIX harness header, and a DESIGN Known issues line updated.
 - 2026-11-05: T7 stop: asked whether to push the branch and run one test-mode dispatch of `docker.yml` — the user chose "Push and run".
+- 2026-11-05: T7: test-mode run 41983783693 at bb2e7c7: `launcher-compose` passed 23 of 23 checks, running after `publish (resolute)` failed. The run is red because `build (resolute, amd64)` could not connect to `r2u.stat.illinois.edu` in the smoke test; the branch changes no `Dockerfile` or image script, so the sighting went to the existing parked row and no re-run was made. `notify` was skipped, as it is on any dispatch.
+- 2026-11-05: claim audit: not owed — internal tier.
 
 ## Decisions
 

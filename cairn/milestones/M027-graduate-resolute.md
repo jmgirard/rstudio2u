@@ -148,6 +148,8 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: claim audit: 19 claims read, 2 corrected — .github/workflows/pr-ci.yml (header said "then" for jobs that run in parallel; the unit-test comment read as covering every script); the corrected lines re-read TRUE by the same reader. Comments only, after the probe runs.
 - 2026-11-05: implement complete; status review.
 - 2026-11-05: review: evidence for AC1, AC2, AC4-AC7 and the gate recorded; AC3 and AC4's size comparison wait for the milestone PR's run at step 8; four review lenses spawned (in progress, checkpoint).
+- 2026-11-05: review: 17 findings settled (6 fixed in a3510c7, 4 follow-up, 7 rejected); AC7 unticked again because the `image-size.sh` fix makes `lint.yml` run on the PR.
+- 2026-11-05: step-7 approval: m027-graduate-resolute approved for merge
 
 ## Decisions
 

@@ -8,6 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M028 | Replace numbered Known issue citations | planned | — | low | milestones/M028-known-issue-citations.md |
 | M027 | Graduate resolute under a written rule | done | — | normal | milestones/archive/M027-graduate-resolute.md |
 | M026 | Hold the image to a size limit in CI | done | M025 | normal | milestones/archive/M026-image-size-limit-ci.md |
 | M025 | Remove unused files from the image | done | — | normal | milestones/archive/M025-remove-unused-image-files.md |
@@ -17,7 +18,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
-- [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
+- [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review — started M028
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015; M027 review: GP3 allows a single-architecture asymmetry only "when an upstream forces it", yet `pr-ci.yml` and DESIGN's size bullet cite GP3 for the amd64-only PR lane, which is chosen, so this row or GP3's text should settle it — added 2026-07-17 — GP3; from M05
 - [low] Run every unit test in the PR lane: the "Script unit tests" step in `pr-ci.yml` runs a hand-written list of 11 `scripts/tests/test_*.sh` files, so a new test file runs nowhere until someone adds it there; a loop over `scripts/tests/test_*.sh` (less the launcher test that `launchers.yml` runs) would pick it up — added 2026-11-05 — GP7; from M027 review

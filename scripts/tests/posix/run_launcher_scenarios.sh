@@ -134,6 +134,13 @@ FORBID_CALL=""
 # Set before a run_scenario call to assert a substring is absent from the
 # launcher's output; cleared after each.
 FORBID_TEXT=""
+# Set before a run_scenario call to assert substrings appear in this order, one
+# per line, each searched for after the end of the one before; cleared after each.
+EXPECT_ORDER=""
+# Set both before a run_scenario call to assert how many output lines contain a
+# substring; cleared after each.
+COUNT_TEXT=""
+COUNT_N=""
 calls="$work/calls"
 
 # The offline warning must appear only when the pull failed AND the fallback
@@ -143,6 +150,11 @@ OFFLINE_WARNING='the update was skipped'
 # The hard error's own second line -- its first line is a prefix of the
 # warning, so it cannot tell the two branches apart.
 HARD_ERROR='Check your internet connection'
+# Printed in place of the key wait under the test seam, so a scenario can see
+# that the launcher reached it.
+KEY_WAIT_MARKER='[test seam] key wait skipped'
+# Printed only just before the key wait on the offline path.
+KEEPS_RUNNING='keeps running'
 
 # run_scenario <name> <launcher> <PATH> <expected-exit> <env-assignments> <expected-substring>...
 run_scenario() {
@@ -161,12 +173,16 @@ run_scenario() {
     local called
     called=$(cat "$calls" 2>/dev/null)
     local expect_call=$EXPECT_CALL forbid_call=$FORBID_CALL forbid_text=$FORBID_TEXT
+    local expect_order=$EXPECT_ORDER count_text=$COUNT_TEXT count_n=$COUNT_N
 
     rm -f "$sandbox/.env" "$calls"
     DOTENV=""
     EXPECT_CALL=""
     FORBID_CALL=""
     FORBID_TEXT=""
+    EXPECT_ORDER=""
+    COUNT_TEXT=""
+    COUNT_N=""
 
     if [ -n "$expect_call" ] && ! grep -q "^$expect_call" <<< "$called"; then
         ok=0
@@ -191,8 +207,32 @@ run_scenario() {
                     ok=0
                     echo "FAIL: $name - offline warning printed although the pull succeeded" ;;
             esac
+            case "$out" in
+                *"$KEEPS_RUNNING"*)
+                    ok=0
+                    echo "FAIL: $name - '$KEEPS_RUNNING' printed although the pull succeeded" ;;
+            esac
             ;;
     esac
+    if [ -n "$expect_order" ]; then
+        local rest=$out step
+        while IFS= read -r step; do
+            case "$rest" in
+                *"$step"*) rest=${rest#*"$step"} ;;
+                *)
+                    ok=0
+                    echo "FAIL: $name - '$step' missing at its place in the expected order" ;;
+            esac
+        done <<< "$expect_order"
+    fi
+    if [ -n "$count_text" ]; then
+        local count
+        count=$(grep -cF -- "$count_text" <<< "$out")
+        if [ "$count" != "$count_n" ]; then
+            ok=0
+            echo "FAIL: $name - expected $count_n line(s) with '$count_text', got $count"
+        fi
+    fi
 
     if [ "$code" != "$expect" ]; then
         ok=0
@@ -240,11 +280,28 @@ for launcher in start_mac.command start_linux.sh; do
 
     # --- offline fallback -----------------------------------------------------
     # A failed pull with every image already downloaded starts that copy, with
-    # a warning that the update was skipped and no hard error.
+    # a warning that the update was skipped and no hard error. The warning comes
+    # again after the running banner, because the health wait scrolls the first
+    # one away, and the window then waits for a key.
     EXPECT_CALL="compose up"
     FORBID_TEXT="$HARD_ERROR"
+    EXPECT_ORDER="$OFFLINE_WARNING
+RStudio Server is running
+$OFFLINE_WARNING
+$KEEPS_RUNNING
+$KEY_WAIT_MARKER"
+    COUNT_TEXT="$OFFLINE_WARNING"
+    COUNT_N=2
     run_scenario "$launcher/offline-fallback" "$launcher" "$stub_path" 0 \
-        'STUB_PULL_FAIL=1' "$OFFLINE_WARNING" 'RStudio Server is running'
+        'STUB_PULL_FAIL=1'
+
+    # With no running banner there is nothing to repeat the warning after, and
+    # nothing is left running to mention.
+    FORBID_TEXT="$KEEPS_RUNNING"
+    COUNT_TEXT="$OFFLINE_WARNING"
+    COUNT_N=1
+    run_scenario "$launcher/offline-health-timeout" "$launcher" "$stub_path" 1 \
+        'STUB_PULL_FAIL=1 STUB_UP_FAIL=1' 'did not become ready'
 
     # Only the second listed image is missing: the launcher must check every
     # image, not just the first.
@@ -271,6 +328,8 @@ for launcher in start_mac.command start_linux.sh; do
         'STUB_UP_FAIL=1' 'did not become ready in time' 'RS_PORT' '.env'
 
     # --- port resolution ------------------------------------------------------
+    # A normal start also must not stop for a key.
+    FORBID_TEXT="$KEY_WAIT_MARKER"
     run_scenario "$launcher/port-default" "$launcher" "$stub_path" 0 "" \
         'RStudio Server is running' 'http://localhost:8787' \
         'go to that address manually'

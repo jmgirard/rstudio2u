@@ -225,3 +225,44 @@ maintainer reads these issues, and the comment that
 `.github/image-size-report.sh` posts names the over-limit variant, so a
 retitle step does not earn its code and tests.
 **Consequences:** The row returns only by superseding this entry.
+
+### D-014 (2026-11-05): Installed R packages stay outside the home volume
+
+**Context:** The README, the `docker-compose.yml` volume comment, and the stop
+launchers say that installed R packages persist in the home volume. bspm
+installs them into the system library folders inside the container, so
+Compose loses them each time it replaces the container, a start launcher's
+download of a newer `latest` included. rocker-bayes settled the same question
+as its D-005 (its M011).
+**Decision:** The text is corrected and the image does not change. The README
+says where packages live, when they are lost, and how a saved install script
+in the home folder restores them. The maintainer chose this at the M029 plan
+gate over a README recipe for a package folder in the home volume and over
+making the image keep packages there by default.
+**Rationale:** bspm's binary installs go system-wide through apt, so a library
+in the volume would build from source, and old copies there could hide newer
+packages that a later image ships (GP2).
+**Consequences:** IP3 and IP4 protect `/home/rstudio` and do not cover these
+packages. Evidence that reopens this: the base image moves package installs
+into the home directory, or users need packages across updates in a way that a
+saved list and a derivative image cannot serve.
+
+### D-015 (2026-11-05): GP2 drops "immutable"; annotates D-005's word
+
+**Context:** GP2, DESIGN.md Purpose & Scope and Conventions, the README, and
+D-005 call the `<variant>-<date>` and `<variant>-<rstudio>` tags immutable.
+Each publish moves the RStudio-version tag while that version is current, and
+`.github/tag-order.sh` moves a date tag to a later-stamped build with the same
+date.
+**Decision:** GP2 becomes: "Moving tags track newest stable automatically;
+every build also publishes date and version tags, and the README keeps
+teaching courses to pin a tag or digest. Freshness may never shed its escape
+hatch." The README teaches the image digest as the pin that never moves. The
+publish job does not change. D-005 keeps its text, and this entry corrects its
+word "immutable". The maintainer approved this at the M030 plan gate over
+freezing tags at first publish.
+**Rationale:** A frozen RStudio-version tag would stop getting the weekly
+base-image security updates. The word told readers something the publish job
+does not do.
+**Consequences:** Evidence that reopens this: courses report that a moved
+version tag broke their setup.

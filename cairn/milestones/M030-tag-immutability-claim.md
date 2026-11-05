@@ -1,0 +1,88 @@
+# M030: Stop calling the Docker tags immutable
+
+- **Status:** planned
+- **Priority:** normal
+- **Depends on:** —
+- **Driving RR:** —
+- **Principles touched:** GP2
+- **Resolves:** —
+- **Surface tier:** user-facing — README pinning advice that courses follow
+- **Branch/PR:** —
+
+## Goal
+
+The README, `cairn/DESIGN.md`, and the publish workflow's comments say truthfully which Docker tags can move, so a user who pins one for reproducibility gets what the text promises.
+
+## Scope
+
+**In:** the README's Reproducibility section and the lines that point to it
+(19, 21, 116, 138–146); GP2's wording (D-015) and the "immutable" in DESIGN.md
+Purpose & Scope and Conventions; the "immutable" in the comments of
+`.github/workflows/docker.yml` (lines 35, 276–278); a README digest pin that
+covers both architectures.
+
+**Out:** changing which tags the publish job moves (D-015 keeps it; the freeze
+alternative needs a new decision first). The package claim → M029. The CRLF
+guard → M031. rocker-bayes's own tag text → done there (its M014).
+
+## Acceptance criteria
+
+- [ ] AC1: A read of `README.md`, `cairn/DESIGN.md`, and the comments in
+      `.github/workflows/docker.yml` at the milestone head finds nothing that
+      calls a date tag or an RStudio-version tag immutable or unchanging.
+- [ ] AC2: The README's Reproducibility section says that a `<variant>-<date>`
+      tag names the date its build started (UTC) and can move to a later build
+      with the same date, that a `<variant>-<rstudio>` tag moves with each
+      publish while that RStudio version is current, and that an image digest
+      never moves. The first two statements match the tag list that
+      `.github/workflows/docker.yml` computes and the rule in
+      `.github/tag-order.sh`, and the second also matches Docker Hub, where the
+      current `noble-<rstudio>` tag and the latest-dated `noble-<date>` tag show
+      the same index digest when read at review.
+- [ ] AC3: The section shows how to read a tag's digest and how to pin it in the
+      `image:` line of `docker-compose.yml` and in a `FROM` line. Running the
+      shown read command against a published tag prints a digest, `docker pull`
+      of the pinned `jmgirard/rstudio2u@sha256:…` reference succeeds, and
+      `docker buildx imagetools inspect` of that reference lists both
+      `linux/amd64` and `linux/arm64`.
+- [ ] AC4: GP2 in `cairn/DESIGN.md` reads: "Moving tags track newest stable
+      automatically; every build also publishes date and version tags, and the
+      README keeps teaching courses to pin a tag or digest. Freshness may never
+      shed its escape hatch."
+
+## Coverage
+
+- AC1 → T2, T3, T4
+- AC2 → T1, T2
+- AC3 → T1, T2
+- AC4 → T3
+
+## Tasks
+
+- [ ] T1: Read the tag rules in `docker.yml` (meta job date, tag list) and
+      `.github/tag-order.sh`; read Docker Hub digests for the current
+      `noble-<rstudio>` and latest `noble-<date>` tags; run the digest read
+      command and a pinned `docker pull`; one work-log line each.
+- [ ] T2: Rewrite the README's Reproducibility section from T1's results, with
+      the digest pin for Compose and `FROM`; reword lines 19, 21, and 116 to
+      point to it.
+- [ ] T3: Set GP2 to the AC4 wording and drop "immutable" from DESIGN.md Purpose
+      & Scope and Conventions, marked `corrected M030`.
+- [ ] T4: Drop "immutable" from the `docker.yml` comments; read the three files
+      whole for any remaining claim (AC1). A `docker.yml` edit publishes on
+      merge, the same as a weekly rebuild.
+
+## Work log
+
+- 2026-11-05: created by /milestone-plan.
+- 2026-11-05: tier check: milestone — three independent README, launcher, and test fixes; this part changes a design principle (GP2).
+- 2026-11-05: idea vet: gap — "fix the claim" also fits freezing tags at first publish, which changes what users get; posed at the question set, answer: reword and teach digests. No flaw.
+- 2026-11-05: question set: how to fix the immutable-tags claim, and approval of GP2's new wording — reword and teach digests; GP2 wording approved (D-015).
+- 2026-11-05: plan gate chose rewording over freezing tags at first publish because a frozen RStudio-version tag would stop getting weekly base-image security updates; falsified by courses reporting that a moved version tag broke their setup.
+- 2026-11-05: collision check: D-005 calls the tags immutable; D-015 annotates its word. Absorbs rocker-bayes row "Stop calling rstudio2u tags immutable" (rocker-bayes M014, its D-006). Inbox sweep: 0 open issues, 0 open PRs.
+- 2026-11-05: criteria audit (full mode, fresh Opus reader): 4 findings, all fixed — AC1 a word grep was a proxy, now a read of three files; AC2 the date is the build's start date and tag-order.sh orders by stamp, so "last image published that day" was wrong; AC3 a per-platform digest would pass, so the pin must list both architectures; AC4 needed the user's approval and a D-entry (D-015).
+- 2026-11-05: lessons used: 2026-11-05 (M026) on reading a registry answer with jq -s.
+
+## Decisions
+
+## Review

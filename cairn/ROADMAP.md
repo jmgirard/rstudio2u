@@ -8,6 +8,9 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M029 | Correct the package persistence claim | planned | — | normal | milestones/M029-package-persistence-claim.md |
+| M030 | Stop calling the Docker tags immutable | planned | — | normal | milestones/M030-tag-immutability-claim.md |
+| M031 | Fix the CRLF guard's miss and comment | planned | — | normal | milestones/M031-crlf-guard-fix.md |
 | M028 | Replace numbered Known issue citations | done | — | low | milestones/archive/M028-known-issue-citations.md |
 | M027 | Graduate resolute under a written rule | done | — | normal | milestones/archive/M027-graduate-resolute.md |
 | M026 | Hold the image to a size limit in CI | done | M025 | normal | milestones/archive/M026-image-size-limit-ci.md |

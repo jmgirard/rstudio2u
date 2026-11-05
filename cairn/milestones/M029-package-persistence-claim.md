@@ -1,13 +1,13 @@
 # M029: Correct the package persistence claim
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** IP4, GP1
 - **Resolves:** —
 - **Surface tier:** user-facing — README, Compose file, and launcher text that students read
-- **Branch/PR:** —
+- **Branch/PR:** m029-package-persistence-claim
 
 ## Goal
 

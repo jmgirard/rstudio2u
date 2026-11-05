@@ -1,17 +1,16 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-04 (lessons pass over 18 lessons: dropped 2026-07-18 (M08) CRLF by enforcement, 2026-09-03 (M11) by ownership, 2026-09-04 (M014) by planner test, 2026-09-07 (M018) by ownership; joined to one line: 2026-07-18 (M05) x2, (M07) x2, (M08), (M09) x2, 2026-09-06 (M015), 2026-09-07 (M016) x2; no decision entry; validate green)_
+_Last hygiene check: 2026-11-05 (M023 merged: its row graduated, M020 pruned from the table, three parked rows filed, lessons captured; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M023 | Re-print the offline warning at the end | review | — | normal | milestones/M023-reprint-offline-warning.md |
+| M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |
 | M022 | Harden the tag-order check | done | — | normal | milestones/archive/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |
-| M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 3 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 
@@ -21,7 +20,6 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
 - Verify the launcher port on real Compose: Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
-- Re-print the offline warning at the end: Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review — started M023
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015 — added 2026-07-17 — GP3; from M05

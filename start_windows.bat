@@ -125,8 +125,9 @@ echo      If your browser does not open, go to that address manually.
 echo ============================================================
 echo.
 
-:: Repeat the warning after the running banner, because the health wait scrolls
-:: the first one away. The server is up by now, so it no longer says "starting".
+:: Repeat the warning after the running banner, because the banner and the health
+:: wait's output now sit below the first one. The server is up by now, so it no
+:: longer says "starting".
 if defined UPDATE_SKIPPED (
     echo [i] Reminder: the update was skipped, so this is the copy already on this
     echo     computer. To get the latest version, connect to the internet and run

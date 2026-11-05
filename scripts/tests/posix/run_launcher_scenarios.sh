@@ -281,8 +281,8 @@ for launcher in start_mac.command start_linux.sh; do
     # --- offline fallback -----------------------------------------------------
     # A failed pull with every image already downloaded starts that copy, with
     # a warning that the update was skipped and no hard error. The warning comes
-    # again after the running banner, because the health wait scrolls the first
-    # one away, and the window then waits for a key.
+    # again after the running banner, because the banner and the health wait's
+    # output now sit below the first one, and the window then waits for a key.
     EXPECT_CALL="compose up"
     FORBID_TEXT="$HARD_ERROR"
     EXPECT_ORDER="$OFFLINE_WARNING
@@ -296,7 +296,7 @@ $KEY_WAIT_MARKER"
         'STUB_PULL_FAIL=1'
 
     # With no running banner there is nothing to repeat the warning after, and
-    # nothing is left running to mention.
+    # no ready server to mention.
     FORBID_TEXT="$KEEPS_RUNNING"
     COUNT_TEXT="$OFFLINE_WARNING"
     COUNT_N=1

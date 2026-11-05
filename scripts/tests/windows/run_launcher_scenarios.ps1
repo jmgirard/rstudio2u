@@ -252,15 +252,15 @@ Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath `
 # --- offline fallback --------------------------------------------------------
 # A failed pull with every image already downloaded starts that copy, with a
 # warning that the update was skipped and no hard error. The warning comes again
-# after the running banner, because the health wait scrolls the first one away,
-# and the window then waits for a key.
+# after the running banner, because the banner and the health wait's output now
+# sit below the first one, and the window then waits for a key.
 Invoke-Scenario -Name 'offline-fallback'     -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
     -ExpectExit 0 -ExpectCall 'compose up' -ForbidText $hardError `
     -ExpectOrder @($offlineWarning, 'RStudio Server is running', $offlineWarning, $keepsRunning, $keyWaitMarker) `
     -CountText $offlineWarning -CountN 2
 
 # With no running banner there is nothing to repeat the warning after, and
-# nothing is left running to mention.
+# no ready server to mention.
 Invoke-Scenario -Name 'offline-health-timeout' -PathValue $stubPath `
     -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_UP_FAIL = '1' } `
     -ExpectExit 1 -ExpectText @('did not become ready') -ForbidText $keepsRunning `

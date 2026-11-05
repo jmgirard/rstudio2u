@@ -1,6 +1,6 @@
 # M023: Re-print the offline warning at the end
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -72,6 +72,9 @@ FAQ describes the new behavior.
 - 2026-11-05: T4: `start_mac.command` without the seam in a pseudo-terminal on this Mac: on a skipped update it shows the prompt, is alive after 3 s with no key, and exits 0 about 0.05 s after a key; with no terminal on stdin it exits 0; a normal start shows no prompt and exits 0 alone. No test runs the real key wait on Windows.
 - 2026-11-05: implementation choice: the seam marker text is `[test seam] key wait skipped`, printed by `launcher_pause` and `:wait` on every path that reaches them; it prints only under `RS_LAUNCHER_NONINTERACTIVE`.
 - 2026-11-05: the simple-english hook flagged 44 older hits across `README.md` on the T5 edit; left alone as outside this milestone's scope; the two added lines carry none of the flagged forms.
+- 2026-11-05: claim audit: 55 claims read, 6 corrected — launcher_common.sh, start_windows.bat, scripts/tests/posix/run_launcher_scenarios.sh, scripts/tests/windows/run_launcher_scenarios.ps1
+- 2026-11-05: claim audit finding on the row's premise: under a pseudo-terminal on this Mac with Compose 5.6.1, `up -d --wait` redraws in place for a net 4 rows, so the first warning does not scroll off a 24-row window; the reader read the byte stream, not a real window, and did not measure Windows or older Compose; the goal stands on the 3-second Windows close and the browser taking focus, and the comments no longer claim scrolling; to be stated at the merge question.
+- 2026-11-05: the double-clicked window closing when a batch file ends (`start_windows.bat` comment) stays not checkable on this Mac; it is standard Windows behavior.
 
 ## Decisions
 

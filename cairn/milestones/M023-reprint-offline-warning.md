@@ -75,6 +75,7 @@ FAQ describes the new behavior.
 - 2026-11-05: claim audit: 55 claims read, 6 corrected — launcher_common.sh, start_windows.bat, scripts/tests/posix/run_launcher_scenarios.sh, scripts/tests/windows/run_launcher_scenarios.ps1
 - 2026-11-05: claim audit finding on the row's premise: under a pseudo-terminal on this Mac with Compose 5.6.1, `up -d --wait` redraws in place for a net 4 rows, so the first warning does not scroll off a 24-row window; the reader read the byte stream, not a real window, and did not measure Windows or older Compose; the goal stands on the 3-second Windows close and the browser taking focus, and the comments no longer claim scrolling; to be stated at the merge question.
 - 2026-11-05: the double-clicked window closing when a batch file ends (`start_windows.bat` comment) stays not checkable on this Mac; it is standard Windows behavior.
+- 2026-11-05: step-7 approval: m023-reprint-offline-warning approved for merge
 
 ## Decisions
 

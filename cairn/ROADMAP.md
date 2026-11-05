@@ -16,7 +16,6 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- [high] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - Run the arm64 smoke test in PR CI: smoke-test a native arm64 build in `pr-ci.yml` too, deferred from M05 for PR-CI speed and free of emulation since M015; GP3 allows a one-architecture gap only "when an upstream forces it", but `pr-ci.yml` and DESIGN's size bullet cite GP3 for an amd64-only PR lane that is chosen (M027 review), so this row or GP3's text settles it — added 2026-07-17 — GP3; from M05
 - [low] Run every unit test in the PR lane: the "Script unit tests" step in `pr-ci.yml` runs a hand-written list of 11 `scripts/tests/test_*.sh` files, so a new test file runs nowhere until someone adds it there; a loop over `scripts/tests/test_*.sh` (less the launcher test that `launchers.yml` runs) would pick it up — added 2026-11-05 — GP7; from M027 review

@@ -49,7 +49,7 @@ FAQ describes the new behavior.
 - [x] T2: In `launcher_common.sh`, add the reminder and the `keeps running` line, and make `launcher_pause`'s seam branch print a marker. In `start_mac.command` and `start_linux.sh`, record that the update was skipped, print the reminder after the banner, run the browser step, print the `keeps running` line, then `launcher_pause; exit 0`, because `read` at end of input returns 1. Reminder text: "Reminder: the update was skipped, so this is the copy already on this computer. To get the latest version, connect to the internet and run this again later." Line text: "RStudio keeps running after you close this window."
 - [x] T3: In `start_windows.bat`, make the same change with the same words. Replace the `goto :done` at line 128 with a guard around the browser lines only, so the seam flow reaches the offline block. Make `:wait`'s seam branch print the marker. On the skipped path call `:wait` in place of the 3-second timeout, and keep the timeout on a normal start. Keep CRLF.
 - [ ] T4: Plant defects on all three launchers and see the harness fail: both warnings before the banner, both after it, only one warning; two warnings on the `up`-fails branch; the pause removed on the offline path; the pause made unconditional. Run `shellcheck` at the repo's floor and `scripts/tests/test_launcher_line_endings.sh`. On this Mac, run `start_mac.command` without the seam under a pseudo-terminal, with stub `docker` and `open`, and confirm that it waits for a key and then exits 0. Write one work-log line with the results.
-- [ ] T5: Update the README FAQ entry at `README.md:212-216`.
+- [x] T5: Update the README FAQ entry at `README.md:212-216`.
 
 ## Work log
 
@@ -66,6 +66,8 @@ FAQ describes the new behavior.
 - 2026-11-05: T1: both harnesses gained order and count checks and the new assertions; the POSIX run fails `offline-fallback` on both launchers for the missing second warning, `keeps running`, and marker; `offline-health-timeout` already passes because it pins behavior the change leaves alone; the PowerShell edits have not run, because this Mac has no `pwsh` or `cmd`.
 - 2026-11-05: T2: `launcher_remind_offline` and `launcher_hold_offline` added, and `launcher_pause` prints a marker under the seam; the POSIX harness passes on both launchers.
 - 2026-11-05: T3: `start_windows.bat` carries the same words and flow, all 243 lines still CRLF in the working tree; it has not run, because this Mac has no `cmd`.
+- 2026-11-05: T5: the README FAQ entry states the repeat, the key wait, and that RStudio keeps running.
+- 2026-11-05: question set: push a temporary branch `m023-windows-probe` to run the Windows lane, planted Windows defects, and shell lint before the merge question, then delete it — yes; asked at a stop because this Mac has no `cmd`, `pwsh`, or `shellcheck` and these lanes run only on pull requests.
 
 ## Decisions
 

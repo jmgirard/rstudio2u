@@ -214,6 +214,8 @@ change the mapping to `-p 8888:8787` instead. If the launcher reports the server
 `docker pull jmgirard/rstudio2u`. Your work in the home volume is preserved.
 A launcher started without internet access reuses the last downloaded image
 and says the update was skipped; run it again once you are online to update.
+It repeats that warning once the server is ready and waits for a key press
+before its window closes. RStudio keeps running after that.
 
 **How do I reset everything / reclaim disk space?**
 `docker compose down -v` removes the container and its home volume (this deletes

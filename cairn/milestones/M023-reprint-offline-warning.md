@@ -87,3 +87,35 @@ Evidence gathered 2026-11-05 at 21e3c0e, level with origin/main 9bfa381 as its b
 - AC3: pull-succeeded guard passes on every POSIX scenario and in run 41978769374; `port-default` forbids the marker and passes on all three; `start_windows.bat:154` keeps `timeout /t 3` for a normal start.
 - AC4: `offline-health-timeout` passes on all three, exit 1, `did not become ready`, count 1, no `keeps running` (same runs).
 - AC5: `README.md:215-218` states the repeat, the key wait before the window closes, and that RStudio keeps running.
+
+Consistency gate: `cairn_validate` passes, one older `.gitignore` advisory. `docker build --no-cache` from a clean context gave image sha256:14d28273. `hadolint` is not on this Mac and the Dockerfile is unchanged; `pr-ci.yml` runs it on the PR head. Base pinned to a version tag (`rocker/r2u:${UBUNTU_VERSION}`, 24.04). No secret in `ENV` or `ARG`. `.dockerignore` present and excludes launchers and `scripts/tests`. Changelog slot none: the archive summary states the user-visible change. No principle changed, so `cairn_impact` is skipped.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: a key typed during the health wait dismisses the hold as soon as it appears, so the reminder can go unread (reproduced on this Mac; not established on Windows) — follow-up: parked row "Drop keys typed before the key wait"; no criterion fails, because a typed key is a key press, and the promote condition is a report.
+- diff-bug #2: "Press any key to close..." and the README's "before its window closes" do not match POSIX, where the script ends but the window can stay open, and no newline follows the prompt — follow-up: parked row "Reword the launcher key-wait prompt"; the prompt is an older line, and the README sentence holds, because no close comes before the key.
+- diff-bug #3: the line invites closing the window, but closing it during the wait may raise a "terminate running processes?" dialog (not run) — follow-up: same parked row "Reword the launcher key-wait prompt".
+- diff-bug #4: unattended callers can now block on a skipped update when stdin is a non-terminal that stays open, or a batch wrapper run from a console — reject, edge: a script piping an open stdin into a launcher, or a wrapper around it, falls outside the double-click and terminal uses the README documents; the effect is a wait.
+- diff-bug #5: any pull failure counts as offline, so "connect to the internet" is wrong during a Docker Hub outage or rate limit, and a local-only image in an override would stop for a key on every start — follow-up: parked row "Name other causes of a failed pull"; the first warning already assumes this since M10.
+- diff-bug #6: Windows shows "Press any key to continue . . ." right after a line about closing the window, and it may be localized — follow-up: same parked row "Reword the launcher key-wait prompt".
+- diff-bug #7: the pull-succeeded `keeps running` guard repeats on every pull-succeeded scenario — reject, planned change: AC3 names this guard as its evidence.
+- diff-bug #8: production code prints a line only so tests can match it — reject, planned change: T2, T3, and the work log record this choice and its falsifier.
+- diff-bug #9: the "because the banner and the health wait's output now sit below the first one" comments are no longer the real reason, and in test files they are narrative — fix now.
+- diff-bug #10: "A normal start also must not stop for a key." restates the line below it — fix now.
+- diff-bug #11: the order and count checks cannot tell the reminder from a second copy of the first warning, so the false "Starting the copy" text after the banner would pass — fix now: the order check asks for `Reminder: the update was skipped`.
+- diff-bug #12: the normal-path exit status of `start_mac.command` was `open`'s and is now always 0 — reject, edge: only `open` itself failing reaches it, outside the double-click use, and nothing reads the status there.
+- diff-bug #13: "Opening your web browser..." follows the reminder on Windows and sits inside the banner on POSIX — reject, style: AC2 holds on all three, and the banners already differ.
+- diff-bug #14: AC1's evidence must come from the PR head's CI run, which does not exist yet — reject, false as a defect: the AC1 box stays open until that run passes.
+- blame-history #1: the skipped-update success path now waits for a key where success never did — reject, planned change: the user chose it at the question set; no decision or principle records a rule against it.
+- blame-history #2: Windows auto-close on a normal start is preserved — reject, false: reported as information, no defect.
+- blame-history #3: the seam marker also prints on error branches — reject, planned change: T2 and T3 place it in the helpers; students never see it.
+- blame-history #4: `UPDATE_SKIPPED` and `exit 0` verified — reject, false: reported as information, no defect.
+- blame-history #5: this branch resolves M10's candidate — reject, false: reported as information, no defect.
+- prior-review #1: the marker prints for every caller of `launcher_pause` — reject, planned change: same as blame-history #3.
+- prior-review #2: the reminder text is duplicated in two files with nothing enforcing the match — reject, planned change: batch cannot source a shell file, and T3 calls for the same words; the wording is identical today.
+- prior-review #3: only a comment guards the `exit 0` — reject, planned change: T2 calls for it and T4's probe measured it.
+- ripple #1: `scripts/tests/windows/run_launcher_scenarios.ps1:17-18` says each scenario asserts an exit code and a message substring, which understates it — fix now.
+- ripple #2: `cairn/ROADMAP.md:24` gives "scrolls off" as the reason — reject, false as stale text: the row leaves the roadmap at this milestone's hygiene.
+- ripple #3: `.github/workflows/launchers.yml:3-4` says the lane drives every branch while the Windows key wait is not pressed — reject, false: the branch is driven, and the wait is skipped by the seam as on every error path.
+- ripple #4: the inline `read` prompts for a missing helper file print no marker — reject, false: those paths exit before the offline branch and honor the seam inline.
+- ripple #5: README step 4 does not mention the key wait — reject, planned change: AC5 places it in the FAQ.

@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M024 | Verify the launcher port on real Compose | planned | — | normal | milestones/M024-launcher-port-real-compose.md |
+| M024 | Verify the launcher port on real Compose | in-progress | — | normal | milestones/M024-launcher-port-real-compose.md |
 | M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |
 | M022 | Harden the tag-order check | done | — | normal | milestones/archive/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |

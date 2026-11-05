@@ -1,13 +1,13 @@
 # M024: Verify the launcher port on real Compose
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, IP2, IP4
 - **Resolves:** —
 - **Surface tier:** internal — a CI job and a test script over the launchers; no external consumer relies on them
-- **Branch/PR:** —
+- **Branch/PR:** m024-launcher-real-compose
 
 ## Goal
 
@@ -49,7 +49,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 
 ## Tasks
 
-- [ ] T1: Write the script's sandbox, project name, cleanup trap, and the three boot scenarios. It copies `start_linux.sh`, `launcher_common.sh`, and `docker-compose.yml` to a temporary directory, sets `RS_LAUNCHER_NONINTERACTIVE=1` and a fixed `COMPOSE_PROJECT_NAME`, and removes only that project with `down -v`. It names each failed check.
+- [x] T1: Write the script's sandbox, project name, cleanup trap, and the three boot scenarios. It copies `start_linux.sh`, `launcher_common.sh`, and `docker-compose.yml` to a temporary directory, sets `RS_LAUNCHER_NONINTERACTIVE=1` and a fixed `COMPOSE_PROJECT_NAME`, and removes only that project with `down -v`. It names each failed check.
 - [ ] T2: Add the nine-content `.env` table, read from `docker compose config --format json` with no container started.
 - [ ] T3: Run the script on this Mac (Docker 29.9.2, Compose 5.6.1). The first run pulls about 1 GB. Plant each AC4 defect in a temporary copy of the repo and see it red, and run the AC5 sentinel check after one green and one red run.
 - [ ] T4: Add the job to `launchers.yml`, add `docker-compose.yml` to its `paths`, and correct the workflow's header comment, which says the lane needs no Docker.
@@ -72,6 +72,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - 2026-11-05: no RB tripwire tag: the script asserts IP2 and IP4 and changes neither.
 - 2026-11-05: criteria audit (reduced mode, fresh Opus reader): returned no finding on AC1, AC2, AC3, AC4, and AC6, two on AC5 (the phrase "a run" named no ending, and "same content" named no comparison), and one on AC7 (the claim over all runs had one dispatch as evidence). All three fixed by narrowing to the reader's wording, and AC7 also states the job's `if:` holds whatever `publish`'s result.
 - 2026-11-05: no changelog entry and no release: nothing changes for users (D-005).
+- 2026-11-05: T1: script written with the sandbox, the project `rstudio2u-real-compose-test`, the cleanup trap, and three boot scenarios; first run is T3. The profile's `verify` slot does not apply: no Dockerfile or build-context change (`scripts/tests` is in `.dockerignore`).
 
 ## Decisions
 

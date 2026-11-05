@@ -367,4 +367,4 @@ if [ "$fails" -gt 0 ]; then
     echo "FAILED: $fails case(s)"
     exit 1
 fi
-echo "all image-size tests passed"
+echo "PASS: all image-size assertions"

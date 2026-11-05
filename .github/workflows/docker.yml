@@ -94,8 +94,9 @@ jobs:
     permissions:
       contents: read
     strategy:
-      # A resolute failure must never block noble (GP3 preview tier), and an
-      # amd64 failure must not cancel the arm64 leg mid-build.
+      # One variant's failure must never block the other's publish (each variant
+      # ships on its own, cairn/DESIGN.md), and an amd64 failure must not cancel
+      # the arm64 leg mid-build.
       fail-fast: false
       matrix:
         include:
@@ -226,7 +227,8 @@ jobs:
     name: publish (${{ matrix.variant }})
     needs: [meta, build]
     # 'failure' must still reach this job: a variant whose legs all passed is
-    # published even when the other variant's did not (GP3 preview tier), and
+    # published even when the other variant's did not (each variant ships on
+    # its own, cairn/DESIGN.md), and
     # the digest guard below is what reports the variant that did fail.
     # 'skipped' must not: it means meta failed and nothing was built, so there
     # is nothing to assemble and the meta outputs are empty.

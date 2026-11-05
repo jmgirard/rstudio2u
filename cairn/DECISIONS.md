@@ -194,3 +194,22 @@ branch, run 39529671936, passed with both versions.
 **Consequences:** Dependabot closes #28 and #29 once the default branch has
 the new versions. A later bump of either action is still a dependency change
 under D-002 and needs its own test-mode `docker.yml` run.
+
+### D-012 (2026-11-05): Graduate Ubuntu variants by an upstream-readiness rule; `latest` moves only on an announced date
+
+**Context:** `resolute` (26.04) was preview tier from its start, so the pull
+request lane built noble alone (M02). Nothing said when a preview variant
+becomes committed or when `latest` follows it.
+**Decision:** A new Ubuntu LTS variant becomes committed when Ubuntu offers
+the LTS upgrade (its `.1` release), r2u serves its binaries, and its weekly
+builds passed four times in a row. The rule's text lives in `cairn/DESIGN.md`
+Purpose & Scope. A committed variant gets its own pull request job. `latest`
+moves to it only on a date the README announces at least one academic term
+ahead, because the launchers pull `latest` and a mid-term change reaches
+every student who did not pin a tag (GP1). The maintainer chose to graduate
+resolute now and to move `latest` on 2027-06-07, over moving it on
+2027-01-04, setting no date, or moving it at this merge (M027 plan gate).
+**Consequences:** A pull request that breaks only resolute is not merged.
+The move of `latest` and of `docker-compose.yml`'s build argument is the
+parked candidate row "Move latest to resolute on 2027-06-07", and it is a
+major version under D-005.

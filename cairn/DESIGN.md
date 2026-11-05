@@ -32,8 +32,11 @@ or later version, which is when Ubuntu starts to offer the LTS upgrade;
 HTTP 200, so r2u serves its binaries; and (c) the variant's two build jobs and
 its publish job concluded `success` in each of the 4 most recent scheduled
 `docker.yml` runs. A committed variant has its own job in `pr-ci.yml`, which
-builds it, smoke-tests it, and holds it to its size limit. A pull request
-whose noble or resolute job fails is not merged. The weekly rebuild still
+builds its amd64 image, smoke-tests it, and holds it to its size limit. Its
+arm64 image is checked only when `docker.yml` publishes. A pull request
+whose noble or resolute job fails is not merged. That is a rule of how this
+repo merges (never past red CI), not a branch protection setting, which main
+does not have. The weekly rebuild still
 publishes each variant independently, so one variant's failure never stops
 the other's tags. `latest` moves to a newly committed variant only on a date
 that the README announces at least one academic term ahead (GP1). `resolute`

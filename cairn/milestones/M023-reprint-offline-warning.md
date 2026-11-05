@@ -30,10 +30,10 @@ FAQ describes the new behavior.
 ## Acceptance criteria
 
 - [ ] AC1: On a start where `docker compose pull` fails, every image is on disk, and `docker compose up` succeeds, `start_mac.command`, `start_linux.sh`, and `start_windows.bat` each exit 0 and print a line containing `the update was skipped` both before and after the "RStudio Server is running" line. Evidence: the `offline-fallback` scenarios in `scripts/tests/posix/run_launcher_scenarios.sh` and `scripts/tests/windows/run_launcher_scenarios.ps1`, from the PR head's CI run. `start_mac.command` runs there under bash on Ubuntu, not on macOS.
-- [ ] AC2: On that same start, each launcher, after its browser step, prints a line containing `keeps running`, then waits for a key press as its last step before exit. Evidence: the `offline-fallback` scenarios show, in order, the second warning, that line, and the pause helper's seam marker, and a read of each launcher shows the browser step comes first. The real key wait is shown by a read on Windows, and no test runs it there.
-- [ ] AC3: On a start where the pull and `docker compose up` both succeed, each launcher prints no line containing `the update was skipped` or `keeps running` and does not wait for a key press, and `start_windows.bat` still ends with its 3-second timeout. Evidence: the harnesses' pull-succeeded guard, the `port-default` scenario forbidding the seam marker, and a read of `start_windows.bat`.
-- [ ] AC4: On a start where the pull fails, every image is on disk, and `docker compose up` fails, each launcher exits 1, prints its "did not become ready" error, and prints exactly one line containing `the update was skipped`. Evidence: a new `offline-health-timeout` scenario in both harnesses.
-- [ ] AC5: The `README.md` FAQ entry "How do I update to the latest version?" says that a launcher started without internet access repeats the warning once the server is ready and waits for a key press before its window closes, and that RStudio keeps running after that.
+- [x] AC2: On that same start, each launcher, after its browser step, prints a line containing `keeps running`, then waits for a key press as its last step before exit. Evidence: the `offline-fallback` scenarios show, in order, the second warning, that line, and the pause helper's seam marker, and a read of each launcher shows the browser step comes first. The real key wait is shown by a read on Windows, and no test runs it there.
+- [x] AC3: On a start where the pull and `docker compose up` both succeed, each launcher prints no line containing `the update was skipped` or `keeps running` and does not wait for a key press, and `start_windows.bat` still ends with its 3-second timeout. Evidence: the harnesses' pull-succeeded guard, the `port-default` scenario forbidding the seam marker, and a read of `start_windows.bat`.
+- [x] AC4: On a start where the pull fails, every image is on disk, and `docker compose up` fails, each launcher exits 1, prints its "did not become ready" error, and prints exactly one line containing `the update was skipped`. Evidence: a new `offline-health-timeout` scenario in both harnesses.
+- [x] AC5: The `README.md` FAQ entry "How do I update to the latest version?" says that a launcher started without internet access repeats the warning once the server is ready and waits for a key press before its window closes, and that RStudio keeps running after that.
 
 ## Coverage
 
@@ -79,3 +79,11 @@ FAQ describes the new behavior.
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-11-05 at 21e3c0e, level with origin/main 9bfa381 as its base. POSIX harness: 56 scenarios, all ok, run on this Mac. Windows harness: run 41978769374 on the probe branch at T3's code; `git diff 163a01d HEAD` on `start_windows.bat` and the PowerShell harness changes only comment lines.
+
+- AC1: POSIX `offline-fallback` passes on `start_mac.command` and `start_linux.sh`, exit 0, with the order warning, running line, warning, and a count of 2; Windows `offline-fallback` passed the same checks in run 41978769374. The criterion names the PR head's CI run, which does not exist before the approval, so the box stays open until that run passes (step 8).
+- AC2: `offline-fallback` shows second warning, `keeps running`, then `[test seam] key wait skipped` in order on all three launchers (same runs). Read: browser step before the hold at `start_mac.command:85,89`, `start_linux.sh:79,84`, `start_windows.bat:142,151`. Real key wait: pseudo-terminal run on macOS (work log, T4); read only on Windows at `start_windows.bat:151` and `:wait`, no test runs it there.
+- AC3: pull-succeeded guard passes on every POSIX scenario and in run 41978769374; `port-default` forbids the marker and passes on all three; `start_windows.bat:154` keeps `timeout /t 3` for a normal start.
+- AC4: `offline-health-timeout` passes on all three, exit 1, `did not become ready`, count 1, no `keeps running` (same runs).
+- AC5: `README.md:215-218` states the repeat, the key wait before the window closes, and that RStudio keeps running.

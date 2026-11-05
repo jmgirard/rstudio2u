@@ -168,19 +168,20 @@ Evidence gathered 2026-11-05 on branch m027-graduate-resolute at 741c622, main u
 spawned: diff-bug, blame-history, prior-review, ripple
 
 - diff-bug #1: AC3 has no evidence from the milestone's own PR — reject (false): AC3 is read at step 8 from that PR's run before any merge, and its box stays unticked until then.
-- diff-bug #2: "is not merged" rests on no branch protection — fix now: DESIGN says it is the repo's never-merge-red rule, not a protection setting.
-- diff-bug #3: `.github/image-size.sh` header still says pr-ci sizes "the image it builds" — fix now: names the noble and resolute amd64 images.
+- diff-bug #2: "is not merged" rests on no branch protection — fix now: DESIGN says it is the repo's never-merge-red rule, not a protection setting., fixed a3510c7
+- diff-bug #3: `.github/image-size.sh` header still says pr-ci sizes "the image it builds" — fix now: names the noble and resolute amd64 images., fixed a3510c7
 - diff-bug #4: the "Script unit tests" step is a hand-written list, so a new test file runs nowhere — follow-up: new [low] row "Run every unit test in the PR lane" (a maintainer adding a test meets it; low because none is pending).
-- diff-bug #5: README does not tell launcher users that they switch on the date or how to stay — fix now: README says the launchers switch at their first online start after 2027-06-07 and to put a `noble` tag in `docker-compose.yml`'s `image:` line (the launchers run `docker compose pull` at each start).
-- diff-bug #6: the graduation rule has no D-entry — fix now: D-012.
+- diff-bug #5: README does not tell launcher users that they switch on the date or how to stay — fix now: README says the launchers switch at their first online start after 2027-06-07 and to put a `noble` tag in `docker-compose.yml`'s `image:` line (the launchers run `docker compose pull` at each start)., fixed a3510c7
+- diff-bug #6: the graduation rule has no D-entry — fix now: D-012., fixed a3510c7
 - diff-bug #7: rewrapped DESIGN lines run past 80 columns; "(M027)" mid-sentence — reject (style).
 - diff-bug #8: `checks` and the image jobs now run in parallel, so a lint failure no longer saves runner time — reject (planned change): the plan chose parallel per-variant jobs.
 - diff-bug #9: uncommitted milestone-file edit — reject (false): committed as f41bb80 before the reviewers' reads ended.
-- blame-history #1: the preview-tier decision is reversed with no DECISIONS entry — fix now: D-012 (same fix as diff-bug #6).
-- blame-history #2: DESIGN's merge rule reads as covering arm64 though the PR jobs build amd64 only — fix now: DESIGN says the PR job builds the amd64 image and arm64 is checked at publish.
+- blame-history #1: the preview-tier decision is reversed with no DECISIONS entry — fix now: D-012 (same fix as diff-bug #6)., fixed a3510c7
+- blame-history #2: DESIGN's merge rule reads as covering arm64 though the PR jobs build amd64 only — fix now: DESIGN says the PR job builds the amd64 image and arm64 is checked at publish., fixed a3510c7
 - blame-history #3: GP1 cited for the `latest` timing rule — reject (false): the launchers pull `latest`, so the move's timing is a double-click path concern.
 - blame-history #4: the README date has no mechanism in code — reject (planned change): the plan's Out sends the move to the parked row "Move latest to resolute on 2027-06-07".
 - prior-review #1: the M026 gap "Measure the build that smoke tested" now covers resolute too — follow-up: that parked row now names `rocker/r2u:26.04` (same edit as ripple #1).
 - prior-review #2: a new `#reproducibility` anchor may not work on Docker Hub — reject (false): README.md:19 on main already links that anchor.
 - ripple #1: ROADMAP row "Measure the build that smoke tested" names only `rocker/r2u:24.04` — follow-up: row text extended to 26.04.
 - ripple #2: GP3 allows an asymmetry only when an upstream forces it, but the amd64-only PR lane is chosen and cites GP3 (predates M027) — follow-up: added to the [low] row "Pre-merge arm64 smoke in `pr-ci.yml`".
+- After the fixes (a3510c7): all 12 `scripts/tests/test_*.sh` exit 0; `koalaman/shellcheck:v0.11.0 -x -S info` (lint.yml's pinned version and flags) on `.github/image-size.sh` exits 0; the Dockerfile and `scripts/` are unchanged since the local builds, so no rebuild. Changed snapshot files: none (`git diff --name-only` lists no `_snaps` or `__snapshots__` path).

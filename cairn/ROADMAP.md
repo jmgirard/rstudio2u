@@ -8,6 +8,8 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M025 | Remove unused files from the image | planned | — | normal | milestones/M025-remove-unused-image-files.md |
+| M026 | Hold the image to a size limit in CI | planned | M025 | normal | milestones/M026-image-size-limit-ci.md |
 | M024 | Verify the launcher port on real Compose | done | — | normal | milestones/archive/M024-launcher-port-real-compose.md |
 | M023 | Re-print the offline warning at the end | done | — | normal | milestones/archive/M023-reprint-offline-warning.md |
 | M022 | Harden the tag-order check | done | — | normal | milestones/archive/M022-harden-tag-order.md |
@@ -16,7 +18,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- Set an image-size budget with a CI guard: Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5
+- Set an image-size budget with a CI guard: Image-size budget: slimming pass + baseline + CI size-regression guard — added 2026-07-17 — GP5 — started M025 — started M026
 - Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
@@ -36,3 +38,4 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [parked] Drop keys typed before the key wait: a key typed during the health wait dismisses the skipped-update hold as soon as it appears, so the reminder can go unread (reproduced with `read` on macOS; `pause` on Windows not established); promote when a user reports the window closing unread — added 2026-11-05 — GP1; from M023 review
 - [parked] Reword the launcher key-wait prompt: "Press any key to close..." can leave a POSIX window open with no newline after it, Windows says "continue" after a line about closing, and closing during the wait may raise a terminal dialog (not run); promote when a user reports it — added 2026-11-05 — GP1; from M023 review
 - [parked] Name other causes of a failed pull: any pull failure counts as offline, so "connect to the internet" is wrong during a Docker Hub outage or rate limit, and a local-only image in an override would warn and wait on every start; promote when a user reports it — added 2026-11-05 — GP1; from M023 review
+- [parked] Try stronger compression on layers: zstd or a higher gzip level on pushed layers can cut the download further; zstd needs a newer Docker on student machines, and gzip level 9 stays unmeasured because the 2026-11-05 probe reused its cached layers; promote when someone reports the download size as a problem — added 2026-11-05 — GP5; from M025 plan

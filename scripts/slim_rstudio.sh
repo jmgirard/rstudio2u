@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ## Remove files that RStudio Server and its libclang-dev dependency install but
-## that this image cannot use. Run this in the same RUN instruction that installs
-## them: a removal in a later instruction hides the files and leaves them in the
-## download.
+## that RStudio does not need to run. Run this in the same RUN instruction that
+## installs them: a removal in a later instruction hides the files and leaves them
+## in the download.
 ##
 ## - Copilot's copies for other platforms. Its language server loads
 ##   copilot-sdk-${process.platform}-${process.arch} and no other.

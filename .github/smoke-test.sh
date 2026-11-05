@@ -226,7 +226,8 @@ then
 fi
 
 # RStudio loads libclang's shared library for its C++ diagnostics. Sys.glob
-# returns nothing if the file is gone, and dyn.load then fails.
+# returns nothing if the file is gone, and the check then stops; dyn.load fails
+# if the link's target is gone.
 echo "==> [libclang] the shared library loads"
 if ! docker exec "$NAME" Rscript -e 'for (f in Sys.glob("/usr/lib/llvm-*/lib/libclang.so")) { dyn.load(f); cat("loaded", f, "\n"); found <- TRUE }; if (!exists("found")) stop("no libclang.so under /usr/lib/llvm-*/lib")'; then
   echo "FAIL: libclang.so did not load"; exit 1

@@ -1,6 +1,6 @@
 # M025: Remove unused files from the image
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -78,6 +78,7 @@ Published images stop carrying files that cannot run on them or serve only stati
 - 2026-11-05: T3, T4 done on a local noble arm64 build: smoke test exit 0. Plants red with the expected `FAIL:` line: native folder gone with another folder present, truncated `runtime.node`, a language server that never answers, libclang's library gone, `libclang-18-dev` removed. With no platform folders, the smoke test passes with the notice. All 10 layers of `docker save` name none of the removed files.
 - 2026-11-05: the `libclang-18-dev` plant first came back `FAIL: quarto render`, not the expected line: with a broken dependency, bspm's apt run removed `rstudio-server`, and the bundled Quarto with it. `apt-get check` now runs before the bspm install, and the plant then fails on it. This also supports the plan gate's choice to keep the package.
 - 2026-11-05: T6 done: test-mode run 42051578392 at c7adaa3 was green on every job and attached no tag. Each leg's log shows one native Copilot folder, 0 llvm archives, no `libgit2.a` or `www-symbolmaps`, and every smoke check passing; resolute uses `llvm-21`. Manifest bytes against the same-version tags: noble amd64 722355886 vs 992828358, noble arm64 711709142 vs 986921584, resolute amd64 758501535 vs 1030892868, resolute arm64 743563107 vs 1019615078: 270 to 276 MB less.
+- 2026-11-05: claim audit: 31 claims read, 2 corrected — .github/smoke-test.sh, scripts/slim_rstudio.sh. The re-read found the header's corrected wording still too strong for symbol maps, which `rserver` can read, so it now says "does not need to run", which the smoke run with them gone supports. One claim stays unobserved: that Copilot sign-in needs a GitHub account. Comment-only changes after run 42051578392.
 
 ## Decisions
 

@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-04 (triage of 16 candidates and 8 Known issues: re-rated Pre-merge arm64 smoke to low; re-rated to parked with a condition: keepalive push retry, Docker Hub tag date alert, untagged manifest pruning, r2u timeouts, gap wording, empty attach path; added a condition to the job-name separator row; no drops, no decision entry; validate green)_
+_Last hygiene check: 2026-11-04 (lessons pass over 18 lessons: dropped 2026-07-18 (M08) CRLF by enforcement, 2026-09-03 (M11) by ownership, 2026-09-04 (M014) by planner test, 2026-09-07 (M018) by ownership; joined to one line: 2026-07-18 (M05) x2, (M07) x2, (M08), (M09) x2, 2026-09-06 (M015), 2026-09-07 (M016) x2; no decision entry; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones

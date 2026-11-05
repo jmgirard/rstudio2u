@@ -164,9 +164,10 @@ launcher_bound_port() {
     out=$(docker compose port rstudio2u 8787 2>/dev/null) || return 1
     port=${out##*:}
     port=${port//[!0-9]/}
-    # `docker compose port` prints :0 and exits 0 when nothing is published for
-    # that container port (e.g. an override that drops `ports`). Announcing
-    # localhost:0 would be worse than falling back.
+    # When nothing is published for that container port (e.g. an override that
+    # drops `ports`), Compose 5.6.1 exits 1 with "no port 8787/tcp", which the
+    # `|| return 1` above handles. This check covers a Compose that prints :0 and
+    # exits 0 instead: announcing localhost:0 would be worse than falling back.
     launcher_port_ok "$port" || return 1
     printf '%s' "$port"
 }

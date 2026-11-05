@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries 10 seconds apart, the answer is not a well-formed index, its date stamp is malformed, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold."
+        description: "Exercise the whole lane without publishing: every leg builds, pushes its layers by digest and is smoke-tested, then the publish job prints the manifest list and the tag list it would apply instead of attaching any tag. That tag list is filtered against what each tag points at now on Docker Hub, so a test run reads the registry and fails if a tag still cannot be read after 3 tries 10 seconds apart, the answer is not a well-formed index, its date stamp is malformed, or it carries a date later than the current time. This covers the tags only: the keepalive job below runs on every dispatch, so a test run still commits if the default branch is past the threshold. The launcher-compose job also runs on every dispatch, against the image already published, and publishes nothing."
         type: boolean
         default: false
       keepalive_threshold:
@@ -395,6 +395,26 @@ jobs:
             docker buildx imagetools inspect "${attach[0]}"
           fi
 
+  # Run start_linux.sh against the runner's real Docker and Compose. The runner's
+  # Compose changes with no change to this repo, so launchers.yml, which runs on
+  # pull requests, cannot see a new Compose by itself. always() runs this even
+  # when a publish leg failed, because `latest` is then still the image a student
+  # pulls, and because notify reads a skipped job as a failure.
+  launcher-compose:
+    needs: publish
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    # notify waits for this job, so a stalled pull must not hold the alert.
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run start_linux.sh against real Docker and Compose
+        run: bash scripts/tests/posix/run_launcher_real_compose.sh
+
   # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
   # opens (or updates) a ci-failure issue and the next green run closes it
   # (GP7). Push and dispatch runs have a person behind them and skip this job.
@@ -411,9 +431,10 @@ jobs:
   # job's is: keepalive runs on schedule and dispatch, notify on schedule
   # alone, so needs.keepalive.result is never `skipped` here. Narrow that `if:`
   # and it can be — and aggregate_result reads `skipped` as a failure, which
-  # would open a ci-failure issue every week for a job that never ran.
+  # would open a ci-failure issue every week for a job that never ran. The same
+  # holds for launcher-compose, whose `if:` is true on every scheduled run.
   notify:
-    needs: [meta, build, publish, keepalive]
+    needs: [meta, build, publish, keepalive, launcher-compose]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
@@ -434,7 +455,7 @@ jobs:
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }} ${{ needs.keepalive.result }}
+          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }} ${{ needs.keepalive.result }} ${{ needs.launcher-compose.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail

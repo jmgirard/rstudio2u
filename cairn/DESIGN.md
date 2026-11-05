@@ -79,7 +79,10 @@ reproducibility.
   `.github/last-rebuild-success.sh` (moved there M020). A scheduled run whose
   gap job fails outright is reported too: `rebuild-gap.yml`'s `notify` job
   names that job in the same issue, and runs only on that failure, so it
-  never closes the issue (added M020).
+  never closes the issue (added M020). `docker.yml`'s `launcher-compose` job
+  counts here too: its failure turns the scheduled run red, so two such weeks
+  raise "No successful weekly rebuild" although the images published, as a
+  keepalive failure does (added M024).
   Its bound: this check is itself on a schedule, so once GitHub has disabled
   the repository's scheduled workflows it is disabled with them — that
   failure mode belongs to the keepalive above, not here.
@@ -204,6 +207,9 @@ _Warts confirmed in the 2026-07-17 interview:_
   shape, so a format change fails the build loudly instead of mis-tagging
   (M03) — the scrape still depends on that endpoint's format.
 - The Windows launcher path sees the least real-world testing.
+- The real-Compose launcher check (`run_launcher_real_compose.sh`) runs only
+  `start_linux.sh`, only on amd64, and only on the runner's Compose version, so
+  it cannot show what a student's Docker Desktop does (added M024).
 - The launchers' offline fallback needs a Compose with `config --images`; an
   older Compose still gets the hard download error even with an image on disk
   (accepted at M10 review: the launchers target current Docker Desktop).

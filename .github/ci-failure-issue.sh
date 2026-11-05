@@ -2,8 +2,9 @@
 #
 # Open, update, or close the repo's `ci-failure` issue from a scheduled run's
 # job results. Called by the `notify` job in .github/workflows/docker.yml on
-# scheduled runs, so a failure anywhere in the run — a build or publish leg, or
-# the keepalive job that keeps next week's run scheduled at all — reaches the
+# scheduled runs, so a failure anywhere in the run — a build or publish leg, the
+# launcher-compose job, or the keepalive job that keeps next week's run
+# scheduled at all — reaches the
 # maintainer as an issue, and the next fully green run closes it (GP7). Also
 # called by .github/rebuild-gap.sh, which reports something no single run can
 # see — that no scheduled run has succeeded in too long — through this same

@@ -25,6 +25,7 @@
 # launcher against Compose's real behavior instead of against themselves.
 # STUB_BOUND_PORT overrides that, which is how the "Compose is the authority"
 # scenario forces a disagreement between requested and bound.
+# run_launcher_real_compose.sh checks start_linux.sh against real Compose.
 #
 # Run by .github/workflows/launchers.yml (ubuntu-latest).
 

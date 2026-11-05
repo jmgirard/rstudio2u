@@ -4,8 +4,11 @@ name: Launchers
 # lane executes all three launchers on real runners against a stub `docker` on
 # PATH — driving every failure/success branch without needing Docker — plus a
 # cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
-# ZIP download works on Windows). Its own paths filter keeps the heavy image
-# build in pr-ci.yml from being dragged in by a launcher-only change.
+# ZIP download works on Windows). The launcher-compose job also runs
+# start_linux.sh against the runner's real Docker and Compose with the published
+# image, because a stub cannot show what Compose really does. The lane's own
+# paths filter keeps the heavy image build in pr-ci.yml from being dragged in by
+# a launcher-only change.
 on:
   pull_request:
     branches: [main]
@@ -13,6 +16,7 @@ on:
       - "start_*"
       - "stop_*"
       - "launcher_common.sh"
+      - "docker-compose.yml"
       - ".gitattributes"
       - "scripts/tests/test_launcher_line_endings.sh"
       - "scripts/tests/posix/**"
@@ -35,6 +39,15 @@ jobs:
         uses: actions/checkout@v7
       - name: Run POSIX launcher branches (stubbed docker)
         run: bash scripts/tests/posix/run_launcher_scenarios.sh
+
+  launcher-compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Run start_linux.sh against real Docker and Compose
+        run: bash scripts/tests/posix/run_launcher_real_compose.sh
 
   windows-scenarios:
     runs-on: windows-latest

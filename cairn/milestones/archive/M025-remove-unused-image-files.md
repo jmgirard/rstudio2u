@@ -1,0 +1,11 @@
+# M025: Remove unused files from the image
+
+**Status:** done (2026-11-05, PR #36 https://github.com/jmgirard/rstudio2u/pull/36)
+
+**Goal:** Published images stop carrying files that cannot run on them or serve only static linking, so a student downloads at least 200 MB less, with every image function unchanged.
+
+**Outcome:** User-visible: each of the four images is 270 to 275 MB smaller to download (noble amd64 993 to 723 MB, resolute amd64 1031 to 759 MB). `scripts/slim_rstudio.sh`, called from `install_rstudio.sh` in the `RUN` that installs RStudio, removes Copilot's `darwin`, `win32`, and other-architecture `linux` folders, the `.a` files under `/usr/lib/llvm-*/lib`, `lib/libgit2.a`, and `www-symbolmaps`. Static linking against libclang no longer works. `.github/smoke-test.sh` runs `apt-get check` before its first install, loads Copilot's native module, sends `initialize` as `rstudio`, loads `libclang.so`, and prints a notice instead of failing when the language server or its platform folders are gone. `scripts/tests/test_slim_rstudio.sh` runs in `pr-ci.yml`. DESIGN.md's Architecture and Known issues record what is removed and what that depends on.
+
+**Decisions:** none. Plan gate: keep Copilot and drop only its other-platform copies (user's choice); delete static archives over removing `libclang-dev`, which `rstudio-server` depends on; `rm` over a dpkg `path-exclude` that would also hide those paths from later installs.
+
+**Review:** Four-lens fan-out, 25 findings: 9 fixed (upstream layout notice, narrower Copilot removal, `method` check on the reply, `exit` handler, running as `rstudio`, DESIGN wording, one test removed, the libclang check's `exists` call), 2 follow-ups (M026's size check; new row "Rename the PR lane's unit test step"), 14 rejected, 2 of those as edge (stale `libgit2.pc` and CMake files; a hang in the native `require`). Claim audit: 31 read, 2 corrected. Evidence at 9664709: test-mode run 42055651268 green on all four legs, 269.8 to 275.3 MB saved against the same-RStudio tags, 10 layers naming no removed file, 6 smoke plants red with the expected `FAIL:` line. PR #36's six checks passed. CI did not test Copilot sign-in. The row "Set an image-size budget with a CI guard" narrowed to M026. New parked row "Try stronger compression on layers". Lessons used: M024's plant lesson.

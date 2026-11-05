@@ -55,7 +55,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - [x] T3: In `pr-ci.yml`, after the build step, export the same build as OCI through the same builder so its cache serves it, read the manifest out of the archive, and run `.github/image-size.sh`. Add the limits file and the script to `paths`. The failure message says how to raise the limit.
 - [x] T4: Write `.github/image-size-report.sh` and `.github/workflows/image-size.yml`: Mondays at 12:00 UTC and on dispatch, with `issues: write`. For each tag and architecture it reads `docker buildx imagetools inspect --raw` up to 3 times 10 seconds apart, then opens, comments on, or closes the `image-size` issue. The rule stays in scripts, never in the workflow.
 - [x] T5: After M025's publish, read the four published sizes and write `.github/image-size-limits` by AC1's rule, with the date and command beside the figures. Projection from the 2026-11-05 probes: noble about 790 MB, resolute about 840 MB.
-- [ ] T6: Add the DESIGN.md Conventions bullet: the metric, the 10% rule, that the pull request lane fails and the weekly check reports, and that a pull request raises a limit by editing the limits file with a stated reason (GP5).
+- [x] T6: Add the DESIGN.md Conventions bullet: the metric, the 10% rule, that the pull request lane fails and the weekly check reports, and that a pull request raises a limit by editing the limits file with a stated reason (GP5).
 - [ ] T7: Run the AC6 diff. Then, with the permission granted at the plan gate, push a temporary branch with a limit set below the real size and `image-size.yml` on `on: push`, because a dispatch needs the workflow on the default branch (lesson M023). See the pull request step red naming the size and limit. See the weekly check open a real `image-size` issue, then green close it. Delete the temporary branch and confirm that the issue is closed.
 
 ## Work log
@@ -78,6 +78,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - 2026-11-05: T3 done: the export and size steps in `pr-ci.yml`, not run yet (T7 runs them). Choice: they follow the smoke test, so a size failure cannot hide a smoke failure. `paths` also gains the report script, because the unit-test step covers it.
 - 2026-11-05: T4 done: `.github/image-size-report.sh` and `image-size.yml`; every report case passes, and eight planted defects (equal counted as over, empty layers as size 0, unread allowing a close, label `ci-failure`, two reads, unread lines dropped, newest issue reused, exit 1 when over) each turned the suite red on the expected check. The committed-limits cases still wait for T5.
 - 2026-11-05: T5 done: limits noble 800 MB and resolute 840 MB, from docker.yml run 42058263556 (M025's publish): noble 723.07 and 712.43 MB, resolute 759.22 and 744.28 MB. `grep -rnw` finds each number only in the limits file. The suite passes in full.
+- 2026-11-05: T6 done: DESIGN.md Conventions bullet added. It also states the bound that growth in the three images the pull request lane does not build shows only after they publish.
 
 ## Decisions
 

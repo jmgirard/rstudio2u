@@ -72,7 +72,7 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
       `find.package()` (and `dpkg -s r-cran-<pkg>` for the bspm path), then run
       each of the four actions in AC1 and record kept or lost; run a saved
       `~/my_packages.R` in a new container. One work-log line per outcome.
-- [ ] T2: Write the README section "Keeping installed packages" under "Adding R
+- [x] T2: Write the README section "Keeping installed packages" under "Adding R
       Packages" from T1's observed results, and point the claims at README
       lines 47–49 and 107–108 to it.
 - [ ] T3: Reword the closing message in the three stop launchers, keeping
@@ -99,6 +99,8 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - 2026-11-05: T1 outcome up -d with RS_PORT 8797 → 8798: new container, praise lost, home file kept.
 - 2026-11-05: T1 outcome up -d with image changed to `noble-2026-11-05`: new container, praise lost, home file kept. A `sudo apt-get install tree` was also lost after down then up.
 - 2026-11-05: T1 saved script: in a new container of `noble-2026-11-05`, `source("~/my_packages.R")` with `sudo apt-get update && sudo apt-get install -y libfftw3-dev` and `install.packages(c("glmmTMB", "mice", "metafor"))` installed all four. Without `apt-get update`, `sudo apt-get install` in a brand-new container fails with "Unable to locate package" (empty apt lists), so the script keeps the update; README line 109's bare `sudo apt install` hint is the new candidate row "Add apt update to the README's apt hint".
+- 2026-11-05: T2 probe: stop, then `docker compose pull` with no newer image, then `up -d --wait` (the start launcher's sequence) kept the same container (a9f692ab2afe) and praise.
+- 2026-11-05: T2: README section "Keeping installed packages" added under "Adding R Packages" from the T1 and T2 runs; the "Your work is saved" note and the bullet at old line 107 point to it. The Simple English lint finds no new hit in the added lines (README total 52 → 51); the older hits are the new candidate row "Clear the README's plain-English hits".
 
 ## Decisions
 

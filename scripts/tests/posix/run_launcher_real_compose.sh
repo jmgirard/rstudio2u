@@ -4,11 +4,12 @@
 # the launcher announces is not the port that answers. It is the counterpart of
 # run_launcher_scenarios.sh, whose stub `docker` models Compose instead of
 # asking it. The launcher's own `docker compose pull` fetches the published
-# image, so the first run on a machine downloads about 1 GB.
+# image, so the first run on a machine downloads about 1 GB, and any local
+# jmgirard/rstudio2u:latest is replaced.
 #
 # The launcher runs from a temporary copy under its own Compose project, so a
 # run cannot touch a .env in this checkout or the home volume of a real
-# rstudio2u project. Ports 8787, 8888, and 8889 must be free.
+# rstudio2u project. Ports 8787, 8888, 8889, and 8890 must be free.
 #
 # Run by the launcher-compose jobs in .github/workflows/launchers.yml and
 # .github/workflows/docker.yml (ubuntu-latest).
@@ -23,8 +24,9 @@ for tool in docker curl jq; do
 done
 docker info >/dev/null 2>&1 || { echo "the Docker daemon cannot be reached"; exit 1; }
 
-# A value from the calling shell would decide every scenario.
-unset RS_PORT
+# A value from the calling shell would decide every scenario, and COMPOSE_FILE
+# could also point the cleanup's `down -v` at another project's file.
+unset RS_PORT COMPOSE_FILE COMPOSE_PROFILES COMPOSE_ENV_FILES
 export COMPOSE_PROJECT_NAME=rstudio2u-real-compose-test
 
 work=$(mktemp -d)
@@ -72,9 +74,12 @@ run_scenario() {
         bash "$sandbox/start_linux.sh" > "$output" 2>&1
     code=$?
     check "$name: launcher exit status" "$code" 0
-    [ "$code" = 0 ] || tail -n 20 "$output"
+    if [ "$code" != 0 ]; then
+        tail -n 20 "$output"
+        compose_in_sandbox logs --tail 20
+    fi
 
-    url=$(sed -n 's/^.*RStudio Server is running at \([^ ]*\)$/\1/p' "$output")
+    url=$(grep -Eo 'http://localhost:[0-9]+' "$output" | head -n 1)
     check "$name: announced URL" "$url" "http://localhost:$expected"
 
     curl -sS -o /dev/null --max-time 10 "$url" 2>/dev/null
@@ -117,6 +122,16 @@ compare_env '# RS_PORT=1111'
 run_scenario "default port" "" "" 8787
 run_scenario ".env port" "RS_PORT=8888" "" 8888
 run_scenario "environment beats .env" "RS_PORT=8888" 8889 8889
+
+# In the scenarios above the launcher's fallback gives the same port as Compose,
+# so a broken query would pass. Only Compose knows the port an override sets.
+cat > "$sandbox/docker-compose.override.yml" <<'OVERRIDE'
+services:
+  rstudio2u:
+    ports: !override
+      - "127.0.0.1:8890:8787"
+OVERRIDE
+run_scenario "override decides the port" "" "" 8890
 
 echo ""
 if [ "$fails" -gt 0 ]; then

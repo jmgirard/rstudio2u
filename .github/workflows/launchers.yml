@@ -6,9 +6,9 @@ name: Launchers
 # cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
 # ZIP download works on Windows). The launcher-compose job also runs
 # start_linux.sh against the runner's real Docker and Compose with the published
-# image, because a stub cannot show what Compose really does. Its own paths
-# filter keeps the heavy image build in pr-ci.yml from being dragged in by a
-# launcher-only change.
+# image, because a stub cannot show what Compose really does. The lane's own
+# paths filter keeps the heavy image build in pr-ci.yml from being dragged in by
+# a launcher-only change.
 on:
   pull_request:
     branches: [main]
@@ -42,6 +42,7 @@ jobs:
 
   launcher-compose:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v7

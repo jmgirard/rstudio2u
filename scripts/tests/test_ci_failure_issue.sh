@@ -453,8 +453,8 @@ assert_rc      "cancelled exits 0" 0 "$rc"
 if [ -s "$LOG" ]; then echo "FAIL: cancelled made gh calls"; cat "$LOG"; fails=$((fails + 1)); else echo "ok: cancelled makes no gh call"; fi
 
 # 6. Aggregating the needed jobs' results. The first argument is the list the
-# notify job passes ("<meta> <build> <publish>"), and the issue is closed only
-# when every one of them is success. Each case is asserted by which gh
+# notify job passes ("<meta> <build> <publish> <keepalive> <launcher-compose>"),
+# and the issue is closed only when every one of them is success. Each case is asserted by which gh
 # subcommand ran on which issue, so "did not close" is distinguishable from
 # "did nothing".
 
@@ -492,7 +492,7 @@ assert_call    "a failure outranks a cancellation and opens an issue" '^issue cr
 
 # 6f2. An empty results list reported nothing successful, so it is not a
 # success. Unreachable from docker.yml today, where RESULTS always carries
-# three values, but the rule is what keeps a future empty interpolation from
+# five values, but the rule is what keeps a future empty interpolation from
 # closing the issue on a run that did nothing.
 rc=$(run_script "" "$TWO" "$FIX_ALL_GREEN")
 assert_rc      "an empty results list exits 0" 0 "$rc"

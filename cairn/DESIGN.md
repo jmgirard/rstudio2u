@@ -79,7 +79,10 @@ reproducibility.
   `.github/last-rebuild-success.sh` (moved there M020). A scheduled run whose
   gap job fails outright is reported too: `rebuild-gap.yml`'s `notify` job
   names that job in the same issue, and runs only on that failure, so it
-  never closes the issue (added M020).
+  never closes the issue (added M020). `docker.yml`'s `launcher-compose` job
+  counts here too: its failure turns the scheduled run red, so two such weeks
+  raise "No successful weekly rebuild" although the images published, as a
+  keepalive failure does (added M024).
   Its bound: this check is itself on a schedule, so once GitHub has disabled
   the repository's scheduled workflows it is disabled with them — that
   failure mode belongs to the keepalive above, not here.

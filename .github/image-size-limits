@@ -1,7 +1,7 @@
 # Compressed-size limit for each image variant, in decimal MB (1,000,000 bytes).
 # .github/image-size.sh reads the lines below that are not comments.
 noble 800
-resolute 840
+resolute 740
 
 # How a limit is set: the larger of the variant's two compressed sizes, plus 10%,
 # rounded up to the next 10 MB. A pull request raises a limit by editing this

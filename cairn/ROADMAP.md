@@ -8,6 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M027 | Graduate resolute under a written rule | planned | — | normal | milestones/M027-graduate-resolute.md |
 | M026 | Hold the image to a size limit in CI | done | M025 | normal | milestones/archive/M026-image-size-limit-ci.md |
 | M025 | Remove unused files from the image | done | — | normal | milestones/archive/M025-remove-unused-image-files.md |
 | M024 | Verify the launcher port on real Compose | done | — | normal | milestones/archive/M024-launcher-port-real-compose.md |
@@ -16,12 +17,12 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
+- Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2 — started M027
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015 — added 2026-07-17 — GP3; from M05
-- [low] Rename the PR lane's unit test step: `pr-ci.yml` calls its step "Resolver unit tests" and describes "the RStudio version resolver", but it runs every script's unit tests, so the name misleads whoever reads a failure — added 2026-11-05 — from M025 review
+- [low] Rename the PR lane's unit test step: `pr-ci.yml` calls its step "Resolver unit tests" and describes "the RStudio version resolver", but it runs every script's unit tests, so the name misleads whoever reads a failure — added 2026-11-05 — from M025 review — started M027
 - [parked] Keep launcher failures out of the gap: a red `launcher-compose` job turns the scheduled `docker.yml` run red, so after two such weeks `rebuild-gap.sh` reports "No successful weekly rebuild" although the images published; the alert lands on the `ci-failure` issue that the job's own failure already opened; promote when a gap alert fires in a week whose images published — added 2026-11-05 — GP2; from M024 review
 - [parked] Retry the launcher check's image pull: `run_launcher_real_compose.sh` relies on the launcher's single `docker compose pull`, so one Docker Hub failure on the weekly run opens the `ci-failure` issue; promote when a Hub pull failure opens that issue — added 2026-11-05 — GP7; from M024 review
 - [parked] Run start_windows.bat on real Compose: M024's real-Compose check covers only `start_linux.sh`, because hosted Windows runners have no Linux containers, so the batch file's own port logic meets only the stub; promote when a hosted Windows runner can run Linux containers or a user reports a wrong port on Windows — added 2026-11-05 — GP3; from M024 plan
@@ -41,3 +42,4 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [parked] Retitle a reused image-size issue: an issue opened as "Image size not read" keeps that title when a later comment reports a size over its limit; promote when a user reports it — added 2026-11-05 — GP5; from M026 review
 - [parked] Measure the build that smoke tested: `pr-ci.yml`'s export step re-resolves `rocker/r2u:24.04`, so a tag move during the smoke test would measure a different build; promote when an export step's log shows a rebuilt layer — added 2026-11-05 — GP5; from M026 review
 - [parked] Add .dockerignore to the build paths: `.dockerignore` is in neither `pr-ci.yml`'s nor `docker.yml`'s `paths`, so an edit that changes the image's contents starts no check and no publish; promote when a `.dockerignore` edit ships unchecked — added 2026-11-05 — GP7; from M026 review
+- [parked] Move latest to resolute on 2027-06-07: point `latest` at resolute in `docker.yml`'s publish matrix, set `docker-compose.yml`'s `UBUNTU_VERSION` to 26.04, and update the README tag table, on the date M027's README announces; a major version (D-005); promote on 2027-05-03 so it can merge by 2027-06-07 — added 2026-11-05 — GP1, GP2; from M027 plan

@@ -213,3 +213,15 @@ resolute now and to move `latest` on 2027-06-07, over moving it on
 The move of `latest` and of `docker-compose.yml`'s build argument is the
 parked candidate row "Move latest to resolute on 2027-06-07", and it is a
 major version under D-005.
+
+### D-013 (2026-11-05): Triage drops the reused image-size issue retitle
+
+**Context:** A `/cairn-triage` pass weighed every ROADMAP candidate row and
+every DESIGN.md Known issues entry.
+**Decision:** Dropped as not worth keeping: "Retitle a reused image-size
+issue", which would retitle an `image-size` issue opened as "Image size not
+read" when a later comment reports a size over its limit. Only the
+maintainer reads these issues, and the comment that
+`.github/image-size-report.sh` posts names the over-limit variant, so a
+retitle step does not earn its code and tests.
+**Consequences:** The row returns only by superseding this entry.

@@ -1,7 +1,7 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (M028 merged: one row graduated, M025 pruned from the table, no lesson captured; validate green)_
+_Last hygiene check: 2026-11-05 (triage: compressed and retitled "Pre-merge arm64 smoke in `pr-ci.yml`" → "Run the arm64 smoke test in PR CI", low → normal; promoted "Remove the old pdf .gitignore entry", low → high; dropped "Retitle a reused image-size issue", not worth keeping; decision entry D-013 written; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
@@ -16,9 +16,9 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
+- [high] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
-- [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
-- [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015; M027 review: GP3 allows a single-architecture asymmetry only "when an upstream forces it", yet `pr-ci.yml` and DESIGN's size bullet cite GP3 for the amd64-only PR lane, which is chosen, so this row or GP3's text should settle it — added 2026-07-17 — GP3; from M05
+- Run the arm64 smoke test in PR CI: smoke-test a native arm64 build in `pr-ci.yml` too, deferred from M05 for PR-CI speed and free of emulation since M015; GP3 allows a one-architecture gap only "when an upstream forces it", but `pr-ci.yml` and DESIGN's size bullet cite GP3 for an amd64-only PR lane that is chosen (M027 review), so this row or GP3's text settles it — added 2026-07-17 — GP3; from M05
 - [low] Run every unit test in the PR lane: the "Script unit tests" step in `pr-ci.yml` runs a hand-written list of 11 `scripts/tests/test_*.sh` files, so a new test file runs nowhere until someone adds it there; a loop over `scripts/tests/test_*.sh` (less the launcher test that `launchers.yml` runs) would pick it up — added 2026-11-05 — GP7; from M027 review
 - [parked] Keep launcher failures out of the gap: a red `launcher-compose` job turns the scheduled `docker.yml` run red, so after two such weeks `rebuild-gap.sh` reports "No successful weekly rebuild" although the images published; the alert lands on the `ci-failure` issue that the job's own failure already opened; promote when a gap alert fires in a week whose images published — added 2026-11-05 — GP2; from M024 review
 - [parked] Retry the launcher check's image pull: `run_launcher_real_compose.sh` relies on the launcher's single `docker compose pull`, so one Docker Hub failure on the weekly run opens the `ci-failure` issue; promote when a Hub pull failure opens that issue — added 2026-11-05 — GP7; from M024 review
@@ -36,7 +36,6 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [parked] Name other causes of a failed pull: any pull failure counts as offline, so "connect to the internet" is wrong during a Docker Hub outage or rate limit, and a local-only image in an override would warn and wait on every start; promote when a user reports it — added 2026-11-05 — GP1; from M023 review
 - [parked] Try stronger compression on layers: zstd or a higher gzip level on pushed layers can cut the download further; zstd needs a newer Docker on student machines, and gzip level 9 stays unmeasured because the 2026-11-05 probe reused its cached layers; promote when someone reports the download size as a problem — added 2026-11-05 — GP5; from M025 plan
 - [parked] Alert when the size report itself fails: `image-size.yml` has no `notify` job, so a failed run moves no issue and shows only as a red run, where `rebuild-gap.yml` reports its own failure; promote when a red size run goes unnoticed for a week — added 2026-11-05 — GP2; from M026 review
-- [parked] Retitle a reused image-size issue: an issue opened as "Image size not read" keeps that title when a later comment reports a size over its limit; promote when a user reports it — added 2026-11-05 — GP5; from M026 review
 - [parked] Measure the build that smoke tested: `pr-ci.yml`'s export step re-resolves `rocker/r2u:24.04` (and `rocker/r2u:26.04` for resolute since M027), so a tag move during the smoke test would measure a different build; promote when an export step's log shows a rebuilt layer — added 2026-11-05 — GP5; from M026 review
 - [parked] Add .dockerignore to the build paths: `.dockerignore` is in neither `pr-ci.yml`'s nor `docker.yml`'s `paths`, so an edit that changes the image's contents starts no check and no publish; promote when a `.dockerignore` edit ships unchecked — added 2026-11-05 — GP7; from M026 review
 - [parked] Move latest to resolute on 2027-06-07: point `latest` at resolute in `docker.yml`'s publish matrix, set `docker-compose.yml`'s `UBUNTU_VERSION` to 26.04, and update the README tag table, on the date M027's README announces; a major version (D-005); promote on 2027-05-03 so it can merge by 2027-06-07 — added 2026-11-05 — GP1, GP2; from M027 plan

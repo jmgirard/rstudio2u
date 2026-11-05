@@ -82,6 +82,14 @@ while :; do
 done
 
 # --- Phase 2: toolchain -----------------------------------------------------
+# Before any install: with a broken dependency, bspm's apt run below removes
+# rstudio-server to settle it, which hides the state the image shipped in.
+echo "==> [apt] the package database is consistent"
+if ! docker exec "$NAME" apt-get check; then
+  echo "FAIL: apt-get check reported a problem"; exit 1
+fi
+echo "PASS: apt-get check"
+
 # bspm binary install: request a CRAN package and confirm it (a) loads and
 # (b) landed as an apt binary (r-cran-<pkg>). The dpkg check is what proves the
 # r2u/bspm *binary* path worked rather than a silent source-compile fallback —
@@ -224,12 +232,6 @@ if ! docker exec "$NAME" Rscript -e 'for (f in Sys.glob("/usr/lib/llvm-*/lib/lib
   echo "FAIL: libclang.so did not load"; exit 1
 fi
 echo "PASS: libclang.so loads"
-
-echo "==> [apt] the package database is consistent"
-if ! docker exec "$NAME" apt-get check; then
-  echo "FAIL: apt-get check reported a problem"; exit 1
-fi
-echo "PASS: apt-get check"
 
 # --- Phase 3: mirror-failure UX ---------------------------------------------
 # The r2u binary mirror is occasionally unreachable (a known issue), and a raw

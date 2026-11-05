@@ -94,3 +94,40 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - AC6 evidence: `git diff --stat origin/main...HEAD` names nine files: the limits file, the two new scripts, `image-size.yml`, `pr-ci.yml`, `cairn/DESIGN.md`, `cairn/ROADMAP.md`, the milestone file, and `scripts/tests/test_image_size.sh`. It names none of the files AC6 lists.
 - AC7 evidence: `test_image_size.sh` exits 0 with 86 ok lines and no FAIL line. It covers a size under, equal to, and over the limit, a no-layers manifest failing the archive check (exit 2) and reading as unread in the report, the AC4 and AC5 issue actions on a stub `gh`, and no call naming `ci-failure`. `pr-ci.yml` line 48 runs it, and the check ran green in run 42062731742. DESIGN.md line 136 states the limit rule and how a pull request raises a limit.
 - Consistency gate: `cairn_validate.py` exit 0, one advisory (the old `.gitignore` pdf entry, already a candidate row). `Dockerfile` and `scripts/` outside `scripts/tests/` are unchanged. hadolint 2.15.1 reports no violation locally. The build ran from a clean checkout in run 42062731742, not locally. The base image is an explicit version tag through `UBUNTU_VERSION`, no secret is in `ENV` or `ARG`, and `.dockerignore` is present. No changelog: nothing changes for users. No principle changed, so `cairn_impact` is skipped.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: a pull request unrelated to size can go red from upstream growth, because the lane builds `stable` RStudio on the current base, and DESIGN did not say so — fix now (the design keeps failing the lane; DESIGN now states the bound), fixed 02db7ea
+- diff-bug #2: a failed `gh label create` withheld the comment on an already open issue — fix now (label call moved to the create path), fixed 02db7ea
+- diff-bug #3: when the report script itself fails, nothing raises an alert beyond a red run — follow-up: parked row "Alert when the size report itself fails", plus a DESIGN bound sentence in 02db7ea
+- diff-bug #4: jq's exit status was ignored, so `{"layers":[{"size":5}]} <html>oops` counted as a real size and could close the issue — fix now (`jq -s`, one document only), fixed 02db7ea
+- diff-bug #5: the test named "before the issue opens" did not check order — fix now, fixed 02db7ea
+- diff-bug #6: two manifests for one architecture had no test — fix now, fixed 02db7ea
+- diff-bug #7: buildx is not pinned, so a change to the export's `index.json` shape fails every pull request closed, and DESIGN did not say so — fix now (DESIGN bound), fixed 02db7ea
+- diff-bug #8: an unreadable result in the pull request lane gave no annotation — fix now, fixed 02db7ea
+- diff-bug #9: the 10-second pause had no test — fix now, fixed 02db7ea
+- diff-bug #10: the unreadable-blob branch had no test — fix now, fixed 02db7ea
+- diff-bug #11: other untested branches — fix now for `%` and carriage return, run-link stand-in, OS filter, zero sum, negative size, width bound, no `::error::` in plain mode, and the "still publish" text, fixed 02db7ea; rejected, edge, for the jq-missing guard (only a runner with no jq reaches it, and it exits 2), the silent-script fallback line (only a deleted or crashed `image-size.sh` reaches it, and it reads as unread), and the `.size` type and floor checks (only a fractional layer size from a registry, and later checks catch nearly all of it)
+- diff-bug #12: the variant list is hard-coded — rejected, planned change: AC3 names the `noble` and `resolute` tags
+- diff-bug #13: nothing bounded a read that hangs — fix now (`timeout-minutes: 10`), fixed 02db7ea
+- diff-bug #14: the anonymous read's rate-limit risk was unstated — fix now (DESIGN bound), fixed 02db7ea
+- diff-bug #15: no `concurrency` setting — rejected, edge: only a manual dispatch racing the Monday schedule reaches it, its effect is a second alert issue, which an all-within run closes, and `rebuild-gap.yml` has none either
+- diff-bug #16: an issue opened as unread keeps that title when a later comment reports an over size — follow-up: parked row "Retitle a reused image-size issue"
+- diff-bug #17: the export re-resolves `rocker/r2u:24.04`, so a tag move during the smoke test would measure another build — follow-up: parked row "Measure the build that smoke tested"
+- diff-bug #18: the limit rule uses published sizes that a pull request does not have — fix now (limits file and DESIGN state what figure it has), fixed 02db7ea
+- diff-bug #19: exit 0 with empty stdout would record as within — rejected, false: `image-size.sh` prints its line before every exit 0
+- diff-bug #20: a not-found answer is retried 3 times, unlike `tag-order.sh` — rejected, edge: only a deleted tag reaches it, its effect is 20 seconds, and it ends as unread
+- diff-bug #21: the three new scripts were mode 100644 where neighbors are 100755 — fix now, fixed 02db7ea
+- diff-bug #22: `.dockerignore` is not in `paths`, in `pr-ci.yml` or `docker.yml`, and this predates the diff — follow-up: parked row "Add .dockerignore to the build paths"
+- diff-bug #23: `scripts/**` in `docker.yml` matches the new test, so this merge starts a publish — rejected, planned change: AC7 fixes the test's path, and every test under `scripts/tests/` already does this; shown at the merge question
+- diff-bug (c): refusal cases asserted only the exit code — fix now, fixed 02db7ea; the header comment restated stub behavior — fix now, fixed 02db7ea; repeated exit-0 asserts on separate recording routes — rejected, style; stub probes — rejected, false: check discrimination asks for them and `test_rebuild_gap.sh` has the same probe
+- blame-history #1: `image-size.yml` has no failure path, unlike M020's `notify` job — follow-up: same parked row as diff-bug #3
+- blame-history #2: a pull request can raise its own limit in the same diff — rejected, planned change: T6 and AC7 name that path
+- blame-history #3: the pull request gate covers amd64 only — rejected, planned change: the milestone's Scope `Out:`
+- blame-history #4: the retry treats every failure alike, unlike `tag-order.sh` — rejected, edge: same as diff-bug #20
+- blame-history #5: the `pr-ci.yml` header omitted the size step — fix now, fixed 02db7ea
+- prior-review #1: digit-width bounds had no over-wide, zero-padded, or widest-in-range cases (lesson M016) — fix now, fixed 02db7ea
+- prior-review #2: refusal cases asserted only the exit status (lesson M024) — fix now, fixed 02db7ea
+- ripple #1: the `pr-ci.yml` header omitted the size step — fix now, fixed 02db7ea; the workflow's `name:` stays
+- ripple #2: the step named "Resolver unit tests" gained another script that is no resolver test — follow-up: absorbed by the low row "Rename the PR lane's unit test step"
+- ripple #3: "Both workflows are weekly" in DESIGN and `rebuild-gap.yml` — rejected, false: the sentence names `docker.yml` and `rebuild-gap.yml`, and stays true of them
+- ripple #4: the candidate row "Set an image-size budget with a CI guard" still reads as open — rejected, false: post-merge hygiene removes it
+- After the fixes, on 02db7ea: `test_image_size.sh` exits 0 with 130 ok lines, shellcheck 0.11.0 at `-S info` is clean on the three scripts, `cairn_validate.py` exits 0, and AC1's grep still finds each limit only in the limits file. Six planted defects against the new cases each turned the suite red. These fixes have not run on a real runner yet: the pull request's own checks run them at the merge wait, except the report script, which first runs for real after the merge.

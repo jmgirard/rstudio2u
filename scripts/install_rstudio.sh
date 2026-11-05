@@ -80,6 +80,8 @@ fi
 gdebi --non-interactive "$DOWNLOAD_FILE"
 rm "$DOWNLOAD_FILE"
 
+/rocker_scripts/slim_rstudio.sh
+
 ln -fs /usr/lib/rstudio-server/bin/rstudio-server /usr/local/bin
 ln -fs /usr/lib/rstudio-server/bin/rserver /usr/local/bin
 

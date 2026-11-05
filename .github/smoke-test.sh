@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 #
 # Boot a locally-built rstudio2u image and confirm the image actually works
-# before CI publishes any tag. Two phases:
+# before CI publishes any tag. Three phases:
 #   1. Server up  — RStudio Server answers on :8787 (healthcheck or port probe).
-#   2. Toolchain  — a bspm binary package installs via apt and loads, and Quarto
-#                   renders a document to HTML. These exercise the paths where
+#   2. Toolchain  — a bspm binary package installs via apt and loads, Quarto
+#                   renders a document to HTML, and what scripts/slim_rstudio.sh
+#                   leaves behind still works (Copilot's native module and
+#                   language server, libclang, apt). These exercise the paths where
 #                   arm64 parity can silently diverge (bundled/symlinked Quarto,
 #                   the r2u binary install path), so CI runs the same checks on
 #                   the arm64 image, natively, before publishing (GP3).
-# Exits 0 only when both phases pass; non-zero if the container exits, reports
-# unhealthy, times out, or either toolchain check fails. This is the gate that
+#   3. Mirror UX  — the plain-language hint when the r2u mirror is unreachable.
+# Exits 0 only when every phase passes; non-zero if the container exits, reports
+# unhealthy, times out, or any check fails. This is the gate that
 # keeps an unattended rebuild from pushing a moving tag whose server won't start
 # or whose toolchain is broken on an arch (GP7).
 #
@@ -79,6 +82,14 @@ while :; do
 done
 
 # --- Phase 2: toolchain -----------------------------------------------------
+# Before any install: with a broken dependency, bspm's apt run below removes
+# rstudio-server to settle it, which hides the state the image shipped in.
+echo "==> [apt] the package database is consistent"
+if ! docker exec "$NAME" apt-get check; then
+  echo "FAIL: apt-get check reported a problem"; exit 1
+fi
+echo "PASS: apt-get check"
+
 # bspm binary install: request a CRAN package and confirm it (a) loads and
 # (b) landed as an apt binary (r-cran-<pkg>). The dpkg check is what proves the
 # r2u/bspm *binary* path worked rather than a silent source-compile fallback —
@@ -122,6 +133,114 @@ QMD
   echo "FAIL: quarto render did not produce HTML output"; exit 1
 fi
 echo "PASS: quarto rendered .qmd to HTML"
+
+# --- Phase 2b: what scripts/slim_rstudio.sh leaves behind -------------------
+# The listing is a report for the log, not a gate: a file that stayed makes the
+# image larger, not broken, and a larger image is no reason to stop a publish.
+COPILOT_DIR=/usr/lib/rstudio-server/bin/copilot-language-server-js
+echo "==> [slim] Copilot folders, static archives, and symbol maps left in the image"
+docker exec "$NAME" bash -c "
+  ls '$COPILOT_DIR/node_modules/@github'
+  echo \"static archives under llvm: \$(find /usr/lib/llvm-*/lib -name '*.a' | wc -l)\"
+  ls -d /usr/lib/rstudio-server/lib/libgit2.a /usr/lib/rstudio-server/www-symbolmaps 2>&1
+" || true
+
+# `initialize` alone also succeeds with the native folder gone, because the
+# server loads that module later, so the check loads it first. An image with no
+# language server at this path, or no platform folders, is a new upstream layout,
+# not a broken image, so it gets a notice. Other platforms' folders with none for
+# this one means Copilot cannot load here. The check runs as the user RStudio runs
+# Copilot as. Sign-in and completions need a GitHub account.
+RS_NODE=/usr/lib/rstudio-server/bin/node/bin/node
+echo "==> [copilot] native module and language server"
+if ! docker exec "$NAME" test -f "$COPILOT_DIR/language-server.js" \
+  || ! docker exec "$NAME" test -x "$RS_NODE"; then
+  echo "NOTICE: no Copilot language server at $COPILOT_DIR; skipping the Copilot check"
+elif ! docker exec -i -u rstudio -w "$COPILOT_DIR" "$NAME" "$RS_NODE" - <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
+const github = path.resolve('node_modules/@github');
+const platform = `${process.platform}-${process.arch}`;
+const folders = fs.existsSync(github)
+  ? fs.readdirSync(github).filter((d) => /^copilot-sdk-.+-.+$/.test(d))
+  : [];
+const native = `copilot-sdk-${platform}`;
+
+function fail(message) {
+  console.log(`FAIL: ${message}`);
+  process.exit(1);
+}
+
+if (folders.length === 0) {
+  console.log('NOTICE: no copilot-sdk platform folders; skipping the native module load');
+} else if (!folders.includes(native)) {
+  fail(`Copilot has no ${native} folder (found: ${folders.join(' ')})`);
+} else {
+  try {
+    require(path.join(github, native, 'prebuilds', platform, 'runtime.node'));
+  } catch (e) {
+    fail(`Copilot's native module did not load: ${e.message}`);
+  }
+  console.log(`PASS: Copilot's native module loads (${native})`);
+}
+
+const server = spawn(process.execPath, ['language-server.js', '--stdio'], {
+  stdio: ['pipe', 'pipe', 'inherit'],
+});
+server.on('exit', (code) => fail(`the Copilot language server exited early (code ${code})`));
+const timer = setTimeout(() => {
+  server.kill();
+  fail('the Copilot language server did not answer initialize within 60s');
+}, 60000);
+let buffer = Buffer.alloc(0);
+server.stdout.on('data', (chunk) => {
+  buffer = Buffer.concat([buffer, chunk]);
+  for (;;) {
+    const end = buffer.indexOf('\r\n\r\n');
+    if (end < 0) return;
+    const length = Number(/Content-Length: (\d+)/i.exec(buffer.toString('latin1', 0, end))?.[1]);
+    if (buffer.length < end + 4 + length) return;
+    const message = JSON.parse(buffer.toString('utf8', end + 4, end + 4 + length));
+    buffer = buffer.subarray(end + 4 + length);
+    if (message.id === 1 && !message.method) {
+      clearTimeout(timer);
+      server.kill();
+      if (!message.result) fail(`initialize returned an error: ${JSON.stringify(message.error)}`);
+      console.log('PASS: the Copilot language server answered initialize');
+      process.exit(0);
+    }
+  }
+});
+const request = JSON.stringify({
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'initialize',
+  params: {
+    processId: null,
+    rootUri: null,
+    capabilities: {},
+    initializationOptions: {
+      editorInfo: { name: 'smoke-test', version: '1' },
+      editorPluginInfo: { name: 'smoke-test', version: '1' },
+    },
+  },
+});
+server.stdin.write(`Content-Length: ${Buffer.byteLength(request)}\r\n\r\n${request}`);
+NODE
+then
+  echo "FAIL: the Copilot check did not pass"; exit 1
+fi
+
+# RStudio loads libclang's shared library for its C++ diagnostics. Sys.glob
+# returns nothing if the file is gone, and the check then stops; dyn.load fails
+# if the link's target is gone.
+echo "==> [libclang] the shared library loads"
+if ! docker exec "$NAME" Rscript -e 'libs <- Sys.glob("/usr/lib/llvm-*/lib/libclang.so"); if (length(libs) == 0) stop("no libclang.so under /usr/lib/llvm-*/lib"); for (f in libs) { dyn.load(f); cat("loaded", f, "\n") }'; then
+  echo "FAIL: libclang.so did not load"; exit 1
+fi
+echo "PASS: libclang.so loads"
 
 # --- Phase 3: mirror-failure UX ---------------------------------------------
 # The r2u binary mirror is occasionally unreachable (a known issue), and a raw
@@ -210,6 +329,6 @@ if ! printf '%s' "$mf_out" | grep -qF "$HINT_SENTINEL"; then
 fi
 echo "PASS: mirror-unreachable install surfaced the hint"
 
-echo "PASS: smoke test (server + toolchain + mirror-failure UX) succeeded"
+echo "PASS: smoke test (server + toolchain + Copilot, libclang, apt + mirror-failure UX) succeeded"
 SMOKE_OK=1
 exit 0

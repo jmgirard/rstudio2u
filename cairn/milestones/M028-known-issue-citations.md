@@ -78,6 +78,8 @@ that list changes.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 5 findings, all fixed — AC1 grep widened to "known-issue", "no." and bare-number forms (still the same 4 hits today); AC2 names sites by content, not line; AC3 names `main`, defines a comment line and excludes diff headers; `docker build .` moved from AC3 to T2 because it depends on rstudio.org and the r2u mirror, with the PR build as the gate.
 - 2026-11-05: status in-progress; branch m028-known-issue-citations cut from main at f9b9dcb.
 - 2026-11-05: T1 done: each numbered citation deleted, since every sentence already names its problem in words (Dockerfile lines 45 and 52, `mirror_hint.R` lines 1-2 and 4, `resolve-rstudio-version.sh` lines 5-9); `(Known issue #2 / GP2)` became `(GP2)`.
+- 2026-11-05: T2 checks: AC1 grep prints nothing (exit 1); AC3 diff has 8 changed lines, 0 outside comments; hadolint 2.14.0 container on Dockerfile exit 0, no output.
+- 2026-11-05: claim audit: 12 claims read, 0 corrected — Dockerfile, scripts/mirror_hint.R, scripts/resolve-rstudio-version.sh; the reader called the GP2 citation an indirect fit, which this branch keeps unchanged from main.
 
 ## Decisions
 

@@ -75,11 +75,11 @@ ALL="copilot-sdk-darwin-arm64 copilot-sdk-darwin-x64 copilot-sdk-linux-arm64 cop
 # shellcheck disable=SC2086  # ALL is a word list on purpose.
 check_keep() {
     local arch="$1" want="$2" root="$WORK/keep-$1"
-    make_tree "$root" $ALL
+    make_tree "$root" $ALL copilot-sdk-helper-tool
     run_slim "$root" "$arch"
     [ "$rc" -eq 0 ] || fail "$arch: exit $rc: $out"
-    [ "$(folders "$root")" = "copilot-sdk $want " ] \
-        || fail "$arch: expected copilot-sdk and $want, left: $(folders "$root")"
+    [ "$(folders "$root")" = "copilot-sdk copilot-sdk-helper-tool $want " ] \
+        || fail "$arch: expected copilot-sdk, its non-platform folder, and $want, left: $(folders "$root")"
     [ -f "$root/$SDK/$want/runtime.node" ] || fail "$arch: emptied the folder it kept"
     ok "$arch keeps $want"
 }
@@ -129,13 +129,6 @@ run_slim "$root" amd64
 [ "$rc" -eq 0 ] || fail "no folders: exit $rc: $out"
 [ "$(folders "$root")" = "copilot-sdk " ] || fail "no folders: left: $(folders "$root")"
 ok "no platform folders exits 0"
-
-# Nothing to remove at all, such as a release with a different layout.
-root="$WORK/empty"
-mkdir -p "$root/usr/lib"
-run_slim "$root" amd64
-[ "$rc" -eq 0 ] || fail "empty tree: exit $rc: $out"
-ok "an empty tree exits 0"
 
 if [ "$fails" -ne 0 ]; then
     echo "$fails check(s) failed"

@@ -230,11 +230,14 @@ _Warts confirmed in the 2026-07-17 interview:_
   (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
   (added M015).
 - `scripts/slim_rstudio.sh` depends on RStudio's folder layout. If a release
-  renames the `copilot-sdk-<platform>-<arch>` folders, the script removes no
-  Copilot folder, the image grows, and nothing fails. A later apt reinstall of
-  `libclang-18-dev` puts its archives back on that machine. CI loads Copilot's
-  native module and sends `initialize`, but it does not test sign-in or
-  completions, which need a GitHub account (added M025).
+  moves the language server or drops the `copilot-sdk-<platform>-<arch>`
+  folders, the script removes no Copilot folder, the image grows, and the smoke
+  test prints a notice and passes. If folders with that form remain but none is
+  for the image's architecture, the smoke test fails and that variant does not
+  publish. A later apt reinstall or upgrade of the `libclang-<n>-dev` package puts
+  its archives back on that machine, and until then `dpkg --verify` lists them as
+  missing. CI loads Copilot's native module and sends `initialize`, but it does
+  not test sign-in or completions, which need a GitHub account (added M025).
 - The keepalive rests on GitHub continuing to count a pushed commit as the
   repository activity that defers the 60-day scheduled-workflow cutoff. This
   repo cannot test that: the counter is not exposed, and the only observation

@@ -83,3 +83,44 @@ Published images stop carrying files that cannot run on them or serve only stati
 ## Decisions
 
 ## Review
+
+Evidence run: test-mode run 42053189266 at 2fcee06, green on every job, no tag attached, RStudio 2026.10.1-239. Local build of the same commit, noble arm64.
+
+- AC1 evidence: each of the four legs' logs lists `copilot-sdk` and one platform folder: `copilot-sdk-linux-x64` on both amd64 legs, `copilot-sdk-linux-arm64` on both arm64 legs.
+- AC2 evidence: each leg's log shows `static archives under llvm: 0` and `ls: cannot access` for `libgit2.a` and `www-symbolmaps`. A `docker save` of the local build: 10 layers, 27454 entries, 0 naming a removed file.
+- AC3 evidence: measured against the `<variant>-2026.10.1-239` tags from Docker Hub's API, in bytes: noble amd64 722355811 vs 992828358 (270.5 MB less), noble arm64 711709228 vs 986921584 (275.2 MB less), resolute amd64 758502023 vs 1030892868 (272.4 MB less), resolute arm64 743562784 vs 1019615078 (276.1 MB less). Projected 260 to 275 MB; the floor is 200 MB.
+- AC4 evidence: each leg's log shows `PASS: Copilot's native module loads` naming its folder and `PASS: the Copilot language server answered initialize`. Sign-in and completions not run, as the criterion states.
+- AC5 evidence: each leg's log shows `loaded /usr/lib/llvm-<n>/lib/libclang.so` (18 on noble, 21 on resolute), `PASS: libclang.so loads`, `PASS: apt-get check`, and the final `PASS: smoke test`; 13 `PASS` lines and no `FAIL` line in each leg. `main`'s smoke checks all still run in that script; the diff removes none.
+- AC6 evidence: `bash scripts/tests/test_slim_rstudio.sh` at 2fcee06 passes all seven groups: both architectures keep their folder, an unknown architecture stops and names it and removes nothing, only other folders removes none, no folders and an empty tree exit 0.
+- AC7 evidence: the criterion's `grep` prints nothing at 2fcee06 (exit 1), and DESIGN.md's Architecture paragraph and Known issues entry state what is removed and what the removal depends on.
+
+Consistency gate at 2fcee06: `cairn_validate` passes with one advisory (the old `.gitignore` pdf entry, already a candidate row). `hadolint Dockerfile` clean, `docker build` succeeds. The base image is `rocker/r2u:${UBUNTU_VERSION}`, a versioned tag in both variants. No secret in `ENV` or `COPY`. `.dockerignore` lists `.git` and `cairn`. No principle changed, so `cairn_impact` is skipped. User-visible change for the next release's notes: a download about 270 MB smaller.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: the smoke test stops a publish on upstream layout changes that T3's exception does not cover, such as a missing `@github` or a moved language server — fix now.
+- diff-bug #2: DESIGN.md says nothing fails after a folder rename, which is false when the new name still has the `copilot-sdk-*-*` form — fix now.
+- diff-bug #3: `slim_rstudio.sh` deletes any `copilot-sdk-*-*` folder, so a future helper package would go silently — fix now: it removes only `darwin`, `win32`, and `linux` folders.
+- diff-bug #4: the `initialize` half looks like dependency behavior and detects no removal — reject, planned change: AC4 requires it, and a planted silent server and a crashing server turn it red.
+- diff-bug #5: the "no platform folders" test takes the same branch as the no-match case — reject, planned change: T1 and AC6 name the case.
+- diff-bug #6: the "empty tree" test repeats that branch and otherwise exercises `rm -f` — fix now: removed.
+- diff-bug #7: the `runtime.node` and neighbor checks can fail only if a literal path or the wholesale `rm -rf` is rewritten — reject, false: they are the shapes the check must leave alone, which check discrimination asks for.
+- diff-bug #8: the unit test passes with the `install_rstudio.sh` call deleted and the smoke listing is report-only, so a slim step that does nothing publishes green — follow-up: M026's size check reports exactly that case; no new row.
+- diff-bug #9: the fixture has no nested `.a` and the removal is shallow while AC2's `find` is recursive — reject, false: AC2's recursive `find` prints 0 on all four images, and a recursive delete could take runtime archives under `lib/clang`.
+- diff-bug #10: `-lclangAST`-style static links now fail although the Goal says every function is unchanged, and `dpkg --verify` lists 93 missing files — reject, planned change: the Goal and Scope name the removal of static-linking files; DESIGN.md now names the `dpkg --verify` result.
+- diff-bug #11: `libgit2.pc` and `lib/cmake/libgit2` still point at the removed `libgit2.a` — reject, edge: only pointing `PKG_CONFIG_PATH` or CMake at RStudio's private `lib` folder reaches it, outside documented and common use, and the effect is a link error.
+- diff-bug #12: the check reads `id === 1` without excluding a server request that carries a `method` — fix now.
+- diff-bug #13: a server crash waits 60 s and reports "did not answer" — fix now: an `exit` handler reports the exit code.
+- diff-bug #14: the native `require` runs before the timer, so a hang there lasts until GitHub's job limit — reject, edge: only a native module whose load hangs reaches it, outside common use, and the effect is slow running; the smoke test's other `docker exec` calls have no timeout either.
+- diff-bug #15: `apt-get check` can stop a publish for a dependency break in the base image — reject, false: that stop is wanted, because the planted break showed bspm's next install removes `rstudio-server`.
+- diff-bug #16: the Copilot check runs as root, but RStudio runs it as `rstudio` — fix now: `docker exec -u rstudio`.
+- diff-bug #17: DESIGN.md names only `libclang-18-dev` and only a reinstall, but resolute uses llvm-21 and an upgrade also restores the archives — fix now.
+- diff-bug #18: the `[1/2]` and `[2/2]` labels sit beside unnumbered steps, and `exists("found")` also searches attached packages — the labels: reject, style; the `exists` call: fix now.
+- blame-history #1: the build now fails on an architecture other than amd64 or arm64 — reject, planned change: AC6 asks for it, and CI builds only those two (D-007).
+- blame-history #2: moving the symbol map removal changes its rationale and may change developer-facing behavior — reject, false: those files were already absent at run time in the published image, so only the download changes.
+- blame-history #3: the launcher script's size figure was dropped although T5 asked to correct it with a date — reject, false: the work log records the choice, and the derived-figures rule accepts a derivation in place of a figure.
+- blame-history #4: the Known issues entry says sign-in needs a GitHub account, which the audit lists as unobserved — reject, planned change: AC4 states it, and the work log records it as unobserved.
+- prior-review #1: the slim listing's `|| true` lets a failed `docker exec` pass — reject, planned change: the listing is a report by design, and the checks after it fail on a dead container.
+- prior-review #2: the notice branch lets a missing platform folder pass — reject, planned change: AC6 and T3 specify it, and a plant shows it.
+- ripple: no line outside the diff disagrees with it.
+- ripple #1: `pr-ci.yml` names its step "Resolver unit tests" though it runs every script's unit tests; pre-existing — follow-up: new row "Rename the PR lane's unit test step", `[low]`, because a maintainer reads that name on each failed run.

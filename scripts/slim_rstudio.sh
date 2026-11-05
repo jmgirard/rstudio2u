@@ -33,10 +33,11 @@ SDK="$ROOT/usr/lib/rstudio-server/bin/copilot-language-server-js/node_modules/@g
 # Without the folder for this image, the layout is not the one this script knows,
 # so nothing is removed here. .github/smoke-test.sh reports that case.
 if [ -d "$SDK/$KEEP" ]; then
-    for dir in "$SDK"/copilot-sdk-*-*; do
-        if [ "${dir##*/}" != "$KEEP" ]; then
-            rm -rf "$dir"
-        fi
+    for dir in "$SDK"/copilot-sdk-*; do
+        case "${dir##*/}" in
+            "$KEEP") ;;
+            copilot-sdk-darwin-* | copilot-sdk-win32-* | copilot-sdk-linux-*) rm -rf "$dir" ;;
+        esac
     done
 else
     echo "slim_rstudio.sh: $KEEP not found; removing no Copilot folder"

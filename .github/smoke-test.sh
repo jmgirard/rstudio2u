@@ -147,18 +147,25 @@ docker exec "$NAME" bash -c "
 
 # `initialize` alone also succeeds with the native folder gone, because the
 # server loads that module later, so the check loads it first. An image with no
-# platform folders at all is a new upstream layout, not a broken image, so it
-# gets a notice. Other platforms' folders with none for this one means Copilot
-# cannot load here. Sign-in and completions need a GitHub account.
+# language server at this path, or no platform folders, is a new upstream layout,
+# not a broken image, so it gets a notice. Other platforms' folders with none for
+# this one means Copilot cannot load here. The check runs as the user RStudio runs
+# Copilot as. Sign-in and completions need a GitHub account.
+RS_NODE=/usr/lib/rstudio-server/bin/node/bin/node
 echo "==> [copilot] native module and language server"
-if ! docker exec -i -w "$COPILOT_DIR" "$NAME" /usr/lib/rstudio-server/bin/node/bin/node - <<'NODE'
+if ! docker exec "$NAME" test -f "$COPILOT_DIR/language-server.js" \
+  || ! docker exec "$NAME" test -x "$RS_NODE"; then
+  echo "NOTICE: no Copilot language server at $COPILOT_DIR; skipping the Copilot check"
+elif ! docker exec -i -u rstudio -w "$COPILOT_DIR" "$NAME" "$RS_NODE" - <<'NODE'
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 
 const github = path.resolve('node_modules/@github');
 const platform = `${process.platform}-${process.arch}`;
-const folders = fs.readdirSync(github).filter((d) => /^copilot-sdk-.+-.+$/.test(d));
+const folders = fs.existsSync(github)
+  ? fs.readdirSync(github).filter((d) => /^copilot-sdk-.+-.+$/.test(d))
+  : [];
 const native = `copilot-sdk-${platform}`;
 
 function fail(message) {
@@ -182,6 +189,7 @@ if (folders.length === 0) {
 const server = spawn(process.execPath, ['language-server.js', '--stdio'], {
   stdio: ['pipe', 'pipe', 'inherit'],
 });
+server.on('exit', (code) => fail(`the Copilot language server exited early (code ${code})`));
 const timer = setTimeout(() => {
   server.kill();
   fail('the Copilot language server did not answer initialize within 60s');
@@ -196,7 +204,7 @@ server.stdout.on('data', (chunk) => {
     if (buffer.length < end + 4 + length) return;
     const message = JSON.parse(buffer.toString('utf8', end + 4, end + 4 + length));
     buffer = buffer.subarray(end + 4 + length);
-    if (message.id === 1) {
+    if (message.id === 1 && !message.method) {
       clearTimeout(timer);
       server.kill();
       if (!message.result) fail(`initialize returned an error: ${JSON.stringify(message.error)}`);
@@ -229,7 +237,7 @@ fi
 # returns nothing if the file is gone, and the check then stops; dyn.load fails
 # if the link's target is gone.
 echo "==> [libclang] the shared library loads"
-if ! docker exec "$NAME" Rscript -e 'for (f in Sys.glob("/usr/lib/llvm-*/lib/libclang.so")) { dyn.load(f); cat("loaded", f, "\n"); found <- TRUE }; if (!exists("found")) stop("no libclang.so under /usr/lib/llvm-*/lib")'; then
+if ! docker exec "$NAME" Rscript -e 'libs <- Sys.glob("/usr/lib/llvm-*/lib/libclang.so"); if (length(libs) == 0) stop("no libclang.so under /usr/lib/llvm-*/lib"); for (f in libs) { dyn.load(f); cat("loaded", f, "\n") }'; then
   echo "FAIL: libclang.so did not load"; exit 1
 fi
 echo "PASS: libclang.so loads"

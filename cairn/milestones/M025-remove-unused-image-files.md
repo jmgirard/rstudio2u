@@ -80,6 +80,7 @@ Published images stop carrying files that cannot run on them or serve only stati
 - 2026-11-05: T6 done: test-mode run 42051578392 at c7adaa3 was green on every job and attached no tag. Each leg's log shows one native Copilot folder, 0 llvm archives, no `libgit2.a` or `www-symbolmaps`, and every smoke check passing; resolute uses `llvm-21`. Manifest bytes against the same-version tags: noble amd64 722355886 vs 992828358, noble arm64 711709142 vs 986921584, resolute amd64 758501535 vs 1030892868, resolute arm64 743563107 vs 1019615078: 270 to 276 MB less.
 - 2026-11-05: claim audit: 31 claims read, 2 corrected — .github/smoke-test.sh, scripts/slim_rstudio.sh. The re-read found the header's corrected wording still too strong for symbol maps, which `rserver` can read, so it now says "does not need to run", which the smoke run with them gone supports. One claim stays unobserved: that Copilot sign-in needs a GitHub account. Comment-only changes after run 42051578392.
 - 2026-11-05: review settled 25 findings: 9 fixed in 9664709, 2 follow-ups (M026's size check, a new `[low]` row), 14 rejected with their grounds in the Review section, 2 of them as edge; the labels half of diff-bug #18 is a further style reject. No finding showed a criterion failing, so no return. Test-mode runs 42053189266 and 42055651268, covered by the plan gate's permission, reran the evidence.
+- 2026-11-05: step-7 approval: m025-remove-unused-image-files approved for merge
 
 ## Decisions
 

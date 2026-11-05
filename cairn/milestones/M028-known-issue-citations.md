@@ -81,6 +81,7 @@ that list changes.
 - 2026-11-05: T2 checks: AC1 grep prints nothing (exit 1); AC3 diff has 8 changed lines, 0 outside comments; hadolint 2.14.0 container on Dockerfile exit 0, no output.
 - 2026-11-05: claim audit: 12 claims read, 0 corrected — Dockerfile, scripts/mirror_hint.R, scripts/resolve-rstudio-version.sh; the reader called the GP2 citation an indirect fit, which this branch keeps unchanged from main.
 - 2026-11-05: T2 done: `docker build -t rstudio2u:m028 .` exit 0; the image's `/etc/R/Rprofile.site` lines 34-35 carry the new mirror_hint header. Status review.
+- 2026-11-05: step-7 approval: m028-known-issue-citations approved for merge
 
 ## Decisions
 

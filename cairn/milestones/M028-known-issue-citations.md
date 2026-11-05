@@ -1,6 +1,6 @@
 # M028: Replace numbered Known issue citations
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** low
 - **Depends on:** —
 - **Driving RR:** —
@@ -58,7 +58,7 @@ that list changes.
       `scripts/resolve-rstudio-version.sh:9`, `scripts/mirror_hint.R:2` at plan
       time), keeping each sentence's description of the problem and the `GP2`
       citation.
-- [ ] T2: Run the AC1 grep, the AC3 diff check, and hadolint. Run
+- [x] T2: Run the AC1 grep, the AC3 diff check, and hadolint. Run
       `docker build .` as the profile's verify slot asks; a failure there that
       comes from rstudio.org or the r2u mirror is logged, not fixed, and
       `pr-ci.yml`'s build and smoke test on the PR stay the build gate before
@@ -80,6 +80,7 @@ that list changes.
 - 2026-11-05: T1 done: each numbered citation deleted, since every sentence already names its problem in words (Dockerfile lines 45 and 52, `mirror_hint.R` lines 1-2 and 4, `resolve-rstudio-version.sh` lines 5-9); `(Known issue #2 / GP2)` became `(GP2)`.
 - 2026-11-05: T2 checks: AC1 grep prints nothing (exit 1); AC3 diff has 8 changed lines, 0 outside comments; hadolint 2.14.0 container on Dockerfile exit 0, no output.
 - 2026-11-05: claim audit: 12 claims read, 0 corrected — Dockerfile, scripts/mirror_hint.R, scripts/resolve-rstudio-version.sh; the reader called the GP2 citation an indirect fit, which this branch keeps unchanged from main.
+- 2026-11-05: T2 done: `docker build -t rstudio2u:m028 .` exit 0; the image's `/etc/R/Rprofile.site` lines 34-35 carry the new mirror_hint header. Status review.
 
 ## Decisions
 

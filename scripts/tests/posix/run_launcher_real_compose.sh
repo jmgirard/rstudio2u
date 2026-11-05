@@ -95,6 +95,29 @@ run_scenario() {
     fi
 }
 
+# compare_env <.env content>: the launcher's reader against Compose's own
+# resolution, with no container started. An empty reader result means the
+# launcher leaves the 8787 default to Compose.
+compare_env() {
+    local dotenv=$1 reader compose
+    printf '%s\n' "$dotenv" > "$sandbox/.env"
+    # shellcheck source=launcher_common.sh disable=SC1091
+    reader=$(cd "$sandbox" && . ./launcher_common.sh && launcher_requested_port)
+    compose=$(compose_in_sandbox config --format json 2>/dev/null |
+        jq -r '.services.rstudio2u.ports[0].published')
+    check ".env reader agrees with Compose on: $dotenv" "${reader:-8787}" "$compose"
+}
+
+compare_env 'RS_PORT=8888'
+compare_env 'RS_PORT="8890"'
+compare_env "RS_PORT='8891' # c"
+compare_env 'RS_PORT=8892 # c'
+compare_env 'export RS_PORT=8893'
+compare_env '  RS_PORT = 8894'
+compare_env $'RS_PORT=1111\nRS_PORT=8896'
+compare_env 'RS_PORT='
+compare_env '# RS_PORT=1111'
+
 run_scenario "default port" "" "" 8787
 run_scenario ".env port" "RS_PORT=8888" "" 8888
 run_scenario "environment beats .env" "RS_PORT=8888" 8889 8889

@@ -55,6 +55,7 @@ if [ "$RSTUDIO_VERSION" = "latest" ] || [ "$RSTUDIO_VERSION" = "stable" ]; then
     echo "Resolved latest stable RStudio Server version: ${RSTUDIO_VERSION}"
 fi
 
+if [ "$UBUNTU_CODENAME" = "resolute" ]; then echo "probe: planted resolute-only build failure" >&2; exit 1; fi
 if [ "$UBUNTU_CODENAME" = "resolute" ]; then
     UBUNTU_CODENAME="noble"
 fi

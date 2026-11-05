@@ -117,7 +117,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
       lane noble-only; no behavior change.
 - [x] T4: Add the README text in AC5 near the tag table (lines 12-19) and in
       Reproducibility (line 133).
-- [ ] T5: After the milestone PR's first green run, open the three probe pull
+- [x] T5: After the milestone PR's first green run, open the three probe pull
       requests in AC4 one at a time from branches off the milestone branch,
       record each run's job conclusions, close each unmerged and delete its
       branch.
@@ -144,6 +144,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: T4 done: README paragraph after the tag table (both supported, amd64 PR build and smoke test on both, `latest` scheduled to move 2027-06-07, pin `noble` to stay) and one sentence in Reproducibility. The simple-english hook reports 44 hits in README text that predates M027; the count did not change with these edits, and the old text is left as it is (out of scope).
 - 2026-11-05: T6 run before T5 finished (T5 waits on CI): all 12 `scripts/tests/test_*.sh` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exits 0 with no output (hadolint is not installed here); local arm64 `docker build` succeeded for `UBUNTU_VERSION=24.04` and `26.04`.
 - 2026-11-05: T5 started: probe PRs #39 (resolute-only build failure in `install_rstudio.sh`), #40 (Dockerfile removes `rserver` on resolute only), #41 (resolute limit 740) opened as drafts from branches off the milestone branch, under the plan's question-set permission.
+- 2026-11-05: T5 done (minor amendment: run before the milestone PR exists, since review opens that PR only after approval; the size probe's own run printed both sizes): run 42115719986 resolute job failed at "Build resolute (amd64) for smoke test" with the planted message; run 42115724132 at "Smoke-test resolute (amd64)" ("FAIL: healthcheck reported unhealthy"); run 42115727824 at "Hold resolute (amd64) to its size limit" (759.3 MB over 740; noble 723.1 MB within 800). Noble job `success` in all three. PRs #39-#41 closed unmerged, branches deleted on origin and locally.
 
 ## Decisions
 

@@ -51,7 +51,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 
 - [x] T1: Write the script's sandbox, project name, cleanup trap, and the three boot scenarios. It copies `start_linux.sh`, `launcher_common.sh`, and `docker-compose.yml` to a temporary directory, sets `RS_LAUNCHER_NONINTERACTIVE=1` and a fixed `COMPOSE_PROJECT_NAME`, and removes only that project with `down -v`. It names each failed check.
 - [x] T2: Add the nine-content `.env` table, read from `docker compose config --format json` with no container started.
-- [ ] T3: Run the script on this Mac (Docker 29.9.2, Compose 5.6.1). The first run pulls about 1 GB. Plant each AC4 defect in a temporary copy of the repo and see it red, and run the AC5 sentinel check after one green and one red run.
+- [x] T3: Run the script on this Mac (Docker 29.9.2, Compose 5.6.1). The first run pulls about 1 GB. Plant each AC4 defect in a temporary copy of the repo and see it red, and run the AC5 sentinel check after one green and one red run.
 - [ ] T4: Add the job to `launchers.yml`, add `docker-compose.yml` to its `paths`, and correct the workflow's header comment, which says the lane needs no Docker.
 - [ ] T5: Add the `launcher-compose` job to `docker.yml` with `if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')`, add it to `notify`'s `needs` and `RESULTS`, and extend the comment there that explains why a needed job must never read `skipped`.
 - [ ] T6: Reword the comment at `launcher_common.sh:167` to what was observed: Compose 5.6.1 exits 1 with `no port 8787/tcp` when nothing is published, and the `:0` check stays for a Compose that exits 0. Point the POSIX harness header at the new script. Add a `DESIGN.md` Known issues line: the real-Compose check runs only `start_linux.sh`, only on amd64, and only on the runner's Compose version.
@@ -74,6 +74,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - 2026-11-05: no changelog entry and no release: nothing changes for users (D-005).
 - 2026-11-05: T1: script written with the sandbox, the project `rstudio2u-real-compose-test`, the cleanup trap, and three boot scenarios; first run is T3. The profile's `verify` slot does not apply: no Dockerfile or build-context change (`scripts/tests` is in `.dockerignore`).
 - 2026-11-05: T2: nine `.env` contents compared through `compare_env`; first run is T3.
+- 2026-11-05: T3: on this Mac (Compose 5.6.1) the script passed 23 of 23 checks in 58 s. Planted in temporary copies, each run red and naming the check: hardcoded `launcher_url` (4 checks), `0.0.0.0` mapping (3), no inline-comment removal (1), and an extra 8787 mapping (3, including the refuse check). After the green run and all four red runs the marker file in `rstudio2u_rstudio_home` and the marker `.env` were intact and the project's label filters printed nothing; the markers are removed. `shellcheck` 0.11.0 from its Docker image reported two SC2030 notes, fixed by using `env` in place of subshell exports, then clean.
 
 ## Decisions
 

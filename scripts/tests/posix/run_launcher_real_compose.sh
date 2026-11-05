@@ -68,10 +68,8 @@ run_scenario() {
     rm -f "$sandbox/.env"
     [ -z "$dotenv" ] || printf '%s\n' "$dotenv" > "$sandbox/.env"
 
-    (
-        [ -z "$env_port" ] || export RS_PORT="$env_port"
-        RS_LAUNCHER_NONINTERACTIVE=1 bash "$sandbox/start_linux.sh"
-    ) > "$output" 2>&1
+    env ${env_port:+"RS_PORT=$env_port"} RS_LAUNCHER_NONINTERACTIVE=1 \
+        bash "$sandbox/start_linux.sh" > "$output" 2>&1
     code=$?
     check "$name: launcher exit status" "$code" 0
     [ "$code" = 0 ] || tail -n 20 "$output"
@@ -82,10 +80,8 @@ run_scenario() {
     curl -sS -o /dev/null --max-time 10 "$url" 2>/dev/null
     check "$name: announced URL gets a response" "$?" 0
 
-    raw=$(
-        [ -z "$env_port" ] || export RS_PORT="$env_port"
-        compose_in_sandbox port rstudio2u 8787 2>/dev/null
-    )
+    raw=$(cd "$sandbox" && env ${env_port:+"RS_PORT=$env_port"} \
+        docker compose port rstudio2u 8787 2>/dev/null)
     check "$name: docker compose port output" "$raw" "127.0.0.1:$expected"
 
     if [ "$expected" != 8787 ]; then
@@ -105,7 +101,7 @@ compare_env() {
     reader=$(cd "$sandbox" && . ./launcher_common.sh && launcher_requested_port)
     compose=$(compose_in_sandbox config --format json 2>/dev/null |
         jq -r '.services.rstudio2u.ports[0].published')
-    check ".env reader agrees with Compose on: $dotenv" "${reader:-8787}" "$compose"
+    check ".env reader agrees with Compose on: ${dotenv//$'\n'/ then }" "${reader:-8787}" "$compose"
 }
 
 compare_env 'RS_PORT=8888'

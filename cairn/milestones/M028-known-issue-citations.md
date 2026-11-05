@@ -91,3 +91,14 @@ that list changes.
 - AC2 evidence (2026-11-05, read of `git diff main...HEAD`): apt-retries comment still reads "Retry transient r2u-mirror fetch failures"; the append comment sits under "plain-language hint when an install fails on an unreachable mirror"; `mirror_hint.R` header reads "the r2u binary mirror is unreachable"; `resolve-rstudio-version.sh` header still names the scraped endpoint and "A format change" and ends "(GP2)".
 - AC3 evidence (2026-11-05, HEAD f8e3e0a): the diff has 8 added or removed lines, 0 of them non-comment (a planted `+RUN x` line is counted, so the filter can fail); `hadolint/hadolint:v2.14.0` on `Dockerfile` exit 0 with no output, and on a planted `FROM ubuntu:latest` file exit 1 with DL3007.
 - Gate (2026-11-05): `cairn_validate.py` all checks passed, 1 advisory (the old `cairn/references/pdf/` ignore entry, its own candidate row). No principle text changed, so no `cairn_impact`. Profile slot: `docker build .` exit 0 (T2); hadolint clean (AC3); base image is the explicit tag `rocker/r2u:${UBUNTU_VERSION}`, unchanged; no `ENV` or `COPY` secrets; `.dockerignore` present and excludes `.git` and `cairn`; changelog none, the archive summary records the change.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the apt-retries comment now ends with no period while the next comment ends with one — reject (style).
+- diff-bug #2: the edited `mirror_hint.R` header ships in the image's `Rprofile.site`, and D-005 gives a comment change no release — reject (planned change: the Surface tier slot and plan work log record it).
+- blame-history #1: archive M03 and M07 still cite "#1" and "#2", which now point at nothing in code — reject (planned change: Scope Out keeps the archive as history, never edited).
+- blame-history #2: `resolve-rstudio-version.sh` no longer links to the Known issues entry, though it still describes the scrape fragility in words — reject (planned change: naming the problem in words is the plan's reading).
+- blame-history #3: no undone intent; retries, the probe, and the version-shape check are untouched — reject (false: reports no defect).
+- prior-review: no prior-review evidence; the `pulls/comments` probe returned `[]`.
+- ripple #1: `.github/workflows/docker.yml:59` says "the version-scrape known issue / GP2" — reject (false: it names the issue in words with no number, the form this branch adopts).
+- ripple #2: `.github/smoke-test.sh:246` says "(a known issue)" — reject (false: no number, so it agrees with the diff).
+- ripple #3: the `cairn/ROADMAP.md` candidate row still describes the numbered citations — reject (planned change: post-merge hygiene graduates that row).
+- Actioned list: none; 9 findings rejected, 0 fixed, 0 follow-up. Open-PR cap: 0 of 1 feature PRs open.

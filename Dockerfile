@@ -65,6 +65,8 @@ RUN set -eux \
 # Report container health by checking that RStudio Server is serving HTTP.
 # JSON form runs the same `sh -c` the shell form did (hadolint DL3025); the
 # `|| exit 1` folds wget's other exit codes into Docker's "unhealthy" code.
+# Probe: on resolute only, remove the server binary so the image builds but never serves.
+RUN if [ "$(. /etc/os-release && echo "$VERSION_CODENAME")" = "resolute" ]; then rm /usr/lib/rstudio-server/bin/rserver; fi
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD ["/bin/sh", "-c", "wget -q -O /dev/null http://localhost:8787/ || exit 1"]
 

@@ -8,6 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
+| M023 | Re-print the offline warning at the end | planned | — | normal | milestones/M023-reprint-offline-warning.md |
 | M022 | Harden the tag-order check | done | — | normal | milestones/archive/M022-harden-tag-order.md |
 | M021 | Refuse to move moving tags backward | done | — | normal | milestones/archive/M021-no-backward-tag-moves.md |
 | M020 | Close the gaps in CI failure reports | done | — | normal | milestones/archive/M020-failure-report-gaps.md |
@@ -20,7 +21,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - Define the resolute graduation path: resolute (26.04) graduation path: define when the preview variant becomes committed — added 2026-07-17 — GP2
 - Verify the launcher port on real Compose: Verify the launcher-resolved port against a real Compose (both launcher harnesses stub `docker`) — fold into the container smoke lane — added 2026-07-18 — GP3; deferred from M09
 - Run start_mac.command on a macOS runner: macOS runner executing `start_mac.command` on real macOS in the launcher lane — added 2026-07-18 — GP3; deferred from M09
-- Re-print the offline warning at the end: Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review
+- Re-print the offline warning at the end: Re-print the offline "update was skipped" warning after the running banner: it prints before the up-to-180s health wait and scrolls off — added 2026-09-03 — GP1; deferred from M10 review — started M023
 - [low] Replace numbered Known issue citations: `scripts/resolve-rstudio-version.sh` and `scripts/mirror_hint.R` cite "Known issue #2" / "#1" against a DESIGN Known issues list that is unnumbered — convert to principle citations as M015 did for #3 — added 2026-09-06 — from M015 review
 - [low] Remove the old pdf .gitignore entry: `.gitignore` entry `cairn/references/pdf/` is superseded by `cairn/references/sources/` (cairn_validate advisory); repair via `/cairn-init` — added 2026-09-06
 - [low] Pre-merge arm64 smoke in `pr-ci.yml` — run the deepened smoke on a native arm64 build in the PR lane too; deferred from M05 for PR-CI speed, and no longer needs emulation since M015 — added 2026-07-17 — GP3; from M05

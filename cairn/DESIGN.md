@@ -196,6 +196,13 @@ R library permissions → healthcheck on :8787 → s6 `/init` entrypoint.
 `docker-compose.yml` provides the named home volume and the
 `127.0.0.1`-only port mapping the launchers rely on.
 
+`scripts/slim_rstudio.sh` runs inside the `RUN` that installs RStudio, because
+a removal in a later instruction only hides files that the lower layer still
+ships. It removes Copilot's folders for other platforms, the `.a` files under
+`/usr/lib/llvm-*/lib`, RStudio's `lib/libgit2.a`, and `www-symbolmaps`. The
+`libclang-dev` package stays because `rstudio-server` depends on it (added
+M025).
+
 ## Known issues
 
 _Warts confirmed in the 2026-07-17 interview:_
@@ -222,6 +229,12 @@ _Warts confirmed in the 2026-07-17 interview:_
   free only while the repo stays public and pinned to one Ubuntu version
   (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
   (added M015).
+- `scripts/slim_rstudio.sh` depends on RStudio's folder layout. If a release
+  renames the `copilot-sdk-<platform>-<arch>` folders, the script removes no
+  Copilot folder, the image grows, and nothing fails. A later apt reinstall of
+  `libclang-18-dev` puts its archives back on that machine. CI loads Copilot's
+  native module and sends `initialize`, but it does not test sign-in or
+  completions, which need a GitHub account (added M025).
 - The keepalive rests on GitHub continuing to count a pushed commit as the
   repository activity that defers the 60-day scheduled-workflow cutoff. This
   repo cannot test that: the counter is not exposed, and the only observation

@@ -4,7 +4,7 @@
 # the launcher announces is not the port that answers. It is the counterpart of
 # run_launcher_scenarios.sh, whose stub `docker` models Compose instead of
 # asking it. The launcher's own `docker compose pull` fetches the published
-# image, so the first run on a machine downloads about 1 GB, and any local
+# image, so the first run on a machine downloads the whole image, and any local
 # jmgirard/rstudio2u:latest is replaced.
 #
 # The launcher runs from a temporary copy under its own Compose project, so a

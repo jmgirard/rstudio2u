@@ -55,7 +55,7 @@ Published images stop carrying files that cannot run on them or serve only stati
 - [x] T2: Write `scripts/slim_rstudio.sh` and call it from `scripts/install_rstudio.sh` right after the `gdebi` line. Remove the `www-symbolmaps` line and its comment from `Dockerfile:61-62`, keeping the `RUN` valid. Keep `.so` files and the `copilot-sdk` package.
 - [ ] T3: Add the checks to `.github/smoke-test.sh`, before the phase that breaks apt networking. Copilot: load `copilot-sdk-${process.platform}-${process.arch}/prebuilds/<same>/runtime.node` under `/usr/lib/rstudio-server/bin/node/bin/node`, then send `initialize` to the language server. `initialize` alone also passes with the native folder gone, so both parts are needed. If no `copilot-sdk-*-*` folder exists at all, print a notice and skip the load, so an upstream layout change does not stop a publish. M026's size check catches that case. If other folders exist and the matching one does not, fail. Also add the libclang `dlopen` and `apt-get check`.
 - [ ] T4: Build noble arm64 locally, run the smoke test, and list every layer of a `docker save`. Plant each defect in a throwaway image and see the smoke test red with the expected `FAIL:` line: native folder removed, `libclang.so` target removed. Exit status alone does not count.
-- [ ] T5: Correct the figures that T4 made false: `scripts/tests/posix/run_launcher_real_compose.sh:7` (with its date and how it was measured). Update DESIGN.md's Architecture. Add a Known issues entry: the removal depends on RStudio's folder layout, a later apt reinstall of `libclang-18-dev` restores its archives, and CI does not test Copilot sign-in.
+- [x] T5: Correct the figures that T4 made false: `scripts/tests/posix/run_launcher_real_compose.sh:7` (with its date and how it was measured). Update DESIGN.md's Architecture. Add a Known issues entry: the removal depends on RStudio's folder layout, a later apt reinstall of `libclang-18-dev` restores its archives, and CI does not test Copilot sign-in.
 - [ ] T6: Push the branch and run `gh workflow run docker.yml --ref <branch> -f test_mode=true` (permission granted at the plan gate). From each leg's log, record the digest and the AC1, AC2, AC4, and AC5 results. Read each digest's manifest for AC3.
 
 ## Work log
@@ -74,6 +74,7 @@ Published images stop carrying files that cannot run on them or serve only stati
 - 2026-11-05: no RB tripwire tag: IP3's runtime interface is not touched.
 - 2026-11-05: no changelog file (PROFILE). The merge publishes because it touches `scripts/` and the Dockerfile. The archive summary states the smaller download for the next release's notes.
 - 2026-11-05: T1, T2 done: `test_slim_rstudio.sh` failed with exit 127 before the script existed and passes with it. `slim_rstudio.sh` runs from `install_rstudio.sh`; the Dockerfile's `www-symbolmaps` line is gone. Implementation choice: the script stands alone, for its unit test, rather than sitting inside `install_rstudio.sh`.
+- 2026-11-05: checkpoint: T3's smoke checks are written and pass on a local noble arm64 build, and T4's planted-defect runs are still going, so T3 and T4 stay unticked. T5 done: the launcher script's comment now says "the whole image" with no figure, a minor change from T5's "with its date", so it cannot go stale; DESIGN.md's Architecture and Known issues updated.
 
 ## Decisions
 

@@ -34,13 +34,13 @@ that list changes.
 
 ## Acceptance criteria
 
-- [ ] AC1: `git grep -niE 'known[ -]issues?:? ?(#|no\.? ?)?[0-9]' -- ':!cairn'`
+- [x] AC1: `git grep -niE 'known[ -]issues?:? ?(#|no\.? ?)?[0-9]' -- ':!cairn'`
       prints nothing on the milestone branch.
-- [ ] AC2: Each of the four In-scope comments, found by its content, still names
+- [x] AC2: Each of the four In-scope comments, found by its content, still names
       in words the problem its code guards against (an unreliable or
       unreachable r2u mirror, or a change to the format of the RStudio update
       endpoint), and the `resolve-rstudio-version.sh` header still cites `GP2`.
-- [ ] AC3: The branch changes only comments: in `git diff main...HEAD -- .
+- [x] AC3: The branch changes only comments: in `git diff main...HEAD -- .
       ':!cairn'`, every added or removed line, after its leading `+` or `-`, is
       blank or has `#` as its first non-space character (the `+++` and `---`
       file headers excluded), and `hadolint Dockerfile` reports no violations
@@ -85,3 +85,9 @@ that list changes.
 ## Decisions
 
 ## Review
+
+- 2026-11-05 sync: branch base f9b9dcb equals origin/main; no merge needed. No PR yet; Copilot round off.
+- AC1 evidence (2026-11-05, HEAD f8e3e0a): the AC1 grep prints nothing, exit 1. The same pattern on `main` finds 4 lines, so the grep can fail.
+- AC2 evidence (2026-11-05, read of `git diff main...HEAD`): apt-retries comment still reads "Retry transient r2u-mirror fetch failures"; the append comment sits under "plain-language hint when an install fails on an unreachable mirror"; `mirror_hint.R` header reads "the r2u binary mirror is unreachable"; `resolve-rstudio-version.sh` header still names the scraped endpoint and "A format change" and ends "(GP2)".
+- AC3 evidence (2026-11-05, HEAD f8e3e0a): the diff has 8 added or removed lines, 0 of them non-comment (a planted `+RUN x` line is counted, so the filter can fail); `hadolint/hadolint:v2.14.0` on `Dockerfile` exit 0 with no output, and on a planted `FROM ubuntu:latest` file exit 1 with DL3007.
+- Gate (2026-11-05): `cairn_validate.py` all checks passed, 1 advisory (the old `cairn/references/pdf/` ignore entry, its own candidate row). No principle text changed, so no `cairn_impact`. Profile slot: `docker build .` exit 0 (T2); hadolint clean (AC3); base image is the explicit tag `rocker/r2u:${UBUNTU_VERSION}`, unchanged; no `ENV` or `COPY` secrets; `.dockerignore` present and excludes `.git` and `cairn`; changelog none, the archive summary records the change.

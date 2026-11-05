@@ -79,6 +79,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - 2026-11-05: T7 stop: asked whether to push the branch and run one test-mode dispatch of `docker.yml` — the user chose "Push and run".
 - 2026-11-05: T7: test-mode run 41983783693 at bb2e7c7: `launcher-compose` passed 23 of 23 checks, running after `publish (resolute)` failed. The run is red because `build (resolute, amd64)` could not connect to `r2u.stat.illinois.edu` in the smoke test; the branch changes no `Dockerfile` or image script, so the sighting went to the existing parked row and no re-run was made. `notify` was skipped, as it is on any dispatch.
 - 2026-11-05: claim audit: not owed — internal tier.
+- 2026-11-05: review stop: Docker Desktop off and fixes changed the script; asked whether to start Docker and whether to run a second test-mode dispatch — the user chose "Start Docker for me" and "Push and run again".
 
 ## Decisions
 

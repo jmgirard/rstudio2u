@@ -81,6 +81,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - 2026-11-05: T6 done: DESIGN.md Conventions bullet added. It also states the bound that growth in the three images the pull request lane does not build shows only after they publish.
 - 2026-11-05: T7 done on temporary branch m026-temp-size-check, both workflows `on: push`, as granted at the plan gate. With noble's limit at 500: `pr-ci.yml` run 42062583727 failed only at its size step with "noble amd64 is 723.1 MB, over its 500 MB limit" and the raise-the-limit text; `image-size.yml` run 42062584097 opened issue #37 under `image-size`, naming both noble sizes and the limit. With the real limit restored: `image-size.yml` run 42062731641 closed #37, and `pr-ci.yml` run 42062731742 passed at 723.1 MB, the same as the published image. No `ci-failure` issue was opened or closed. The real runs covered no unread size: that outcome has stub-driven cases only. Temporary branch deleted, #37 confirmed closed, AC6 diff names none of the listed files. Local shellcheck 0.11.0 at `-S info` is clean on the three new shell files, and all 12 `scripts/tests/test_*.sh` files pass.
 - 2026-11-05: claim audit: not owed — internal tier
+- 2026-11-05: step-7 approval: m026-image-size-limit-ci approved for merge
 
 ## Decisions
 

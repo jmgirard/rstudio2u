@@ -6,7 +6,7 @@ echo Stopping rstudio2u...
 docker compose stop
 
 echo.
-echo [OK] Server stopped. Your work is preserved -- double-click
-echo      start_windows.bat to resume where you left off.
+echo [OK] Server stopped. The files in your home folder are kept. Double-click
+echo      start_windows.bat to start it again.
 echo.
 pause

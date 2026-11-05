@@ -75,7 +75,7 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - [x] T2: Write the README section "Keeping installed packages" under "Adding R
       Packages" from T1's observed results, and point the claims at README
       lines 47–49 and 107–108 to it.
-- [ ] T3: Reword the closing message in the three stop launchers, keeping
+- [x] T3: Reword the closing message in the three stop launchers, keeping
       `stop_windows.bat` CRLF; run `scripts/tests/test_launcher_line_endings.sh`.
 - [ ] T4: Reword README lines 42 and 217 and the `docker-compose.yml:15`
       comment; read every sentence of the five files for any remaining claim
@@ -101,6 +101,7 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - 2026-11-05: T1 saved script: in a new container of `noble-2026-11-05`, `source("~/my_packages.R")` with `sudo apt-get update && sudo apt-get install -y libfftw3-dev` and `install.packages(c("glmmTMB", "mice", "metafor"))` installed all four. Without `apt-get update`, `sudo apt-get install` in a brand-new container fails with "Unable to locate package" (empty apt lists), so the script keeps the update; README line 109's bare `sudo apt install` hint is the new candidate row "Add apt update to the README's apt hint".
 - 2026-11-05: T2 probe: stop, then `docker compose pull` with no newer image, then `up -d --wait` (the start launcher's sequence) kept the same container (a9f692ab2afe) and praise.
 - 2026-11-05: T2: README section "Keeping installed packages" added under "Adding R Packages" from the T1 and T2 runs; the "Your work is saved" note and the bullet at old line 107 point to it. The Simple English lint finds no new hit in the added lines (README total 52 → 51); the older hits are the new candidate row "Clear the README's plain-English hits".
+- 2026-11-05: T3: the three stop launchers now say "Server stopped. The files in your home folder are kept." then Run/Double-click the start file "to start it again"; edited line by line so `stop_windows.bat` keeps CRLF; the CRLF guard passes (12 of 12 lines), `bash -n` passes on the two shell files, and `stop_linux.sh` printed the new message (shellcheck is not installed here; `lint.yml` runs it on the PR).
 
 ## Decisions
 

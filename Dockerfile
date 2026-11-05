@@ -57,9 +57,7 @@ RUN set -eux \
     && echo 'DPkg::Post-Invoke {"chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library || true"; "chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library || true";};' > /etc/apt/apt.conf.d/99fix-r-lib-perms \
     # Grant that write access once for the libraries already present
     && chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
-    && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library \
-    # Drop RStudio's JS debug symbol maps (developer-only, ~34 MB)
-    && rm -rf /usr/lib/rstudio-server/www-symbolmaps
+    && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
 # ---------------------------------------------------------------------------
 # Runtime

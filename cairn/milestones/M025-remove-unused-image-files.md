@@ -1,13 +1,13 @@
 # M025: Remove unused files from the image
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP4, GP5, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — every student downloads the published image, and the merge moves the moving tags
-- **Branch/PR:** —
+- **Branch/PR:** m025-remove-unused-image-files
 
 ## Goal
 
@@ -51,8 +51,8 @@ Published images stop carrying files that cannot run on them or serve only stati
 
 ## Tasks
 
-- [ ] T1: Write `scripts/tests/test_slim_rstudio.sh` first, over a fixture tree with `SLIM_ROOT` and a stub `dpkg`: amd64 and arm64 each keep their folder (`linux-x64`, `linux-arm64`), an unknown architecture fails and names it, a tree with only other architectures' folders loses none, and a tree with no such folders exits 0. See it fail, then add it to the unit-test step in `pr-ci.yml`.
-- [ ] T2: Write `scripts/slim_rstudio.sh` and call it from `scripts/install_rstudio.sh` right after the `gdebi` line. Remove the `www-symbolmaps` line and its comment from `Dockerfile:61-62`, keeping the `RUN` valid. Keep `.so` files and the `copilot-sdk` package.
+- [x] T1: Write `scripts/tests/test_slim_rstudio.sh` first, over a fixture tree with `SLIM_ROOT` and a stub `dpkg`: amd64 and arm64 each keep their folder (`linux-x64`, `linux-arm64`), an unknown architecture fails and names it, a tree with only other architectures' folders loses none, and a tree with no such folders exits 0. See it fail, then add it to the unit-test step in `pr-ci.yml`.
+- [x] T2: Write `scripts/slim_rstudio.sh` and call it from `scripts/install_rstudio.sh` right after the `gdebi` line. Remove the `www-symbolmaps` line and its comment from `Dockerfile:61-62`, keeping the `RUN` valid. Keep `.so` files and the `copilot-sdk` package.
 - [ ] T3: Add the checks to `.github/smoke-test.sh`, before the phase that breaks apt networking. Copilot: load `copilot-sdk-${process.platform}-${process.arch}/prebuilds/<same>/runtime.node` under `/usr/lib/rstudio-server/bin/node/bin/node`, then send `initialize` to the language server. `initialize` alone also passes with the native folder gone, so both parts are needed. If no `copilot-sdk-*-*` folder exists at all, print a notice and skip the load, so an upstream layout change does not stop a publish. M026's size check catches that case. If other folders exist and the matching one does not, fail. Also add the libclang `dlopen` and `apt-get check`.
 - [ ] T4: Build noble arm64 locally, run the smoke test, and list every layer of a `docker save`. Plant each defect in a throwaway image and see the smoke test red with the expected `FAIL:` line: native folder removed, `libclang.so` target removed. Exit status alone does not count.
 - [ ] T5: Correct the figures that T4 made false: `scripts/tests/posix/run_launcher_real_compose.sh:7` (with its date and how it was measured). Update DESIGN.md's Architecture. Add a Known issues entry: the removal depends on RStudio's folder layout, a later apt reinstall of `libclang-18-dev` restores its archives, and CI does not test Copilot sign-in.
@@ -73,6 +73,7 @@ Published images stop carrying files that cannot run on them or serve only stati
 - 2026-11-05: split: the row's slimming pass is M025; its baseline and CI guard are M026 (planned now, depends on M025); stronger compression is a new parked row. Not a feature series: M026 changes nothing users see.
 - 2026-11-05: no RB tripwire tag: IP3's runtime interface is not touched.
 - 2026-11-05: no changelog file (PROFILE). The merge publishes because it touches `scripts/` and the Dockerfile. The archive summary states the smaller download for the next release's notes.
+- 2026-11-05: T1, T2 done: `test_slim_rstudio.sh` failed with exit 127 before the script existed and passes with it. `slim_rstudio.sh` runs from `install_rstudio.sh`; the Dockerfile's `www-symbolmaps` line is gone. Implementation choice: the script stands alone, for its unit test, rather than sitting inside `install_rstudio.sh`.
 
 ## Decisions
 

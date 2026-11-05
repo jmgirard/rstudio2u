@@ -100,9 +100,9 @@ spawned: diff-bug, blame-history, prior-review, ripple
 - diff-bug #6: Windows shows "Press any key to continue . . ." right after a line about closing the window, and it may be localized — follow-up: same parked row "Reword the launcher key-wait prompt".
 - diff-bug #7: the pull-succeeded `keeps running` guard repeats on every pull-succeeded scenario — reject, planned change: AC3 names this guard as its evidence.
 - diff-bug #8: production code prints a line only so tests can match it — reject, planned change: T2, T3, and the work log record this choice and its falsifier.
-- diff-bug #9: the "because the banner and the health wait's output now sit below the first one" comments are no longer the real reason, and in test files they are narrative — fix now.
-- diff-bug #10: "A normal start also must not stop for a key." restates the line below it — fix now.
-- diff-bug #11: the order and count checks cannot tell the reminder from a second copy of the first warning, so the false "Starting the copy" text after the banner would pass — fix now: the order check asks for `Reminder: the update was skipped`.
+- diff-bug #9: the "because the banner and the health wait's output now sit below the first one" comments are no longer the real reason, and in test files they are narrative — fix now, fixed f70b21b.
+- diff-bug #10: "A normal start also must not stop for a key." restates the line below it — fix now, fixed f70b21b.
+- diff-bug #11: the order and count checks cannot tell the reminder from a second copy of the first warning, so the false "Starting the copy" text after the banner would pass — fix now: the order check asks for `Reminder: the update was skipped`, fixed f70b21b; a planted copy of the first warning after the banner fails `offline-fallback` on both POSIX launchers.
 - diff-bug #12: the normal-path exit status of `start_mac.command` was `open`'s and is now always 0 — reject, edge: only `open` itself failing reaches it, outside the double-click use, and nothing reads the status there.
 - diff-bug #13: "Opening your web browser..." follows the reminder on Windows and sits inside the banner on POSIX — reject, style: AC2 holds on all three, and the banners already differ.
 - diff-bug #14: AC1's evidence must come from the PR head's CI run, which does not exist yet — reject, false as a defect: the AC1 box stays open until that run passes.
@@ -114,7 +114,7 @@ spawned: diff-bug, blame-history, prior-review, ripple
 - prior-review #1: the marker prints for every caller of `launcher_pause` — reject, planned change: same as blame-history #3.
 - prior-review #2: the reminder text is duplicated in two files with nothing enforcing the match — reject, planned change: batch cannot source a shell file, and T3 calls for the same words; the wording is identical today.
 - prior-review #3: only a comment guards the `exit 0` — reject, planned change: T2 calls for it and T4's probe measured it.
-- ripple #1: `scripts/tests/windows/run_launcher_scenarios.ps1:17-18` says each scenario asserts an exit code and a message substring, which understates it — fix now.
+- ripple #1: `scripts/tests/windows/run_launcher_scenarios.ps1:17-18` says each scenario asserts an exit code and a message substring, which understates it — fix now, fixed f70b21b.
 - ripple #2: `cairn/ROADMAP.md:24` gives "scrolls off" as the reason — reject, false as stale text: the row leaves the roadmap at this milestone's hygiene.
 - ripple #3: `.github/workflows/launchers.yml:3-4` says the lane drives every branch while the Windows key wait is not pressed — reject, false: the branch is driven, and the wait is skipped by the seam as on every error path.
 - ripple #4: the inline `read` prompts for a missing helper file print no marker — reject, false: those paths exit before the offline branch and honor the seam inline.

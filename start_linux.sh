@@ -48,9 +48,11 @@ launcher_check_port "$(launcher_requested_port)" || exit 1
 
 # A pull failure is a different problem from a slow or unhealthy start. If a
 # copy is already downloaded, start it with a warning rather than refuse.
+update_skipped=0
 if ! docker compose pull; then
     if launcher_images_present; then
         launcher_warn_offline
+        update_skipped=1
     else
         echo ""
         echo "❌ Could not download the latest image."
@@ -72,9 +74,15 @@ if docker compose up -d --wait --wait-timeout 180; then
     echo "🚀 Opening your web browser..."
     echo "============================================================"
     echo ""
+    [ "$update_skipped" = 0 ] || launcher_remind_offline
     if launcher_interactive; then
         xdg-open "$url" >/dev/null 2>&1 || \
             echo "Open $url in your browser."
+    fi
+    if [ "$update_skipped" = 1 ]; then
+        # exit 0 because the key wait's status is read's, which is 1 at end of input.
+        launcher_hold_offline
+        exit 0
     fi
 else
     echo ""

@@ -15,7 +15,7 @@ Two Windows details this harness must respect (both bit the first attempt):
 
 Each scenario sets a controlled PATH (+ STUB_*_FAIL) in the wrapper, calls the
 launcher with RS_LAUNCHER_NONINTERACTIVE so it runs unattended, and asserts the
-forwarded exit code and a message substring. No network, no real Docker.
+forwarded exit code, the docker calls, and the output. No network, no real Docker.
 
 Run by .github/workflows/launchers.yml (windows-latest).
 #>
@@ -135,6 +135,11 @@ $offlineWarning = 'the update was skipped'
 # The hard error's own second line -- its first line is a prefix of the warning,
 # so it cannot tell the two branches apart.
 $hardError = 'Check your internet connection'
+# Printed in place of the key wait under the test seam, so a scenario can see
+# that the launcher reached it.
+$keyWaitMarker = '[test seam] key wait skipped'
+# Printed only just before the key wait on the offline path.
+$keepsRunning = 'keeps running'
 
 function Invoke-Scenario {
     param(
@@ -149,7 +154,13 @@ function Invoke-Scenario {
         [string]   $ExpectCall,
         [string]   $ForbidCall,
         # A substring that must be absent from the launcher's output.
-        [string]   $ForbidText
+        [string]   $ForbidText,
+        # Substrings that must appear in this order, each searched for after the
+        # end of the one before.
+        [string[]] $ExpectOrder,
+        # A substring and how many times it must appear.
+        [string]   $CountText,
+        [int]      $CountN
     )
     # Seed (or clear) the sandbox .env for this scenario.
     if (Test-Path $dotenvPath) { Remove-Item $dotenvPath -Force }
@@ -196,6 +207,27 @@ function Invoke-Scenario {
         $ok = $false
         Write-Host "FAIL: $Name - offline warning printed although the pull succeeded"
     }
+    if ($ExtraEnv['STUB_PULL_FAIL'] -ne '1' -and $out -match [regex]::Escape($keepsRunning)) {
+        $ok = $false
+        Write-Host "FAIL: $Name - '$keepsRunning' printed although the pull succeeded"
+    }
+    $searchFrom = 0
+    foreach ($step in $ExpectOrder) {
+        $at = $out.IndexOf($step, $searchFrom, [System.StringComparison]::Ordinal)
+        if ($at -lt 0) {
+            $ok = $false
+            Write-Host "FAIL: $Name - '$step' missing at its place in the expected order"
+        } else {
+            $searchFrom = $at + $step.Length
+        }
+    }
+    if ($CountText) {
+        $count = [regex]::Matches($out, [regex]::Escape($CountText)).Count
+        if ($count -ne $CountN) {
+            $ok = $false
+            Write-Host "FAIL: $Name - expected $CountN occurrence(s) of '$CountText', got $count"
+        }
+    }
     if ($ok) { Write-Host "ok: $Name (exit $code)" }
     else {
         Write-Host "----- $Name output -----"
@@ -219,10 +251,19 @@ Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath `
 
 # --- offline fallback --------------------------------------------------------
 # A failed pull with every image already downloaded starts that copy, with a
-# warning that the update was skipped and no hard error.
+# warning that the update was skipped and no hard error. The warning comes again
+# after the running banner, and the window then waits for a key.
 Invoke-Scenario -Name 'offline-fallback'     -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
-    -ExpectExit 0 -ExpectText @($offlineWarning, 'RStudio Server is running') `
-    -ExpectCall 'compose up' -ForbidText $hardError
+    -ExpectExit 0 -ExpectCall 'compose up' -ForbidText $hardError `
+    -ExpectOrder @($offlineWarning, 'RStudio Server is running', "Reminder: $offlineWarning", $keepsRunning, $keyWaitMarker) `
+    -CountText $offlineWarning -CountN 2
+
+# With no running banner there is nothing to repeat the warning after, and
+# no ready server to mention.
+Invoke-Scenario -Name 'offline-health-timeout' -PathValue $stubPath `
+    -ExtraEnv @{ STUB_PULL_FAIL = '1'; STUB_UP_FAIL = '1' } `
+    -ExpectExit 1 -ExpectText @('did not become ready') -ForbidText $keepsRunning `
+    -CountText $offlineWarning -CountN 1
 
 # Only the second listed image is missing: the launcher must check every image,
 # not just the first.
@@ -248,7 +289,8 @@ Invoke-Scenario -Name 'health-timeout'       -PathValue $stubPath -ExtraEnv @{ S
 # --- port resolution ---------------------------------------------------------
 
 Invoke-Scenario -Name 'port-default'         -PathValue $stubPath -ExtraEnv @{} `
-    -ExpectExit 0 -ExpectText @('RStudio Server is running', 'http://localhost:8787', 'go to that address manually')
+    -ExpectExit 0 -ExpectText @('RStudio Server is running', 'http://localhost:8787', 'go to that address manually') `
+    -ForbidText $keyWaitMarker
 
 Invoke-Scenario -Name 'port-from-env'        -PathValue $stubPath -ExtraEnv @{ RS_PORT = '8888' } `
     -ExpectExit 0 -ExpectText @('http://localhost:8888')

@@ -71,6 +71,7 @@ if errorlevel 1 (
 :: Get the latest image. A pull failure is a different problem from a slow or
 :: unhealthy start, so report it as its own thing instead of blaming a timeout.
 :: If a copy is already downloaded, start it with a warning rather than refuse.
+set "UPDATE_SKIPPED="
 docker compose pull
 if errorlevel 1 (
     call :images_present
@@ -88,6 +89,7 @@ if errorlevel 1 (
     echo     Starting the copy already on this computer instead. To get the
     echo     latest version, connect to the internet and run this again later.
     echo.
+    set "UPDATE_SKIPPED=1"
 )
 
 :: Start the server and wait until it reports healthy.
@@ -123,13 +125,33 @@ echo      If your browser does not open, go to that address manually.
 echo ============================================================
 echo.
 
-:: Under the non-interactive test seam, stop before opening a browser or
-:: pausing so CI can drive every branch unattended.
-if defined RS_LAUNCHER_NONINTERACTIVE goto :done
+:: Repeat the warning after the running banner, so a student who looks at the
+:: window once the server is ready can read it. The server is up by now, so it no
+:: longer says "starting".
+if defined UPDATE_SKIPPED (
+    echo [i] Reminder: the update was skipped, so this is the copy already on this
+    echo     computer. To get the latest version, connect to the internet and run
+    echo     this again later.
+    echo.
+)
 
-echo Opening your web browser...
-start "" "!RS_URL!"
-timeout /t 3 >nul
+:: Under the non-interactive test seam, do not open a browser or pause, so CI can
+:: drive every branch unattended.
+if not defined RS_LAUNCHER_NONINTERACTIVE (
+    echo Opening your web browser...
+    start "" "!RS_URL!"
+)
+
+:: A double-clicked window closes when this script ends, so hold it after a skipped
+:: update so the reminder can be read. A student may otherwise think that the
+:: server needs this window, so say that it does not.
+if defined UPDATE_SKIPPED (
+    echo RStudio keeps running after you close this window.
+    echo.
+    call :wait
+    goto :done
+)
+if not defined RS_LAUNCHER_NONINTERACTIVE timeout /t 3 >nul
 
 :done
 endlocal
@@ -211,8 +233,12 @@ if "!IMAGE:~-1!"==" " (
 )
 goto :eof
 
-:: Interactive pause, suppressed under the test seam.
+:: Interactive pause. Under the test seam it prints a marker instead, so a scenario
+:: can see that the launcher got here.
 :wait
-if defined RS_LAUNCHER_NONINTERACTIVE goto :eof
+if defined RS_LAUNCHER_NONINTERACTIVE (
+    echo [test seam] key wait skipped
+    goto :eof
+)
 pause
 goto :eof

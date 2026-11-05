@@ -1,13 +1,13 @@
 # M023: Re-print the offline warning at the end
 
-- **Status:** planned
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP1, GP3
 - **Resolves:** —
 - **Surface tier:** user-facing — it changes what students see in all three launchers
-- **Branch/PR:** —
+- **Branch/PR:** m023-reprint-offline-warning
 
 ## Goal
 
@@ -30,10 +30,10 @@ FAQ describes the new behavior.
 ## Acceptance criteria
 
 - [ ] AC1: On a start where `docker compose pull` fails, every image is on disk, and `docker compose up` succeeds, `start_mac.command`, `start_linux.sh`, and `start_windows.bat` each exit 0 and print a line containing `the update was skipped` both before and after the "RStudio Server is running" line. Evidence: the `offline-fallback` scenarios in `scripts/tests/posix/run_launcher_scenarios.sh` and `scripts/tests/windows/run_launcher_scenarios.ps1`, from the PR head's CI run. `start_mac.command` runs there under bash on Ubuntu, not on macOS.
-- [ ] AC2: On that same start, each launcher, after its browser step, prints a line containing `keeps running`, then waits for a key press as its last step before exit. Evidence: the `offline-fallback` scenarios show, in order, the second warning, that line, and the pause helper's seam marker, and a read of each launcher shows the browser step comes first. The real key wait is shown by a read on Windows, and no test runs it there.
-- [ ] AC3: On a start where the pull and `docker compose up` both succeed, each launcher prints no line containing `the update was skipped` or `keeps running` and does not wait for a key press, and `start_windows.bat` still ends with its 3-second timeout. Evidence: the harnesses' pull-succeeded guard, the `port-default` scenario forbidding the seam marker, and a read of `start_windows.bat`.
-- [ ] AC4: On a start where the pull fails, every image is on disk, and `docker compose up` fails, each launcher exits 1, prints its "did not become ready" error, and prints exactly one line containing `the update was skipped`. Evidence: a new `offline-health-timeout` scenario in both harnesses.
-- [ ] AC5: The `README.md` FAQ entry "How do I update to the latest version?" says that a launcher started without internet access repeats the warning once the server is ready and waits for a key press before its window closes, and that RStudio keeps running after that.
+- [x] AC2: On that same start, each launcher, after its browser step, prints a line containing `keeps running`, then waits for a key press as its last step before exit. Evidence: the `offline-fallback` scenarios show, in order, the second warning, that line, and the pause helper's seam marker, and a read of each launcher shows the browser step comes first. The real key wait is shown by a read on Windows, and no test runs it there.
+- [x] AC3: On a start where the pull and `docker compose up` both succeed, each launcher prints no line containing `the update was skipped` or `keeps running` and does not wait for a key press, and `start_windows.bat` still ends with its 3-second timeout. Evidence: the harnesses' pull-succeeded guard, the `port-default` scenario forbidding the seam marker, and a read of `start_windows.bat`.
+- [x] AC4: On a start where the pull fails, every image is on disk, and `docker compose up` fails, each launcher exits 1, prints its "did not become ready" error, and prints exactly one line containing `the update was skipped`. Evidence: a new `offline-health-timeout` scenario in both harnesses.
+- [x] AC5: The `README.md` FAQ entry "How do I update to the latest version?" says that a launcher started without internet access repeats the warning once the server is ready and waits for a key press before its window closes, and that RStudio keeps running after that.
 
 ## Coverage
 
@@ -45,11 +45,11 @@ FAQ describes the new behavior.
 
 ## Tasks
 
-- [ ] T1: In both harnesses, add an order check (first occurrence before the running line, last occurrence after it), a count check, and the new assertions: `offline-fallback` order, the `keeps running` line, and the seam marker; `port-default` forbids the marker; the pull-succeeded guard also forbids `keeps running` (not the marker, because `health-timeout` prints it); a new `offline-health-timeout` scenario with `STUB_PULL_FAIL=1 STUB_UP_FAIL=1`. See them fail first.
-- [ ] T2: In `launcher_common.sh`, add the reminder and the `keeps running` line, and make `launcher_pause`'s seam branch print a marker. In `start_mac.command` and `start_linux.sh`, record that the update was skipped, print the reminder after the banner, run the browser step, print the `keeps running` line, then `launcher_pause; exit 0`, because `read` at end of input returns 1. Reminder text: "Reminder: the update was skipped, so this is the copy already on this computer. To get the latest version, connect to the internet and run this again later." Line text: "RStudio keeps running after you close this window."
-- [ ] T3: In `start_windows.bat`, make the same change with the same words. Replace the `goto :done` at line 128 with a guard around the browser lines only, so the seam flow reaches the offline block. Make `:wait`'s seam branch print the marker. On the skipped path call `:wait` in place of the 3-second timeout, and keep the timeout on a normal start. Keep CRLF.
-- [ ] T4: Plant defects on all three launchers and see the harness fail: both warnings before the banner, both after it, only one warning; two warnings on the `up`-fails branch; the pause removed on the offline path; the pause made unconditional. Run `shellcheck` at the repo's floor and `scripts/tests/test_launcher_line_endings.sh`. On this Mac, run `start_mac.command` without the seam under a pseudo-terminal, with stub `docker` and `open`, and confirm that it waits for a key and then exits 0. Write one work-log line with the results.
-- [ ] T5: Update the README FAQ entry at `README.md:212-216`.
+- [x] T1: In both harnesses, add an order check (first occurrence before the running line, last occurrence after it), a count check, and the new assertions: `offline-fallback` order, the `keeps running` line, and the seam marker; `port-default` forbids the marker; the pull-succeeded guard also forbids `keeps running` (not the marker, because `health-timeout` prints it); a new `offline-health-timeout` scenario with `STUB_PULL_FAIL=1 STUB_UP_FAIL=1`. See them fail first.
+- [x] T2: In `launcher_common.sh`, add the reminder and the `keeps running` line, and make `launcher_pause`'s seam branch print a marker. In `start_mac.command` and `start_linux.sh`, record that the update was skipped, print the reminder after the banner, run the browser step, print the `keeps running` line, then `launcher_pause; exit 0`, because `read` at end of input returns 1. Reminder text: "Reminder: the update was skipped, so this is the copy already on this computer. To get the latest version, connect to the internet and run this again later." Line text: "RStudio keeps running after you close this window."
+- [x] T3: In `start_windows.bat`, make the same change with the same words. Replace the `goto :done` at line 128 with a guard around the browser lines only, so the seam flow reaches the offline block. Make `:wait`'s seam branch print the marker. On the skipped path call `:wait` in place of the 3-second timeout, and keep the timeout on a normal start. Keep CRLF.
+- [x] T4: Plant defects on all three launchers and see the harness fail: both warnings before the banner, both after it, only one warning; two warnings on the `up`-fails branch; the pause removed on the offline path; the pause made unconditional. Run `shellcheck` at the repo's floor and `scripts/tests/test_launcher_line_endings.sh`. On this Mac, run `start_mac.command` without the seam under a pseudo-terminal, with stub `docker` and `open`, and confirm that it waits for a key and then exits 0. Write one work-log line with the results.
+- [x] T5: Update the README FAQ entry at `README.md:212-216`.
 
 ## Work log
 
@@ -63,7 +63,60 @@ FAQ describes the new behavior.
 - 2026-11-05: question set: a real Windows check before the merge — no, tests and a code read; the real key wait on Windows is not run.
 - 2026-11-05: question set: start the build right after the plan — yes, asked on 2026-11-04 and not withdrawn at the rerun.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): nine findings, all fixed in the wording or the tasks: seam blind to the pause (marker, T1-T3), `goto :done` skips the offline block (T3), AC3 too broad (narrowed to pull and up succeeding), no order or count check (T1), warning text undefined and partly false after the banner (anchor text, reminder), POSIX exit status becomes `read`'s (T2), macOS and the real key wait are not executed (stated in AC1, AC2, and T4's local probe), AC6 only promised CI status (deleted, with CI named in AC1), new checks need planted defects (T4).
+- 2026-11-05: T1: both harnesses gained order and count checks and the new assertions; the POSIX run fails `offline-fallback` on both launchers for the missing second warning, `keeps running`, and marker; `offline-health-timeout` already passes because it pins behavior the change leaves alone; the PowerShell edits have not run, because this Mac has no `pwsh` or `cmd`.
+- 2026-11-05: T2: `launcher_remind_offline` and `launcher_hold_offline` added, and `launcher_pause` prints a marker under the seam; the POSIX harness passes on both launchers.
+- 2026-11-05: T3: `start_windows.bat` carries the same words and flow, all 243 lines still CRLF in the working tree; it has not run, because this Mac has no `cmd`.
+- 2026-11-05: T5: the README FAQ entry states the repeat, the key wait, and that RStudio keeps running.
+- 2026-11-05: question set: push a temporary branch `m023-windows-probe` to run the Windows lane, planted Windows defects, and shell lint before the merge question, then delete it — yes; asked at a stop because this Mac has no `cmd`, `pwsh`, or `shellcheck` and these lanes run only on pull requests.
+- 2026-11-05: T4: planted defects: POSIX 10 of 10 red on both launchers (local); Windows 11 of 11 red (run 41978769374 on the probe branch, head e45993d carrying T3's code), each for the expected scenario and reason; the same run's real Windows scenarios, POSIX scenarios, and line-endings guard passed; shellcheck at `-S info` passed (run 41978769304); probe branch deleted from GitHub and locally.
+- 2026-11-05: T4: `start_mac.command` without the seam in a pseudo-terminal on this Mac: on a skipped update it shows the prompt, is alive after 3 s with no key, and exits 0 about 0.05 s after a key; with no terminal on stdin it exits 0; a normal start shows no prompt and exits 0 alone. No test runs the real key wait on Windows.
+- 2026-11-05: implementation choice: the seam marker text is `[test seam] key wait skipped`, printed by `launcher_pause` and `:wait` on every path that reaches them; it prints only under `RS_LAUNCHER_NONINTERACTIVE`.
+- 2026-11-05: the simple-english hook flagged 44 older hits across `README.md` on the T5 edit; left alone as outside this milestone's scope; the two added lines carry none of the flagged forms.
+- 2026-11-05: claim audit: 55 claims read, 6 corrected — launcher_common.sh, start_windows.bat, scripts/tests/posix/run_launcher_scenarios.sh, scripts/tests/windows/run_launcher_scenarios.ps1
+- 2026-11-05: claim audit finding on the row's premise: under a pseudo-terminal on this Mac with Compose 5.6.1, `up -d --wait` redraws in place for a net 4 rows, so the first warning does not scroll off a 24-row window; the reader read the byte stream, not a real window, and did not measure Windows or older Compose; the goal stands on the 3-second Windows close and the browser taking focus, and the comments no longer claim scrolling; to be stated at the merge question.
+- 2026-11-05: the double-clicked window closing when a batch file ends (`start_windows.bat` comment) stays not checkable on this Mac; it is standard Windows behavior.
+- 2026-11-05: step-7 approval: m023-reprint-offline-warning approved for merge
 
 ## Decisions
 
 ## Review
+
+Evidence gathered 2026-11-05 at 21e3c0e, level with origin/main 9bfa381 as its base. POSIX harness: 56 scenarios, all ok, run on this Mac. Windows harness: run 41978769374 on the probe branch at T3's code; `git diff 163a01d HEAD` on `start_windows.bat` and the PowerShell harness changes only comment lines.
+
+- AC1: POSIX `offline-fallback` passes on `start_mac.command` and `start_linux.sh`, exit 0, with the order warning, running line, warning, and a count of 2; Windows `offline-fallback` passed the same checks in run 41978769374. The criterion names the PR head's CI run, which does not exist before the approval, so the box stays open until that run passes (step 8).
+- AC2: `offline-fallback` shows second warning, `keeps running`, then `[test seam] key wait skipped` in order on all three launchers (same runs). Read: browser step before the hold at `start_mac.command:85,89`, `start_linux.sh:79,84`, `start_windows.bat:142,151`. Real key wait: pseudo-terminal run on macOS (work log, T4); read only on Windows at `start_windows.bat:151` and `:wait`, no test runs it there.
+- AC3: pull-succeeded guard passes on every POSIX scenario and in run 41978769374; `port-default` forbids the marker and passes on all three; `start_windows.bat:154` keeps `timeout /t 3` for a normal start.
+- AC4: `offline-health-timeout` passes on all three, exit 1, `did not become ready`, count 1, no `keeps running` (same runs).
+- AC5: `README.md:215-218` states the repeat, the key wait before the window closes, and that RStudio keeps running.
+
+Consistency gate: `cairn_validate` passes, one older `.gitignore` advisory. `docker build --no-cache` from a clean context gave image sha256:14d28273. `hadolint` is not on this Mac and the Dockerfile is unchanged; `pr-ci.yml` runs it on the PR head. Base pinned to a version tag (`rocker/r2u:${UBUNTU_VERSION}`, 24.04). No secret in `ENV` or `ARG`. `.dockerignore` present and excludes launchers and `scripts/tests`. Changelog slot none: the archive summary states the user-visible change. No principle changed, so `cairn_impact` is skipped.
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+- diff-bug #1: a key typed during the health wait dismisses the hold as soon as it appears, so the reminder can go unread (reproduced on this Mac; not established on Windows) — follow-up: parked row "Drop keys typed before the key wait"; no criterion fails, because a typed key is a key press, and the promote condition is a report.
+- diff-bug #2: "Press any key to close..." and the README's "before its window closes" do not match POSIX, where the script ends but the window can stay open, and no newline follows the prompt — follow-up: parked row "Reword the launcher key-wait prompt"; the prompt is an older line, and the README sentence holds, because no close comes before the key.
+- diff-bug #3: the line invites closing the window, but closing it during the wait may raise a "terminate running processes?" dialog (not run) — follow-up: same parked row "Reword the launcher key-wait prompt".
+- diff-bug #4: unattended callers can now block on a skipped update when stdin is a non-terminal that stays open, or a batch wrapper run from a console — reject, edge: a script piping an open stdin into a launcher, or a wrapper around it, falls outside the double-click and terminal uses the README documents; the effect is a wait.
+- diff-bug #5: any pull failure counts as offline, so "connect to the internet" is wrong during a Docker Hub outage or rate limit, and a local-only image in an override would stop for a key on every start — follow-up: parked row "Name other causes of a failed pull"; the first warning already assumes this since M10.
+- diff-bug #6: Windows shows "Press any key to continue . . ." right after a line about closing the window, and it may be localized — follow-up: same parked row "Reword the launcher key-wait prompt".
+- diff-bug #7: the pull-succeeded `keeps running` guard repeats on every pull-succeeded scenario — reject, planned change: AC3 names this guard as its evidence.
+- diff-bug #8: production code prints a line only so tests can match it — reject, planned change: T2, T3, and the work log record this choice and its falsifier.
+- diff-bug #9: the "because the banner and the health wait's output now sit below the first one" comments are no longer the real reason, and in test files they are narrative — fix now, fixed f70b21b.
+- diff-bug #10: "A normal start also must not stop for a key." restates the line below it — fix now, fixed f70b21b.
+- diff-bug #11: the order and count checks cannot tell the reminder from a second copy of the first warning, so the false "Starting the copy" text after the banner would pass — fix now: the order check asks for `Reminder: the update was skipped`, fixed f70b21b; a planted copy of the first warning after the banner fails `offline-fallback` on both POSIX launchers.
+- diff-bug #12: the normal-path exit status of `start_mac.command` was `open`'s and is now always 0 — reject, edge: only `open` itself failing reaches it, outside the double-click use, and nothing reads the status there.
+- diff-bug #13: "Opening your web browser..." follows the reminder on Windows and sits inside the banner on POSIX — reject, style: AC2 holds on all three, and the banners already differ.
+- diff-bug #14: AC1's evidence must come from the PR head's CI run, which does not exist yet — reject, false as a defect: the AC1 box stays open until that run passes.
+- blame-history #1: the skipped-update success path now waits for a key where success never did — reject, planned change: the user chose it at the question set; no decision or principle records a rule against it.
+- blame-history #2: Windows auto-close on a normal start is preserved — reject, false: reported as information, no defect.
+- blame-history #3: the seam marker also prints on error branches — reject, planned change: T2 and T3 place it in the helpers; students never see it.
+- blame-history #4: `UPDATE_SKIPPED` and `exit 0` verified — reject, false: reported as information, no defect.
+- blame-history #5: this branch resolves M10's candidate — reject, false: reported as information, no defect.
+- prior-review #1: the marker prints for every caller of `launcher_pause` — reject, planned change: same as blame-history #3.
+- prior-review #2: the reminder text is duplicated in two files with nothing enforcing the match — reject, planned change: batch cannot source a shell file, and T3 calls for the same words; the wording is identical today.
+- prior-review #3: only a comment guards the `exit 0` — reject, planned change: T2 calls for it and T4's probe measured it.
+- ripple #1: `scripts/tests/windows/run_launcher_scenarios.ps1:17-18` says each scenario asserts an exit code and a message substring, which understates it — fix now, fixed f70b21b.
+- ripple #2: `cairn/ROADMAP.md:24` gives "scrolls off" as the reason — reject, false as stale text: the row leaves the roadmap at this milestone's hygiene.
+- ripple #3: `.github/workflows/launchers.yml:3-4` says the lane drives every branch while the Windows key wait is not pressed — reject, false: the branch is driven, and the wait is skipped by the seam as on every error path.
+- ripple #4: the inline `read` prompts for a missing helper file print no marker — reject, false: those paths exit before the offline branch and honor the seam inline.
+- ripple #5: README step 4 does not mention the key wait — reject, planned change: AC5 places it in the FAQ.

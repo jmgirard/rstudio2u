@@ -29,13 +29,13 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 
 ## Acceptance criteria
 
-- [ ] AC1: `bash scripts/tests/posix/run_launcher_real_compose.sh` runs `start_linux.sh` from a temporary copy, against real Docker and Compose, in three scenarios: no `.env` and no `RS_PORT` (expected port 8787), a `.env` holding `RS_PORT=8888` (expected 8888), and that `.env` with `RS_PORT=8889` in the environment (expected 8889). In each scenario the launcher exits 0, its banner names `http://localhost:<expected>`, an HTTP request to that URL gets a response, and `docker compose port rstudio2u 8787` prints exactly `127.0.0.1:<expected>`.
-- [ ] AC2: In the 8888 and 8889 scenarios of AC1, a request to port 8787 fails with curl exit code 7 (connection refused).
-- [ ] AC3: The script compares `launcher_requested_port` with the published port in `docker compose config --format json` for these nine `.env` contents, and they agree, an empty reader result counting as 8787: `RS_PORT=8888`; `RS_PORT="8890"`; `RS_PORT='8891' # c`; `RS_PORT=8892 # c`; `export RS_PORT=8893`; `  RS_PORT = 8894`; `RS_PORT=1111` then `RS_PORT=8896` on the next line; `RS_PORT=`; `# RS_PORT=1111`.
-- [ ] AC4: The script exits non-zero and names the failed check in each of these three cases: `launcher_url` returns a hardcoded `http://localhost:8787`; the mapping in `docker-compose.yml` binds `0.0.0.0` instead of `127.0.0.1`; `launcher_requested_port` stops removing an inline comment.
-- [ ] AC5: After a run that exits 0 and after a run that fails on one AC4 case: a `rstudio2u_rstudio_home` volume created before the run still holds a sentinel file placed in it beforehand, a `.env` in the checkout that existed before the run is byte-identical, and `docker ps -a` and `docker volume ls`, each filtered on `label=com.docker.compose.project=<the script's project>`, print nothing.
+- [x] AC1: `bash scripts/tests/posix/run_launcher_real_compose.sh` runs `start_linux.sh` from a temporary copy, against real Docker and Compose, in three scenarios: no `.env` and no `RS_PORT` (expected port 8787), a `.env` holding `RS_PORT=8888` (expected 8888), and that `.env` with `RS_PORT=8889` in the environment (expected 8889). In each scenario the launcher exits 0, its banner names `http://localhost:<expected>`, an HTTP request to that URL gets a response, and `docker compose port rstudio2u 8787` prints exactly `127.0.0.1:<expected>`.
+- [x] AC2: In the 8888 and 8889 scenarios of AC1, a request to port 8787 fails with curl exit code 7 (connection refused).
+- [x] AC3: The script compares `launcher_requested_port` with the published port in `docker compose config --format json` for these nine `.env` contents, and they agree, an empty reader result counting as 8787: `RS_PORT=8888`; `RS_PORT="8890"`; `RS_PORT='8891' # c`; `RS_PORT=8892 # c`; `export RS_PORT=8893`; `  RS_PORT = 8894`; `RS_PORT=1111` then `RS_PORT=8896` on the next line; `RS_PORT=`; `# RS_PORT=1111`.
+- [x] AC4: The script exits non-zero and names the failed check in each of these three cases: `launcher_url` returns a hardcoded `http://localhost:8787`; the mapping in `docker-compose.yml` binds `0.0.0.0` instead of `127.0.0.1`; `launcher_requested_port` stops removing an inline comment.
+- [x] AC5: After a run that exits 0 and after a run that fails on one AC4 case: a `rstudio2u_rstudio_home` volume created before the run still holds a sentinel file placed in it beforehand, a `.env` in the checkout that existed before the run is byte-identical, and `docker ps -a` and `docker volume ls`, each filtered on `label=com.docker.compose.project=<the script's project>`, print nothing.
 - [ ] AC6: `launchers.yml` has a job on `ubuntu-latest` that runs the script, and its `paths` filter lists `docker-compose.yml`. That job and `lint.yml` pass on the milestone's PR head.
-- [ ] AC7: `docker.yml` has a `launcher-compose` job whose `needs` includes `publish`, whose `if:` is true on `schedule` and `workflow_dispatch` whatever `publish`'s result and false on `push`, and whose steps run the script. `notify` lists the job in both `needs` and `RESULTS`, and the job passes in a test-mode dispatch of the milestone branch.
+- [x] AC7: `docker.yml` has a `launcher-compose` job whose `needs` includes `publish`, whose `if:` is true on `schedule` and `workflow_dispatch` whatever `publish`'s result and false on `push`, and whose steps run the script. `notify` lists the job in both `needs` and `RESULTS`, and the job passes in a test-mode dispatch of the milestone branch.
 
 ## Coverage
 
@@ -84,6 +84,18 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 ## Decisions
 
 ## Review
+
+Evidence at 98a1e08, on Docker 29.9.2 and Compose 5.6.1 on this Mac after the user approved starting Docker, and in test-mode run 41985892864 on GitHub:
+
+- AC1: local run exit 0, 28 of 28 checks; each of the three named scenarios passed its exit status, announced URL, response, and exact `docker compose port` output. Same 28 of 28 in the run's `launcher-compose` job.
+- AC2: "port 8787 refuses the connection (curl exit 7)" passed in the 8888 and 8889 scenarios, locally and in the run.
+- AC3: all nine `.env` contents passed "reader agrees with Compose", locally and in the run.
+- AC4: planted in temporary copies, each exit 1 and naming the check: hardcoded `launcher_url` (6 checks, including "announced URL"), `0.0.0.0` mapping (3, "docker compose port output"), no inline-comment removal (1, `RS_PORT=8892 # c`). Also planted: an extra 8787 mapping (2, the refuse check) and a broken `launcher_bound_port` (2, only "override decides the port").
+- AC5: after the green run and all five red runs, `rstudio2u_rstudio_home` still held its sentinel, the checkout's marker `.env` was unchanged, and both label filters printed nothing. Markers removed afterward.
+- AC6: part verified: `launchers.yml` holds the `launcher-compose` job on `ubuntu-latest`, and its `paths` list `docker-compose.yml`. PR-head results for that job and `lint.yml` do not exist yet, because the PR opens after approval; `shellcheck` 0.11.0 from its Docker image was clean on the changed shell files. Not ticked.
+- AC7: `needs: publish`; `if: always() && (schedule || workflow_dispatch)`, which is false on `push` and true whatever `publish`'s result (run 41983783693 ran the job after `publish (resolute)` failed); the step runs the script; `notify` lists it in `needs` and `RESULTS`; the job passed in run 41985892864 at 98a1e08, which was green overall.
+
+Consistency gate: `cairn_validate` exit 0 (one existing advisory on the `.gitignore` entry). No principle changed, so `cairn_impact` was skipped. `hadolint` 2.14.0 exit 0; `docker build` from a `git archive` context exit 0 (noble, arm64); base image on a versioned tag; no secrets in `ENV` or `COPY`; `.dockerignore` present. `actionlint` reported only two existing notes at `docker.yml:70` and `:322`. Changelog slot is none: no user-visible change. Existing suites pass: `run_launcher_scenarios.sh`, `test_ci_failure_issue.sh`.
 
 spawned: diff-bug, blame-history, prior-review, ripple
 

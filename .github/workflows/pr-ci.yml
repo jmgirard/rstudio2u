@@ -19,6 +19,9 @@ on:
       - ".github/last-rebuild-success.sh"
       - ".github/date-lib.sh"
       - ".github/tag-order.sh"
+      - ".github/image-size-limits"
+      - ".github/image-size.sh"
+      - ".github/image-size-report.sh"
 
 jobs:
   build-smoke:
@@ -76,3 +79,23 @@ jobs:
         env:
           SMOKE_TIMEOUT: "300"
         run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-noble
+
+      # The same build again, through the same builder, so its cache serves it.
+      # This export holds compressed layers, whose sizes are what a student
+      # downloads. The daemon's own image size changes meaning with its image
+      # store. After the smoke test, so a size failure cannot hide a smoke one.
+      - name: Export noble (amd64) as an OCI archive
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          build-args: |
+            UBUNTU_VERSION=24.04
+          outputs: type=oci,dest=${{ runner.temp }}/noble-amd64.oci.tar
+          provenance: false
+          cache-from: type=gha,scope=noble-amd64
+
+      # Fails the job over the limit, or when the archive cannot be read. The
+      # rule, and the message saying how to raise a limit, are in the script.
+      - name: Hold noble (amd64) to its size limit
+        run: bash ./.github/image-size.sh --from-oci noble amd64 "$RUNNER_TEMP/noble-amd64.oci.tar"

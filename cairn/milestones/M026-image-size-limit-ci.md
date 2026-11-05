@@ -52,7 +52,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 
 - [x] T1: Write `scripts/tests/test_image_size.sh` first, with fixture manifests and stub `docker` and `gh`, in the shape of `scripts/tests/test_rebuild_gap.sh`. See it fail, then add it to the unit-test step in `pr-ci.yml`.
 - [x] T2: Write `.github/image-size.sh`: given a variant, an architecture, and a manifest file, it reads the limit from `.github/image-size-limits`, prints the size and limit in decimal MB, and exits 0 within, 1 over, 2 unreadable. An empty or missing `layers` list is unreadable, never a size of 0.
-- [ ] T3: In `pr-ci.yml`, after the build step, export the same build as OCI through the same builder so its cache serves it, read the manifest out of the archive, and run `.github/image-size.sh`. Add the limits file and the script to `paths`. The failure message says how to raise the limit.
+- [x] T3: In `pr-ci.yml`, after the build step, export the same build as OCI through the same builder so its cache serves it, read the manifest out of the archive, and run `.github/image-size.sh`. Add the limits file and the script to `paths`. The failure message says how to raise the limit.
 - [ ] T4: Write `.github/image-size-report.sh` and `.github/workflows/image-size.yml`: Mondays at 12:00 UTC and on dispatch, with `issues: write`. For each tag and architecture it reads `docker buildx imagetools inspect --raw` up to 3 times 10 seconds apart, then opens, comments on, or closes the `image-size` issue. The rule stays in scripts, never in the workflow.
 - [ ] T5: After M025's publish, read the four published sizes and write `.github/image-size-limits` by AC1's rule, with the date and command beside the figures. Projection from the 2026-11-05 probes: noble about 790 MB, resolute about 840 MB.
 - [ ] T6: Add the DESIGN.md Conventions bullet: the metric, the 10% rule, that the pull request lane fails and the weekly check reports, and that a pull request raises a limit by editing the limits file with a stated reason (GP5).
@@ -75,6 +75,7 @@ CI holds each image to a recorded compressed-size limit, failing a pull request 
 - 2026-11-05: implement started on branch m026-image-size-limit-ci, cut from origin/main at d7e4886.
 - 2026-11-05: T1 done: `test_image_size.sh` added to the `pr-ci.yml` unit-test step; it fails on every script-driven case with exit 127 because neither script exists yet. Choices: limits come from a fixture through `IMAGE_SIZE_LIMITS`, so raising a real limit edits no test; `--from-oci` mode on `image-size.sh` holds the archive reading so that it is testable; an over or unread report exits 0, as `rebuild-gap.sh` does after an alert.
 - 2026-11-05: T2 done: `.github/image-size.sh` passes every comparison and archive case; the committed-limits cases wait for T5 and the report cases for T4. Choice: sizes print rounded up to 0.1 MB, so an over size never prints as equal to its limit.
+- 2026-11-05: T3 done: the export and size steps in `pr-ci.yml`, not run yet (T7 runs them). Choice: they follow the smoke test, so a size failure cannot hide a smoke failure. `paths` also gains the report script, because the unit-test step covers it.
 
 ## Decisions
 

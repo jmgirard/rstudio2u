@@ -1,0 +1,36 @@
+name: Check the published images against their size limits
+
+# Reads the size of all four published images and reports on the `image-size`
+# issue. It has its own workflow and label, and docker.yml does not depend on
+# it, so an image over its limit still publishes and cannot turn the weekly
+# rebuild red. The pull request lane (pr-ci.yml) is where a size over the limit
+# fails a check.
+#
+# No rule is in this file: .github/image-size-report.sh holds the reporting and
+# .github/image-size.sh the comparison, both tested in
+# scripts/tests/test_image_size.sh.
+
+on:
+  # Mondays at 12:00 UTC, six hours after docker.yml's 06:00 rebuild, so this
+  # reads what that run published.
+  schedule:
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+jobs:
+  image-size:
+    runs-on: ubuntu-latest
+    # The script's retries take about a minute. This bounds a read that hangs.
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Report the published sizes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash ./.github/image-size-report.sh

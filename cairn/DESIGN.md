@@ -133,6 +133,28 @@ reproducibility.
   buildx is not pinned (M022 plan gate). A buildx release that rewords
   that line fails every publish, because each run's date tag is new and so
   absent.
+- **Each image has a size limit (GP5):** `.github/image-size-limits` holds one
+  limit per variant, in decimal MB. The size is the sum of the manifest's
+  `layers[].size`: the compressed download a student waits for, not the disk
+  size after unpacking. A limit is the larger of the variant's two sizes, plus
+  10%, rounded up to the next 10 MB. `pr-ci.yml` fails a pull request whose
+  noble amd64 image is over its limit. `image-size.yml` reads all four published
+  sizes on Mondays at 12:00 UTC and reports on its own `image-size` issue, and an
+  image over its limit still publishes (GP2). All four read and within their
+  limits closes the issue. A size it cannot read goes in the same issue, never
+  counts as within, and keeps the issue open. The rules live in
+  `.github/image-size.sh` and `.github/image-size-report.sh`, never in the
+  workflows. A pull request raises a limit by editing the limits file and stating
+  the reason beside the new figures. Before a publish, the only figure it has is
+  the noble amd64 size its own run printed. Its bounds: the pull request lane
+  builds noble amd64 only (GP3), so growth in the other three shows only after
+  they publish. That lane builds the `stable` RStudio on the current base image,
+  so upstream growth can fail a pull request that changed neither, and that pull
+  request then has to raise the limit. The weekly read is anonymous, so a Docker
+  Hub rate limit reads as unread. A failed run of the report itself moves no
+  issue and shows only as a red run. buildx is not pinned, so a release that
+  changes the export's `index.json` fails every pull request's size step with
+  "no single amd64 manifest" (added M026).
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while

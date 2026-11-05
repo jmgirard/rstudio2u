@@ -121,7 +121,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
       requests in AC4 one at a time from branches off the milestone branch,
       record each run's job conclusions, close each unmerged and delete its
       branch.
-- [ ] T6: Run the verify slot and the unit tests locally (AC7).
+- [x] T6: Run the verify slot and the unit tests locally (AC7).
 
 ## Work log
 
@@ -142,6 +142,8 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: T2 done: `pr-ci.yml` has a `checks` job (step renamed "Script unit tests", hadolint) and a `build-smoke (<variant>)` matrix job for noble 24.04 and resolute 26.04, each with its own cache scope, OCI archive, and size check; YAML parsed with Ruby (no actionlint here); the PR run is the real test.
 - 2026-11-05: T3 done: the two `docker.yml` comments and the `image-size-limits` header no longer call resolute preview tier or the lane noble-only; comments only, and `test_image_size.sh` still passes. The `preview` sweep now prints only DESIGN's rule line and `install_rstudio.sh`.
 - 2026-11-05: T4 done: README paragraph after the tag table (both supported, amd64 PR build and smoke test on both, `latest` scheduled to move 2027-06-07, pin `noble` to stay) and one sentence in Reproducibility. The simple-english hook reports 44 hits in README text that predates M027; the count did not change with these edits, and the old text is left as it is (out of scope).
+- 2026-11-05: T6 run before T5 finished (T5 waits on CI): all 12 `scripts/tests/test_*.sh` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exits 0 with no output (hadolint is not installed here); local arm64 `docker build` succeeded for `UBUNTU_VERSION=24.04` and `26.04`.
+- 2026-11-05: T5 started: probe PRs #39 (resolute-only build failure in `install_rstudio.sh`), #40 (Dockerfile removes `rserver` on resolute only), #41 (resolute limit 740) opened as drafts from branches off the milestone branch, under the plan's question-set permission.
 
 ## Decisions
 

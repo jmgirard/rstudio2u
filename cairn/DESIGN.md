@@ -204,6 +204,9 @@ _Warts confirmed in the 2026-07-17 interview:_
   shape, so a format change fails the build loudly instead of mis-tagging
   (M03) — the scrape still depends on that endpoint's format.
 - The Windows launcher path sees the least real-world testing.
+- The real-Compose launcher check (`run_launcher_real_compose.sh`) runs only
+  `start_linux.sh`, only on amd64, and only on the runner's Compose version, so
+  it cannot show what a student's Docker Desktop does (added M024).
 - The launchers' offline fallback needs a Compose with `config --images`; an
   older Compose still gets the hard download error even with an image on disk
   (accepted at M10 review: the launchers target current Docker Desktop).

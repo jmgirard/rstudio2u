@@ -395,6 +395,24 @@ jobs:
             docker buildx imagetools inspect "${attach[0]}"
           fi
 
+  # Run start_linux.sh against the runner's real Docker and Compose. The runner's
+  # Compose changes with no change to this repo, so launchers.yml, which runs on
+  # pull requests, cannot see a new Compose by itself. always() runs this even
+  # when a publish leg failed, because `latest` is then still the image a student
+  # pulls, and because notify reads a skipped job as a failure.
+  launcher-compose:
+    needs: publish
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run start_linux.sh against real Docker and Compose
+        run: bash scripts/tests/posix/run_launcher_real_compose.sh
+
   # Scheduled runs only: nobody is watching a weekly rebuild, so a failure
   # opens (or updates) a ci-failure issue and the next green run closes it
   # (GP7). Push and dispatch runs have a person behind them and skip this job.
@@ -411,9 +429,10 @@ jobs:
   # job's is: keepalive runs on schedule and dispatch, notify on schedule
   # alone, so needs.keepalive.result is never `skipped` here. Narrow that `if:`
   # and it can be — and aggregate_result reads `skipped` as a failure, which
-  # would open a ci-failure issue every week for a job that never ran.
+  # would open a ci-failure issue every week for a job that never ran. The same
+  # holds for launcher-compose, whose `if:` is true on every scheduled run.
   notify:
-    needs: [meta, build, publish, keepalive]
+    needs: [meta, build, publish, keepalive, launcher-compose]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
@@ -434,7 +453,7 @@ jobs:
       - name: Open, update, or close the ci-failure issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }} ${{ needs.keepalive.result }}
+          RESULTS: ${{ needs.meta.result }} ${{ needs.build.result }} ${{ needs.publish.result }} ${{ needs.keepalive.result }} ${{ needs.launcher-compose.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail

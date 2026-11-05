@@ -83,3 +83,49 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 ## Decisions
 
 ## Review
+
+spawned: diff-bug, blame-history, prior-review, ripple
+
+Review stopped before evidence: Docker Desktop shut down cleanly at 00:56 local on 2026-11-05 (its backend log), so the first evidence run, `docker build`, and `hadolint` all failed with `failed to connect to the docker API`. Those runs tested nothing and count as no evidence.
+
+- diff-bug #1: a red `launcher-compose` turns the scheduled run red, so two such weeks raise a false "No successful weekly rebuild" — follow-up: parked row "Keep launcher failures out of the gap", and the coupling is stated in DESIGN, as keepalive already has it, fixed 673b783
+- diff-bug #2: requested and bound ports match in all three scenarios, so a broken `launcher_bound_port` falls back to the same value and stays green — fix now: fourth scenario where only Compose knows the port, fixed 673b783
+- diff-bug #3: AC6 has no PR-head evidence — reject (false): not a defect, D-138 opens the PR after approval and the merge waits on these checks; AC6 stays unticked until then
+- diff-bug #4: `needs.launcher-compose.result` has never been evaluated, because `notify` runs only on schedule — reject (false): no defect shown; same shape as its neighbors and `actionlint` passed it; the first evaluation is the first Monday after merge
+- diff-bug #5: a failed pull with a local image still goes green — reject (false): no check rests on a fresh image, and a clean runner's first scenario still needs the pull
+- diff-bug #6: a failed `down -v` only warns — reject (edge): a daemon that fails during cleanup, outside normal use; the effect is a warning
+- diff-bug #7: inherited `COMPOSE_FILE` and similar variables could aim `down -v` elsewhere — fix now, fixed 673b783
+- diff-bug #8: `always()` also runs on a cancelled run — reject (edge): needs a cancelled scheduled run in which this job also fails; the effect is an issue the next green run closes; AC7 asks for `always()`-like behavior
+- diff-bug #9: one Docker Hub failure on the weekly run opens the issue — follow-up: parked row "Retry the launcher check's image pull"
+- diff-bug #10: no lock between two runs on one host — reject (edge): two local runs at once; the effect is failed checks
+- diff-bug #11: a failure leaves little to diagnose — fix now: print the container's logs when the launcher fails, fixed 673b783
+- diff-bug #12: the pull replaces a local `latest` — fix now: stated in the script header, fixed 673b783
+- diff-bug #13: no `timeout-minutes` on either job — fix now: 20 minutes on both, fixed 673b783
+- diff-bug #14: `curl` passes on any HTTP status — reject (planned change): AC1 asks for a response
+- diff-bug #15: `ci-failure-issue.sh` header omits the job — fix now, fixed 673b783
+- diff-bug #16: DESIGN Conventions omit the job — fix now, with #1, fixed 673b783
+- diff-bug #17: "Its own paths filter" reads as the job's — fix now, fixed 673b783; the `scripts/tests/posix/**` overlap it also names predates this diff
+- diff-bug #18: merging starts a full publish — reject (false): existing behavior, stated at the merge question
+- diff-bug #19: failures print `FAIL:`, not `::error::` — reject (style)
+- diff-bug test #1: the script guards code the change does not touch — reject (false): AC1 to AC3 name the checks, and the script is the deliverable
+- diff-bug test #2: scenario 3 repeats scenario 2's code path — reject (planned change): AC1 and AC2 name it
+- diff-bug test #3: scenario 3's port check mostly tests Compose's own rule — reject (planned change): AC1 names it
+- diff-bug test #4: the URL check depends on the banner's wording — fix now: read the URL by its form, fixed 673b783
+- diff-bug test #5: the 5.6.1 comment has no test — reject (false): a comment, written from the probe the work log records
+- diff-bug test #6: two header comments restate the code — reject (style)
+- blame-history #1: the `notify` path for this job is unexercised, and `needs` relies on the job's `if:` — reject (false): same as diff-bug #4, and the `docker.yml` comment records the coupling
+- blame-history #2: no `timeout-minutes` — fix now, same as diff-bug #13, fixed 673b783
+- blame-history #3: the comment rewrite pins a version and sets aside M09's observation — reject (false): it keeps the `:0` branch and names the version measured
+- blame-history #4: the PR job uses the published image with the PR's Compose file — reject (planned change): Scope states it
+- blame-history #5: the script says the ports must be free but does not check — reject (edge): a busy local port; the effect is a failed check
+- prior-review #1: same as diff-bug #1 — follow-up: same row
+- prior-review #2: the `:0` branch has only a stub test — reject (false): same as ripple #1 to #3; Scope leaves that branch alone
+- ripple #1, #2, #3: `:0` comments in `start_windows.bat:113` and both harnesses — reject (false): each describes the branch it guards, which still handles a Compose that prints `:0`
+- ripple #4, #5: `test_ci_failure_issue.sh` says three values — fix now, fixed 673b783
+- ripple #6: the `test_mode` input description omits the job — fix now, fixed 673b783
+- ripple #7: `launchers.yml:5` "without needing Docker" — reject (false): that sentence is about the stub jobs, and the next one names the job that needs Docker
+- ripple #8: `docker.yml:43` does not list the new job — reject (false): it says "as notify and keepalive do" and then speaks of `meta`, `build`, and `publish` only
+- ripple #9: same as diff-bug #15 — fix now, fixed 673b783
+- ripple #10: the comment at `docker.yml:422` gives no reason for the job — reject (false): the job's own comment gives it
+- ripple #11: same as diff-bug #16 — fix now, fixed 673b783
+- ripple #12: same as diff-bug #17 — fix now, fixed 673b783

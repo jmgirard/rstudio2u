@@ -115,7 +115,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - [x] T3: Update the comments in `docker.yml` (lines 97, 229) and the header of
       `.github/image-size-limits` (line 9) that call resolute preview or the
       lane noble-only; no behavior change.
-- [ ] T4: Add the README text in AC5 near the tag table (lines 12-19) and in
+- [x] T4: Add the README text in AC5 near the tag table (lines 12-19) and in
       Reproducibility (line 133).
 - [ ] T5: After the milestone PR's first green run, open the three probe pull
       requests in AC4 one at a time from branches off the milestone branch,
@@ -141,6 +141,7 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: T1 done: DESIGN Purpose & Scope names both variants committed and adds the graduation rule; image-size bullet names both amd64 images. AC2 checks on 2026-11-05: meta-release-lts `Version: 26.04.1 LTS`; r2u Release 200; scheduled runs 41460259596, 40318529715, 39245939988, 38259252021 each show the three resolute jobs `success`.
 - 2026-11-05: T2 done: `pr-ci.yml` has a `checks` job (step renamed "Script unit tests", hadolint) and a `build-smoke (<variant>)` matrix job for noble 24.04 and resolute 26.04, each with its own cache scope, OCI archive, and size check; YAML parsed with Ruby (no actionlint here); the PR run is the real test.
 - 2026-11-05: T3 done: the two `docker.yml` comments and the `image-size-limits` header no longer call resolute preview tier or the lane noble-only; comments only, and `test_image_size.sh` still passes. The `preview` sweep now prints only DESIGN's rule line and `install_rstudio.sh`.
+- 2026-11-05: T4 done: README paragraph after the tag table (both supported, amd64 PR build and smoke test on both, `latest` scheduled to move 2027-06-07, pin `noble` to stay) and one sentence in Reproducibility. The simple-english hook reports 44 hits in README text that predates M027; the count did not change with these edits, and the old text is left as it is (out of scope).
 
 ## Decisions
 

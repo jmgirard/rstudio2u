@@ -1,9 +1,9 @@
 name: PR CI (build + smoke)
 
-# Pre-merge gate: run the script unit tests and lint, then for each committed
-# variant (noble and resolute, amd64) build the image, boot it to confirm
-# RStudio Server comes up, and hold it to its compressed-size limit — before a
-# branch merges. The publish
+# Pre-merge gate: run the script unit tests and lint, and, for each committed
+# variant (noble and resolute, amd64), build the image, boot it to confirm
+# RStudio Server comes up, and hold it to its compressed-size limit, before a
+# branch merges. The jobs run in parallel. The publish
 # workflow (docker.yml) runs only on push-to-main/schedule/dispatch, so without
 # this lane a broken image is caught only after merge. This lane never logs in
 # and never pushes: it verifies the branch, it does not publish (GP7).
@@ -32,8 +32,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Fast, offline unit tests of the scripts under scripts/ and .github/
-      # (the launcher line-ending test runs in launchers.yml instead).
+      # Fast, offline unit tests from scripts/tests/ (the launcher tests run in
+      # launchers.yml instead).
       # docker.yml's version scrape never runs on PRs (it is
       # push/schedule/dispatch only), so this is where the guard against a
       # mis-named tag is exercised pre-merge.

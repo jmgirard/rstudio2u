@@ -1,6 +1,6 @@
 # M027: Graduate resolute under a written rule
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -145,6 +145,8 @@ Write down when a preview Ubuntu variant becomes a committed one, and graduate
 - 2026-11-05: T6 run before T5 finished (T5 waits on CI): all 12 `scripts/tests/test_*.sh` exit 0; `hadolint/hadolint:v2.14.0` on the Dockerfile exits 0 with no output (hadolint is not installed here); local arm64 `docker build` succeeded for `UBUNTU_VERSION=24.04` and `26.04`.
 - 2026-11-05: T5 started: probe PRs #39 (resolute-only build failure in `install_rstudio.sh`), #40 (Dockerfile removes `rserver` on resolute only), #41 (resolute limit 740) opened as drafts from branches off the milestone branch, under the plan's question-set permission.
 - 2026-11-05: T5 done (minor amendment: run before the milestone PR exists, since review opens that PR only after approval; the size probe's own run printed both sizes): run 42115719986 resolute job failed at "Build resolute (amd64) for smoke test" with the planted message; run 42115724132 at "Smoke-test resolute (amd64)" ("FAIL: healthcheck reported unhealthy"); run 42115727824 at "Hold resolute (amd64) to its size limit" (759.3 MB over 740; noble 723.1 MB within 800). Noble job `success` in all three. PRs #39-#41 closed unmerged, branches deleted on origin and locally.
+- 2026-11-05: claim audit: 19 claims read, 2 corrected — .github/workflows/pr-ci.yml (header said "then" for jobs that run in parallel; the unit-test comment read as covering every script); the corrected lines re-read TRUE by the same reader. Comments only, after the probe runs.
+- 2026-11-05: implement complete; status review.
 
 ## Decisions
 

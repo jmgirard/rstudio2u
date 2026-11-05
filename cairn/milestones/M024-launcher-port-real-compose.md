@@ -76,6 +76,7 @@ CI runs `start_linux.sh` against real Docker and Compose and fails when the port
 - 2026-11-05: T2: nine `.env` contents compared through `compare_env`; first run is T3.
 - 2026-11-05: T3: on this Mac (Compose 5.6.1) the script passed 23 of 23 checks in 58 s. Planted in temporary copies, each run red and naming the check: hardcoded `launcher_url` (4 checks), `0.0.0.0` mapping (3), no inline-comment removal (1), and an extra 8787 mapping (3, including the refuse check). After the green run and all four red runs the marker file in `rstudio2u_rstudio_home` and the marker `.env` were intact and the project's label filters printed nothing; the markers are removed. `shellcheck` 0.11.0 from its Docker image reported two SC2030 notes, fixed by using `env` in place of subshell exports, then clean.
 - 2026-11-05: T4, T5, T6: `launcher-compose` job in `launchers.yml` with `docker-compose.yml` in its `paths`; `launcher-compose` job in `docker.yml` wired into `notify`'s `needs` and `RESULTS`; comment at `launcher_common.sh:167`, POSIX harness header, and a DESIGN Known issues line updated.
+- 2026-11-05: T7 stop: asked whether to push the branch and run one test-mode dispatch of `docker.yml` — the user chose "Push and run".
 
 ## Decisions
 

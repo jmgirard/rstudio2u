@@ -15,7 +15,7 @@ Two Windows details this harness must respect (both bit the first attempt):
 
 Each scenario sets a controlled PATH (+ STUB_*_FAIL) in the wrapper, calls the
 launcher with RS_LAUNCHER_NONINTERACTIVE so it runs unattended, and asserts the
-forwarded exit code and a message substring. No network, no real Docker.
+forwarded exit code, the docker calls, and the output. No network, no real Docker.
 
 Run by .github/workflows/launchers.yml (windows-latest).
 #>
@@ -252,11 +252,10 @@ Invoke-Scenario -Name 'pull-failure'         -PathValue $stubPath `
 # --- offline fallback --------------------------------------------------------
 # A failed pull with every image already downloaded starts that copy, with a
 # warning that the update was skipped and no hard error. The warning comes again
-# after the running banner, because the banner and the health wait's output now
-# sit below the first one, and the window then waits for a key.
+# after the running banner, and the window then waits for a key.
 Invoke-Scenario -Name 'offline-fallback'     -PathValue $stubPath -ExtraEnv @{ STUB_PULL_FAIL = '1' } `
     -ExpectExit 0 -ExpectCall 'compose up' -ForbidText $hardError `
-    -ExpectOrder @($offlineWarning, 'RStudio Server is running', $offlineWarning, $keepsRunning, $keyWaitMarker) `
+    -ExpectOrder @($offlineWarning, 'RStudio Server is running', "Reminder: $offlineWarning", $keepsRunning, $keyWaitMarker) `
     -CountText $offlineWarning -CountN 2
 
 # With no running banner there is nothing to repeat the warning after, and
@@ -289,7 +288,6 @@ Invoke-Scenario -Name 'health-timeout'       -PathValue $stubPath -ExtraEnv @{ S
 
 # --- port resolution ---------------------------------------------------------
 
-# A normal start also must not stop for a key.
 Invoke-Scenario -Name 'port-default'         -PathValue $stubPath -ExtraEnv @{} `
     -ExpectExit 0 -ExpectText @('RStudio Server is running', 'http://localhost:8787', 'go to that address manually') `
     -ForbidText $keyWaitMarker

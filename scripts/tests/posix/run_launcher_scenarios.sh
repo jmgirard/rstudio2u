@@ -281,13 +281,12 @@ for launcher in start_mac.command start_linux.sh; do
     # --- offline fallback -----------------------------------------------------
     # A failed pull with every image already downloaded starts that copy, with
     # a warning that the update was skipped and no hard error. The warning comes
-    # again after the running banner, because the banner and the health wait's
-    # output now sit below the first one, and the window then waits for a key.
+    # again after the running banner, and the window then waits for a key.
     EXPECT_CALL="compose up"
     FORBID_TEXT="$HARD_ERROR"
     EXPECT_ORDER="$OFFLINE_WARNING
 RStudio Server is running
-$OFFLINE_WARNING
+Reminder: $OFFLINE_WARNING
 $KEEPS_RUNNING
 $KEY_WAIT_MARKER"
     COUNT_TEXT="$OFFLINE_WARNING"
@@ -328,7 +327,6 @@ $KEY_WAIT_MARKER"
         'STUB_UP_FAIL=1' 'did not become ready in time' 'RS_PORT' '.env'
 
     # --- port resolution ------------------------------------------------------
-    # A normal start also must not stop for a key.
     FORBID_TEXT="$KEY_WAIT_MARKER"
     run_scenario "$launcher/port-default" "$launcher" "$stub_path" 0 "" \
         'RStudio Server is running' 'http://localhost:8787' \

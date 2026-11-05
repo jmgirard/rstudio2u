@@ -55,8 +55,8 @@ launcher_warn_offline() {
     echo ""
 }
 
-# Repeat the warning after the running banner, because the banner and the health
-# wait's output now sit below the first one. The server is up by now, so it no
+# Repeat the warning after the running banner, so a student who looks at the
+# window once the server is ready can read it. The server is up by now, so it no
 # longer says "starting".
 launcher_remind_offline() {
     echo "⚠️  Reminder: the update was skipped, so this is the copy already on this"

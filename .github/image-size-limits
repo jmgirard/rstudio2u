@@ -1,0 +1,20 @@
+# Compressed-size limit for each image variant, in decimal MB (1,000,000 bytes).
+# .github/image-size.sh reads the lines below that are not comments.
+noble 800
+resolute 840
+
+# How a limit is set: the larger of the variant's two compressed sizes, plus 10%,
+# rounded up to the next 10 MB. A pull request raises a limit by editing this
+# file and stating the reason beside the new figures.
+#
+# Measured 2026-11-05 on Docker Hub, the images published by docker.yml run
+# 42058263556. Bytes, from the command below:
+#   noble amd64    723074024    noble arm64    712425637
+#   resolute amd64 759219681    resolute arm64 744276741
+#
+# Command:
+#   for t in noble resolute; do for a in amd64 arm64; do
+#     d=$(docker buildx imagetools inspect --raw jmgirard/rstudio2u:$t |
+#       jq -r --arg a $a '.manifests[] | select(.platform.architecture == $a and .platform.os == "linux").digest')
+#     echo "$t $a $(docker buildx imagetools inspect --raw jmgirard/rstudio2u@$d | jq '[.layers[].size] | add')"
+#   done; done

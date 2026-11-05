@@ -6,7 +6,7 @@
 # against the RStudio version shape BEFORE anyone builds a tag or a download
 # URL from it. A format change, or an empty/HTML/error response, is a hard
 # failure (non-zero exit, message on stderr, nothing usable on stdout) rather
-# than a silently mis-named image tag (Known issue #2 / GP2).
+# than a silently mis-named image tag (GP2).
 #
 # Usage: resolve-rstudio-version.sh [--tag]
 #   (default) prints the canonical version with '+', e.g. 2024.12.1+563

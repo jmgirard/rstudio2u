@@ -43,7 +43,7 @@ RUN set -eux \
     # Let bspm shell out to apt via sudo so binary packages install system-wide
     && sed -i '/suppressMessages(bspm::enable())/i options(bspm.sudo = TRUE)' /etc/R/Rprofile.site \
     # Retry transient r2u-mirror fetch failures (with a bounded connect timeout)
-    # instead of failing on the first hiccup — Known issue #1
+    # instead of failing on the first hiccup
     && printf '%s\n' \
        'Acquire::Retries "3";' \
        'Acquire::http::Timeout "30";' \
@@ -51,7 +51,7 @@ RUN set -eux \
        > /etc/apt/apt.conf.d/80-retries \
     # Add a plain-language hint when an install fails on an unreachable mirror.
     # Appended after bspm::enable() so install.packages resolves to bspm's
-    # installer when the wrapper captures it — Known issue #1
+    # installer when the wrapper captures it.
     && cat /rocker_scripts/mirror_hint.R >> /etc/R/Rprofile.site \
     # Re-apply staff-group write access after every apt/bspm install
     && echo 'DPkg::Post-Invoke {"chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library || true"; "chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library || true";};' > /etc/apt/apt.conf.d/99fix-r-lib-perms \

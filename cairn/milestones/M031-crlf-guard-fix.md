@@ -217,3 +217,5 @@ candidate row "Run every unit test in the PR lane".
 - ripple #1, #3 (pass 4): `launchers.yml` lines 6–7 and README line 30 — follow-up: row "Show why .bat files use -text".
 - ripple #2 (pass 4): the NUL row names the negative count as GNU-only, but BSD prints "-1 LF-only line(s)" for `a\r\nb\r\0` — fix now: reword the row.
 - ripple #4 (pass 4): the `-text` row's "shows only" overlooks the `text` sentence — fix now: reword the row.
+- pass 4 fix-now: diff-bug #2, fixed 1ba56f9 (a tracked `0:start_windows.bat` holding `a\nb\n` now fails as "2 LF-only line(s) of 2"; AC1 fixtures and repo run unchanged; shellcheck clean); diff-bug #10, blame-history #1, ripple #2, ripple #4, fixed 1ba56f9; new parked row "Check uppercase .BAT launchers too" filed in 1ba56f9.
+- open-PR cap: `gh pr list --author @me --state open` lists 0 PRs; feature cap 1 not reached.

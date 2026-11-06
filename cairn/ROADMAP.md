@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M032 | Run the Mac launcher on a macOS runner | planned | — | normal | milestones/M032-mac-launcher-on-macos.md |
+| M032 | Run the Mac launcher on a macOS runner | in-progress | — | normal | milestones/M032-mac-launcher-on-macos.md |
 | M031 | Fix the CRLF guard's miss and comment | done | — | normal | milestones/archive/M031-crlf-guard-fix.md |
 | M030 | Stop calling the Docker tags immutable | done | — | normal | milestones/archive/M030-tag-immutability-claim.md |
 | M029 | Correct the package persistence claim | done | — | normal | milestones/archive/M029-package-persistence-claim.md |

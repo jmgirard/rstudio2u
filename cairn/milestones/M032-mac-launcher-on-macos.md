@@ -1,13 +1,13 @@
 # M032: Run the Mac launcher on a macOS runner
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3
 - **Resolves:** —
 - **Surface tier:** user-facing — it guards the macOS launcher that students double-click, and any failure it finds is fixed in that launcher
-- **Branch/PR:** —
+- **Branch/PR:** m032-mac-launcher-on-macos
 
 ## Goal
 
@@ -37,10 +37,10 @@ Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bi
 
 ## Tasks
 
-- [ ] T1: Harness (`scripts/tests/posix/run_launcher_scenarios.sh`): run `start_mac.command` under `/bin/bash` on every platform, in place of `command -v bash` (line 127); run each launcher from a working directory other than the sandbox (for example `cd "$work" && "$bash" "$sandbox/$launcher"`), keeping the stub's `.env` read correct; accept optional launcher names to run (default both); on macOS link `/usr/bin/dirname` and `xattr` into the clean dir; update the header comment (lines 19–21, 30). Run it locally under `/bin/bash` 3.2 and note any scenario added.
+- [x] T1: Harness (`scripts/tests/posix/run_launcher_scenarios.sh`): run `start_mac.command` under `/bin/bash` on every platform, in place of `command -v bash` (line 127); run each launcher from a working directory other than the sandbox (for example `cd "$work" && "$bash" "$sandbox/$launcher"`), keeping the stub's `.env` read correct; accept optional launcher names to run (default both); on macOS link `/usr/bin/dirname` and `xattr` into the clean dir; update the header comment (lines 19–21, 30). Run it locally under `/bin/bash` 3.2 and note any scenario added.
 - [ ] T2: `launchers.yml`: add a `macos-scenarios` job on `macos-latest` that prints `/bin/bash --version` and runs the harness for `start_mac.command`; update the header comment. Fix any failure the job shows.
 - [ ] T3: Planted-defect probes for AC4 (a), (b), (c): one draft PR into `main` per plant, each from a branch off the milestone branch; read the failed step and the `FAIL:` line from `gh run view --json jobs` and the job log; confirm `posix-scenarios` passed in the same run; close each with `gh pr close --delete-branch`. Show (a) and (b) red locally under `/bin/bash` first.
-- [ ] T4: Run the harness from an export of `ee1b9cc` (`git archive`, HEAD untouched) and record its `ok:` set for AC3.
+- [x] T4: Run the harness from an export of `ee1b9cc` (`git archive`, HEAD untouched) and record its `ok:` set for AC3.
 
 ## Work log
 
@@ -55,6 +55,10 @@ Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bi
 - 2026-11-05: criteria audit (full mode, fresh Opus reader) returned 6 findings, all fixed: AC4(c) passed silently because `cd ""` stays in the sandbox, fixed by running launchers from another folder and naming BSD `/usr/bin/dirname`; AC4(b) `declare -A` fails without stopping the function, fixed by making its status the return value; AC4 now names `launcher_interactive`, which every post-helper scenario reaches; AC4 trigger now says draft PRs into `main`; AC3 now compares to a local run of an `ee1b9cc` export plus added scenarios; AC1 now binds the job's interpreter setting and version step, not a log line. AC2 and AC5 had none.
 - 2026-11-05: plan gate chose running `start_mac.command` under `/bin/bash` over the first `bash` on PATH because the runner can put a newer bash first; falsified by a Finder double-click that runs a `.command` under another bash.
 - 2026-11-05: plan gate chose a separate macOS job over moving `posix-scenarios` to macOS because `start_linux.sh` belongs on Linux; falsified by a macOS job that cannot run the harness's stub setup.
+- 2026-11-05: branch m032-mac-launcher-on-macos cut from main at dd70e70; status in-progress. The verify slot (hadolint, docker build) is owed only after Dockerfile or build-context changes, and this milestone makes none.
+- 2026-11-05: T1 done: the harness reads each launcher's interpreter from its first line (`/bin/bash` for both), starts each launcher from `$work` by its absolute sandbox path, takes optional launcher names (an unknown name exits 1), and on macOS links `/usr/bin/dirname`, `/bin/chmod`, and `/usr/bin/xattr`. Chose reading the first line over a fixed `/bin/bash` so a changed first line is what the harness runs. Local run under `/bin/bash` 3.2.57: both launchers 56 `ok:`, `start_mac.command` alone 28 `ok:`, no scenario added.
+- 2026-11-05: T4 done: `git archive ee1b9cc` export's harness run locally printed 56 `ok:` lines, the same sorted set as the changed harness (diff empty).
+- 2026-11-05: local plants under `/bin/bash` 3.2.57 with `start_mac.command` alone: (a) `${plant,,}` in `launcher_interactive` gave 20 `FAIL: start_mac.command/` lines; (c) `dirname -z` in the first `cd` gave 56. (b) as AC4 words it passed all 28: under the seam the function must return nonzero, so returning declare's status 2 is the right answer, and bash 3.2 still creates the array as an indexed one. A `declare -A modes=([batch]=no [user]=yes)` lookup plant gave 1 FAIL (offline-fallback) under 3.2 and the right answers under bash 5 (docker `bash:5`). AC4(b) wording goes to re-audit.
 
 ## Decisions
 

@@ -10,15 +10,22 @@
 #   * PATH is fully controlled (env -i) so the runner's real docker cannot leak
 #     in -- "docker not installed" cannot be simulated by merely omitting the
 #     stub dir, since ubuntu-latest ships docker in /usr/bin. The clean dir
-#     holds symlinks to ONLY the externals the launchers call (dirname, chmod);
-#     everything else they use is a bash builtin.
-#   * `env -i` resolves the interpreter against the scrubbed PATH, so bash is
-#     named absolutely here and the stub carries an absolute /bin/sh shebang.
+#     holds symlinks to ONLY the externals the launchers call (dirname, chmod,
+#     and on macOS xattr); everything else they use is a bash builtin. On
+#     macOS the links name the system's own /usr/bin and /bin tools, so a
+#     GNU copy earlier on the runner's PATH cannot stand in for them.
+#   * Each launcher runs under the interpreter its first line names
+#     (/bin/bash), never the first bash on PATH: a macOS runner can put a newer
+#     bash there, while a student's Mac runs the .command under /bin/bash 3.2.
+#     `env -i` would resolve a bare name against the scrubbed PATH anyway, so
+#     the stub also carries an absolute /bin/sh shebang.
 #   * The launchers run from a sandbox copy, never the repo, so a scenario can
-#     write a .env without touching the developer's own file.
-#   * Both launchers run under bash on Linux. start_mac.command's mac-only calls
-#     (xattr, open) are best-effort or seam-suppressed, so driving it here
-#     exercises its real logic; executing it on genuine macOS is separate.
+#     write a .env without touching the developer's own file. They are started
+#     from another folder, as a Finder double-click starts them in the home
+#     folder, so each launcher's own `cd "$(dirname "$0")"` must work.
+#   * Pass launcher names to run only those (default: both). The Linux job runs
+#     both launchers; the macOS job runs start_mac.command on genuine macOS.
+#     start_mac.command's `open` call is seam-suppressed on every platform.
 #
 # The stub models Compose's own port resolution (RS_PORT, else .env, else 8787)
 # rather than echoing a fixed value, so the precedence assertions test the
@@ -27,12 +34,23 @@
 # scenario forces a disagreement between requested and bound.
 # run_launcher_real_compose.sh checks start_linux.sh against real Compose.
 #
-# Run by .github/workflows/launchers.yml (ubuntu-latest).
+# Run by .github/workflows/launchers.yml: both launchers on ubuntu-latest, and
+# start_mac.command on macos-latest under /bin/bash.
 
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/../../.." && pwd)
 [ -f "$repo/start_mac.command" ] || { echo "launchers not found under $repo"; exit 1; }
+
+if [ "$#" -eq 0 ]; then
+    set -- start_mac.command start_linux.sh
+fi
+for launcher in "$@"; do
+    case $launcher in
+        start_mac.command|start_linux.sh) ;;
+        *) echo "unknown launcher: $launcher"; exit 1 ;;
+    esac
+done
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -116,15 +134,31 @@ chmod +x "$stub/docker"
 # --- clean dir with the externals the launchers need, but no docker -----------
 nodock="$work/nodock"
 mkdir -p "$nodock"
-for t in dirname chmod; do
-    src=$(command -v "$t") || { echo "missing required tool: $t"; exit 1; }
-    ln -sf "$src" "$nodock/$t"
+if [ "$(uname -s)" = Darwin ]; then
+    tools="/usr/bin/dirname /bin/chmod /usr/bin/xattr"
+else
+    tools="$(command -v dirname) $(command -v chmod)"
+fi
+for src in $tools; do
+    [ -x "$src" ] || { echo "missing required tool: $src"; exit 1; }
+    ln -sf "$src" "$nodock/${src##*/}"
 done
 
 stub_path="$stub:$nodock"
 fails=0
 
-bash_bin=$(command -v bash) || { echo "bash not found"; exit 1; }
+# The interpreter a launcher's first line names, e.g. /bin/bash.
+launcher_interpreter() {
+    local first
+    IFS= read -r first < "$sandbox/$1" || return 1
+    first=${first#\#!}
+    case $first in
+        /*) ;;
+        *) return 1 ;;
+    esac
+    [ -x "$first" ] || return 1
+    printf '%s' "$first"
+}
 
 # Set before a run_scenario call to seed the sandbox .env; cleared after each.
 DOTENV=""
@@ -161,15 +195,21 @@ KEEPS_RUNNING='keeps running'
 run_scenario() {
     local name=$1 launcher=$2 pathv=$3 expect=$4 envs=$5
     shift 5
-    local out code ok=1
+    local out code ok=1 interp
 
     rm -f "$sandbox/.env" "$calls"
     [ -n "$DOTENV" ] && printf '%s\n' "$DOTENV" > "$sandbox/.env"
 
+    interp=$(launcher_interpreter "$launcher") || {
+        echo "FAIL: $name - $launcher's first line names no runnable absolute interpreter"
+        fails=$((fails + 1))
+        return
+    }
+    # Started from $work, not the sandbox, so the launcher's own cd must work.
     # shellcheck disable=SC2086  # $envs is a controlled list of VAR=VAL pairs
-    out=$(cd "$sandbox" && env -i PATH="$pathv" HOME="$HOME" TERM=dumb \
+    out=$(cd "$work" && env -i PATH="$pathv" HOME="$HOME" TERM=dumb \
             RS_LAUNCHER_NONINTERACTIVE=1 STUB_CALLS="$calls" $envs \
-            "$bash_bin" "./$launcher" 2>&1)
+            "$interp" "$sandbox/$launcher" 2>&1)
     code=$?
     local called
     called=$(cat "$calls" 2>/dev/null)
@@ -257,7 +297,10 @@ run_scenario() {
     fi
 }
 
-for launcher in start_mac.command start_linux.sh; do
+for launcher in "$@"; do
+    interp=$(launcher_interpreter "$launcher") || interp="(none)"
+    echo "$launcher runs under $interp"
+
     # A student who copies only the launcher out of the folder must get an
     # explanation, not a bare "No such file or directory" from the source line.
     mv "$sandbox/launcher_common.sh" "$work/held_common.sh"

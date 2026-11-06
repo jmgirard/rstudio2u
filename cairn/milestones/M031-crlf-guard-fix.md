@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -30,15 +30,21 @@ candidate row "Run every unit test in the PR lane".
       blob `a\r\nb\nc\r`, `a\nb\r`, and `a\r\nb\nc\r\n` staged as a tracked
       `.bat`, and exits 0 on the repo's tracked `.bat` blobs at the milestone
       head.
-- [x] AC2: A read of `.gitattributes` and the guard's header comment finds no
-      claim that `git archive` applies no line-ending conversion. Any reason
-      they give for `-text` names a delivery path and a command whose output a
-      reviewer can run to show it.
+- [ ] AC2: Neither `.gitattributes` nor the guard's header comment (the
+      comment lines before `set -uo pipefail`) contains the word `archive`.
+      Apart from what it says its command prints, the only effect of `-text`
+      that either comment states outright is that `git add` stores a `.bat`
+      file's CRLF bytes unchanged in the blob. `.gitattributes` gives a
+      `git hash-object --path` command and says what it prints under `-text`
+      and under `text`, `text eol=crlf`, and `text eol=lf`; run in a fresh
+      clone at the milestone head with no `.git/info/attributes` and Git's
+      default `core.safecrlf`, changing only the `*.bat` line, the command
+      prints what the comment says under each.
 
 ## Coverage
 
 - AC1 → T1, T2, T5, T7
-- AC2 → T3, T4, T6
+- AC2 → T3, T4, T6, T8
 
 ## Tasks
 
@@ -64,6 +70,9 @@ candidate row "Run every unit test in the PR lane".
 - [x] T7: (review return 2, fix-now) Run the guard's counts under
       `LC_ALL=C`; correct the "not checked" comment and the `.gitattributes`
       summary of what the guard checks.
+- [x] T8: (review return 3) State only the `git add` effect of `-text` in
+      both comments, fix the command's wording, name Git Bash, say each `*.bat`
+      blob; correct the parked row and file the NUL-byte row.
 
 ## Work log
 
@@ -103,6 +112,10 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: checkpoint, half done: pass 3 fix-now edits made (`.gitattributes` command wording and Git Bash note, "each *.bat blob", guard header "a blob stored at that path", the corrected row "Show why .bat files use -text", new parked row "Fail launcher blobs that hold NUL bytes"); command still prints `a \r \n b \r \n`, guard passes, shellcheck clean; the AC2 amendment waits on its fresh re-audit reader, and no task box is ticked yet.
 - re-audit: AC2 (reduced) — bounded promise: clause 3's "delivery path" is undefined, so membership turns on the reader's reading of the term, and two sentences (the guard's "must be in the blob itself", `.gitattributes`' "need CRLF" beside "`-text` turns off line-ending conversion") imply a checkout claim the command does not show; proportionality: nothing; instrument: nothing. Fixed by the reader's narrower wording, which names the one allowed effect of `-text`, and by comments that state only that effect.
 - re-audit: AC2 (reduced) — passes against 563da4e on the explicit reading (command output `a \r \n b \r \n` under `-text`, `a \n b \n` under `text`, `text eol=crlf`, `text eol=lf`, also with `core.autocrlf=true`); bounded promise: clause 2's "only effect … states" splits on implied effects and on whether the stated command output counts as a second effect; instrument (borderline): clause 3 binds the command's output, not the comment's account of it; clause 3 leaves the run context open (`.git/info/attributes`, `core.safecrlf=true`); proportionality: nothing. Second re-audit on AC2: the wording goes to the user.
+- 2026-11-05: user chose "Tightened wording" for AC2 at the stop.
+- 2026-11-05: amendment return: AC2 — "Neither `.gitattributes` nor the guard's header comment (the comment lines before `set -uo pipefail`) contains the word `archive`. Apart from what it says its command prints, the only effect of `-text` that either comment states outright is that `git add` stores a `.bat` file's CRLF bytes unchanged in the blob. `.gitattributes` gives a `git hash-object --path` command and says what it prints under `-text` and under `text`, `text eol=crlf`, and `text eol=lf`; run in a fresh clone at the milestone head with no `.git/info/attributes` and Git's default `core.safecrlf`, changing only the `*.bat` line, the command prints what the comment says under each."
+- 2026-11-05: minor amendment: added T8 (return 3's comment and row work, done in 960f8ba and 563da4e); Coverage AC2 → T3, T4, T6, T8; AC2's box unticked for re-verification.
+- 2026-11-05: implement done after review return 3: all tasks checked; status → review.
 
 ## Decisions
 

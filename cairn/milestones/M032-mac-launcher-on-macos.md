@@ -7,7 +7,7 @@
 - **Principles touched:** GP3
 - **Resolves:** —
 - **Surface tier:** user-facing — it guards the macOS launcher that students double-click, and any failure it finds is fixed in that launcher
-- **Branch/PR:** m032-mac-launcher-on-macos
+- **Branch/PR:** m032-mac-launcher-on-macos, https://github.com/jmgirard/rstudio2u/pull/50
 
 ## Goal
 

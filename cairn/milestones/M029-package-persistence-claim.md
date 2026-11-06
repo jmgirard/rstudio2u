@@ -28,7 +28,7 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 
 ## Acceptance criteria
 
-- [ ] AC1: The README section on keeping packages states four outcomes for an R
+- [x] AC1: The README section on keeping packages states four outcomes for an R
       package installed with `install.packages()` in the Compose setup: kept
       after `docker compose stop` then `docker compose start`; lost after
       `docker compose down` then `docker compose up -d`; lost after
@@ -38,20 +38,20 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
       when it downloads a newer `latest`. Each stated outcome matches a run with
       `image:` set to a published `noble-<date>` tag, and for the changed-image
       case, `image:` then changed to a second published `noble-` tag.
-- [ ] AC2: The same section names `/usr/lib/R/site-library` and
+- [x] AC2: The same section names `/usr/lib/R/site-library` and
       `/usr/local/lib/R/site-library` as the folders where `install.packages()`
       puts packages by default. This matches `.libPaths()` in a new container of
       a published `noble` tag, and `find.package()` for a package installed
       through bspm returns a path under one of the two.
-- [ ] AC3: The section shows a saved install script kept in the home folder and
+- [x] AC3: The section shows a saved install script kept in the home folder and
       run with `source()` to restore packages after Compose replaces the
       container, and running the README's example script in a new container of
       a published `noble` tag installs the packages it names.
-- [ ] AC4: A read of every sentence in `README.md`, `docker-compose.yml`,
+- [x] AC4: A read of every sentence in `README.md`, `docker-compose.yml`,
       `stop_linux.sh`, `stop_mac.command`, and `stop_windows.bat` at the
       milestone head finds none that says installed R packages, or the session
       as a whole, are kept when Compose replaces the container.
-- [ ] AC5: The three stop launchers print the same closing statement apart from
+- [x] AC5: The three stop launchers print the same closing statement apart from
       the start file's name, the verb for running it, and the status marker. It
       says that the files in the home folder are kept and does not say "resume
       where you left off". `scripts/tests/test_launcher_line_endings.sh` passes
@@ -109,3 +109,10 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-11-05, Compose project `m029review`, `image:` `noble-2026-11-02`, praise installed through bspm, a home file written): stop then start → praise kept, home file kept; down then up -d → lost, home kept; up -d with RS_PORT 8797 → 8798 → lost, home kept; up -d with `image:` changed to `noble-2026-11-05` → lost, home kept. README lines 126–137 state the same four outcomes.
+- AC2 evidence (same run): `.libPaths()` = `/usr/local/lib/R/site-library`, `/usr/lib/R/site-library`, `/usr/lib/R/library`; `find.package("praise")` after the bspm install = `/usr/lib/R/site-library/praise`. README lines 118–119 name the two site-library folders.
+- AC3 evidence (same run): the README's ```r block (lines 142–147) extracted by awk, copied to `~/my_packages.R` in the new `noble-2026-11-05` container, run with `source()` → glmmTMB, mice, metafor found under `/usr/lib/R/site-library`; `dpkg -s libfftw3-dev` installed. README lines 139–151 show the script and the `source()` step.
+- AC4 evidence: read README.md whole (286 lines) and docker-compose.yml, stop_linux.sh, stop_mac.command, stop_windows.bat whole at the branch head; no sentence says packages or the session are kept when Compose replaces the container. Sentences about storage (lines 41–42, 47–52, 109–111, 116–151, 198–201, 255–259, compose lines 15–19, the three stop messages) each name the home folder's files or say packages are lost.
+- AC5 evidence: the three stop files print "Server stopped. The files in your home folder are kept." then "Run ./start_linux.sh" / "Double-click start_mac.command" / "Double-click start_windows.bat" "to start it again." with ✅ or [OK]; `grep -c "resume where"` = 0 in each; `scripts/tests/test_launcher_line_endings.sh` → "ok: stop_windows.bat — all 12 lines CRLF-terminated in blob", PASS.
+- Gate: `cairn_validate.py` all checks passed; no principle changed on the branch, so `cairn_impact` skipped. Profile gate: the diff touches no Dockerfile, `scripts/`, or `.dockerignore`, so the build is the one on main and `docker build` is not re-run; hadolint is not installed here and the Dockerfile is unchanged; base pinned (`rocker/r2u:${UBUNTU_VERSION}`, default 24.04); `.dockerignore` present; no secrets added; changelog none — user-visible change goes in the archive summary.

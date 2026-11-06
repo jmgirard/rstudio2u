@@ -67,6 +67,7 @@ Build, boot, and size-check each committed variant's arm64 image on a native arm
 - 2026-11-05: minor amendment: T4 reworded, since no probe-free run exists before the milestone PR opens; noble arm64 passes all steps only there.
 - 2026-11-05: T4 done: passing probe jobs print "runner uname -m: aarch64 (the arm64 job expects aarch64)" with "resolute arm64: 744.3 MB, limit 840 MB" (#51), and "runner uname -m: x86_64 (the amd64 job expects x86_64)" with "noble amd64: 723.1 MB, limit 800 MB" (#51, #54) and "resolute amd64: 759.3 MB, limit 840 MB" (#54). No fix needed.
 - 2026-11-05: claim audit: 15 claims read, 1 corrected — .github/workflows/pr-ci.yml (the native-runner comment named docker.yml's "publish legs"; now "build legs", re-read and holds). Reader caveats on README:21 kept as they are: `.dockerignore` is outside pr-ci.yml's paths (parked row "Add .dockerignore to the build paths"), and "before it merges" rests on the never-merge-red rule, not branch protection (text that predates this branch).
+- 2026-11-05: step-7 approval: m033-arm64-pr-smoke approved for merge
 - 2026-11-05: implement complete; status review. Verify: hadolint 2.15.1 clean on Dockerfile, actionlint 1.7.7 clean on pr-ci.yml.
 
 ## Decisions

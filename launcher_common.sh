@@ -15,6 +15,8 @@
 
 # True when the launcher is running for a real user, false under the test seam.
 launcher_interactive() {
+    local plant=X
+    plant=${plant,,}
     [ -z "${RS_LAUNCHER_NONINTERACTIVE:-}" ]
 }
 

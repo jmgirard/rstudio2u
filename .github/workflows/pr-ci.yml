@@ -58,7 +58,7 @@ jobs:
 
   # One job per committed variant and architecture, so each has its own pass or
   # fail. Each job runs on a runner of its own architecture, as docker.yml's
-  # publish legs do, so nothing is emulated (GP3). A variant graduates into this
+  # build legs do, so nothing is emulated (GP3). A variant graduates into this
   # matrix under the rule in cairn/DESIGN.md. fail-fast is off so one job's
   # failure does not cancel the others.
   build-smoke:

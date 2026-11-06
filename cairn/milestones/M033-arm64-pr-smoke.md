@@ -2,7 +2,7 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M033: Smoke-test arm64 in the PR lane
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -66,6 +66,8 @@ Build, boot, and size-check each committed variant's arm64 image on a native arm
 - 2026-11-05: #52's resolute amd64 job first failed its smoke step on an r2u outage ("Unable to connect to r2u.stat.illinois.edu", bspm install of data.table), not the plant; rerun of that job alone (attempt 2) succeeded. Same cause as the parked row "Keep r2u timeouts from failing publish"; not a publish, so its condition does not hold. Probes #51-#54 closed unmerged, remote branches deleted.
 - 2026-11-05: minor amendment: T4 reworded, since no probe-free run exists before the milestone PR opens; noble arm64 passes all steps only there.
 - 2026-11-05: T4 done: passing probe jobs print "runner uname -m: aarch64 (the arm64 job expects aarch64)" with "resolute arm64: 744.3 MB, limit 840 MB" (#51), and "runner uname -m: x86_64 (the amd64 job expects x86_64)" with "noble amd64: 723.1 MB, limit 800 MB" (#51, #54) and "resolute amd64: 759.3 MB, limit 840 MB" (#54). No fix needed.
+- 2026-11-05: claim audit: 15 claims read, 1 corrected — .github/workflows/pr-ci.yml (the native-runner comment named docker.yml's "publish legs"; now "build legs", re-read and holds). Reader caveats on README:21 kept as they are: `.dockerignore` is outside pr-ci.yml's paths (parked row "Add .dockerignore to the build paths"), and "before it merges" rests on the never-merge-red rule, not branch protection (text that predates this branch).
+- 2026-11-05: implement complete; status review. Verify: hadolint 2.15.1 clean on Dockerfile, actionlint 1.7.7 clean on pr-ci.yml.
 
 ## Decisions
 

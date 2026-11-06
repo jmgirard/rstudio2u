@@ -195,3 +195,25 @@ candidate row "Run every unit test in the PR lane".
 - AC2 evidence (pass 4, fresh clone at f853e81, no `.git/info/attributes`, `core.safecrlf` unset): `git grep -i archive` over both files exits 1; the header comment before `set -uo pipefail` and `.gitattributes` each state one effect of `-text` outright, "Under `-text`, `git add` stores a .bat file's CRLF bytes unchanged in the blob", besides what the command prints; `.gitattributes` gives the `git hash-object --path=start_windows.bat` command and says it shows a `\r` before each `\n` under `-text` and no `\r` under the other three; changing only the `*.bat` line, its `od -c` output held 2 `\r` and 2 `\n` under `-text` and 0 `\r` and 2 `\n` under `text`, `text eol=crlf`, and `text eol=lf`. Pass.
 - gate (pass 4): cairn_validate all checks passed; no principle changed; docker-image slot as in pass 2 (diff limited to `.gitattributes`, `scripts/tests/`, `cairn/`, all outside the build context); shellcheck 0.11.0 `-x -S info` clean on the guard.
 - spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug (pass 4) confirmed AC1 and AC2 on macOS BSD tools with git 2.54.0 and GNU tools with git 2.43.0, and each built-in case red under its own plant; one of its probes ran in the shared checkout by mistake (staged and removed `n.bat`); `git status` after it was clean.
+- diff-bug #1 (pass 4): a NUL byte lets an LF-only line pass (`610d00620a`) — follow-up: parked row "Fail launcher blobs that hold NUL bytes".
+- diff-bug #2 (pass 4): `":$f"` reads stage 0 of `start_windows.bat` for a tracked file named `0:start_windows.bat`; on main too — fix now: read `":0:$f"`.
+- diff-bug #3 (pass 4): an unmerged `.bat` prints three "cannot be read" lines and "FAILED: 3" — reject: edge, as pass 2 diff-bug #6.
+- diff-bug #4 (pass 4): under `text` the command also prints a "CRLF will be replaced by LF" warning naming `start_windows.bat` — reject: edge; only a reader who edits the `*.bat` line reaches it, and its effect is a warning.
+- diff-bug #5 (pass 4): with `core.safecrlf=true` the command dies, and GNU `xargs` then prints `git cat-file` usage — reject: edge, as pass 3 diff-bug #7.
+- diff-bug #6 (pass 4): removing `LC_ALL=C`, the read check, or the zero-LF branch leaves the built-in check passing — reject: false as a gap, as pass 3 diff-bug #6.
+- diff-bug #7 (pass 4): the good built-in case — reject: false, as pass 2 diff-bug #10.
+- diff-bug #8 (pass 4): a built-in case label other than `bad` or `good` checks nothing — reject: style.
+- diff-bug #9 (pass 4): `git ls-files '*.bat'` skips an uppercase `UP.BAT` that `*.bat -text` covers on a case-insensitive file system; on main too, and no such file is tracked — follow-up: new parked row "Check uppercase .BAT launchers too".
+- diff-bug #10 (pass 4): the parked row's "(corrected M031)" reads as if `launchers.yml` was corrected — fix now: reword the row.
+- diff-bug #11 (pass 4): "no dependencies" while the guard needs git, grep, tr, and wc; on main too — reject: style.
+- blame-history #1 (pass 4): the same "(corrected M031)" wording, and `launchers.yml` lines 5–7 — fix now with diff-bug #10; the `launchers.yml` line: follow-up, row "Show why .bat files use -text".
+- blame-history #2 (pass 4): no record says why `-text` is used — follow-up: row "Show why .bat files use -text".
+- blame-history #3 (pass 4): a bare CR now fails — reject: planned change (T5).
+- blame-history #4–#6, #8 (pass 4): the locale fix, the count fix, unchanged verdicts, and the new CR message — noted, no finding.
+- blame-history #7 (pass 4): "the conversion that `git add` applies" while the command runs `git hash-object --path` — reject: false; the sentence says the command applies the conversion `git add` applies, which `--path` selects.
+- prior-review #1 (pass 4): the reason names `git add`, which pass 3 found is no delivery path — noted, no finding: AC2 was narrowed to it at the user's choice.
+- prior-review #2 (pass 4): `launchers.yml` lines 6–7 — follow-up: row "Show why .bat files use -text".
+- ripple #1, #3 (pass 4): `launchers.yml` lines 6–7 and README line 30 — follow-up: row "Show why .bat files use -text".
+- ripple #2 (pass 4): the NUL row names the negative count as GNU-only, but BSD prints "-1 LF-only line(s)" for `a\r\nb\r\0` — fix now: reword the row.
+- ripple #4 (pass 4): the `-text` row's "shows only" overlooks the `text` sentence — fix now: reword the row.

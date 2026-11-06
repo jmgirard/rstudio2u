@@ -2,7 +2,7 @@
 #
 # Compare one image's compressed size with its limit in
 # .github/image-size-limits. The pull request lane (pr-ci.yml) calls this on the
-# noble and resolute amd64 images it builds, and .github/image-size-report.sh
+# four images it builds (noble and resolute, amd64 and arm64), and .github/image-size-report.sh
 # calls it on the four published images. The rule lives here, so scripts/tests/test_image_size.sh can
 # test it offline.
 #

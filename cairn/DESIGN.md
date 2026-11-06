@@ -32,10 +32,10 @@ or later version, which is when Ubuntu starts to offer the LTS upgrade;
 (b) `https://r2u.stat.illinois.edu/ubuntu/dists/<codename>/Release` answers
 HTTP 200, so r2u serves its binaries; and (c) the variant's two build jobs and
 its publish job concluded `success` in each of the 4 most recent scheduled
-`docker.yml` runs. A committed variant has its own job in `pr-ci.yml`, which
-builds its amd64 image, smoke-tests it, and holds it to its size limit. Its
-arm64 image is checked only when `docker.yml` publishes. A pull request
-whose noble or resolute job fails is not merged. That is a rule of how this
+`docker.yml` runs. A committed variant has two jobs in `pr-ci.yml`, one for
+amd64 and one for arm64, each on a runner of that architecture. Each job
+builds that image, smoke-tests it, and holds it to its size limit (corrected
+M033). A pull request with a failed noble or resolute job is not merged. That is a rule of how this
 repo merges (never past red CI), not a branch protection setting, which main
 does not have. The weekly rebuild still
 publishes each variant independently, so one variant's failure never stops
@@ -158,8 +158,9 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
   limit per variant, in decimal MB. The size is the sum of the manifest's
   `layers[].size`: the compressed download a student waits for, not the disk
   size after unpacking. A limit is the larger of the variant's two sizes, plus
-  10%, rounded up to the next 10 MB. `pr-ci.yml` fails a pull request whose
-  noble amd64 or resolute amd64 image is over its limit. `image-size.yml` reads all four published
+  10%, rounded up to the next 10 MB. `pr-ci.yml` fails a pull request when any
+  of its four images (noble and resolute, each on amd64 and arm64) is over its
+  limit (corrected M033). `image-size.yml` reads all four published
   sizes on Mondays at 12:00 UTC and reports on its own `image-size` issue, and an
   image over its limit still publishes (GP2). All four read and within their
   limits closes the issue. A size it cannot read goes in the same issue, never
@@ -167,15 +168,14 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
   `.github/image-size.sh` and `.github/image-size-report.sh`, never in the
   workflows. A pull request raises a limit by editing the limits file and stating
   the reason beside the new figures. Before a publish, the only figures it has
-  are the noble amd64 and resolute amd64 sizes its own run printed. Its bounds:
-  the pull request lane builds amd64 only for noble and resolute (GP3), so growth
-  in the two arm64 images shows only after they publish (M027). That lane builds the `stable` RStudio on the current base image,
+  are the four sizes its own run printed (corrected M033). Its bounds: the pull
+  request lane builds the `stable` RStudio on the current base image,
   so upstream growth can fail a pull request that changed neither, and that pull
   request then has to raise the limit. The weekly read is anonymous, so a Docker
   Hub rate limit reads as unread. A failed run of the report itself moves no
   issue and shows only as a red run. buildx is not pinned, so a release that
   changes the export's `index.json` fails every pull request's size step with
-  "no single amd64 manifest" (added M026).
+  "no single amd64 manifest" or "no single arm64 manifest" (added M026).
 - **Security model:** root-capable by design (passwordless sudo so bspm can
   install system binaries); safety comes from the localhost-only bind.
   Compose/launcher defaults never publish the port beyond `127.0.0.1` while
@@ -272,7 +272,9 @@ _Warts confirmed in the 2026-07-17 interview:_
 - The arm64 half of every build depends on GitHub's hosted arm64 runners,
   free only while the repo stays public and pinned to one Ubuntu version
   (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
-  (added M015).
+  (added M015). The pull request lane's arm64 jobs run there too, so while
+  those runners are down no pull request that changes the image can pass CI
+  (added M033).
 - `scripts/slim_rstudio.sh` depends on RStudio's folder layout. If a release
   moves the language server or drops the `copilot-sdk-<platform>-<arch>`
   folders, the script removes no Copilot folder, the image grows, and the smoke

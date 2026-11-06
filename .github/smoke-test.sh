@@ -9,7 +9,8 @@
 #                   language server, libclang, apt). These exercise the paths where
 #                   arm64 parity can silently diverge (bundled/symlinked Quarto,
 #                   the r2u binary install path), so CI runs the same checks on
-#                   the arm64 image, natively, before publishing (GP3).
+#                   the arm64 image, natively, before a pull request merges and
+#                   again before publishing (GP3).
 #   3. Mirror UX  — the plain-language hint when the r2u mirror is unreachable.
 # Exits 0 only when every phase passes; non-zero if the container exits, reports
 # unhealthy, times out, or any check fails. This is the gate that

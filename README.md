@@ -18,7 +18,7 @@ The R version is whatever the underlying [r2u](https://github.com/rocker-org/r2u
 
 These tags **move** with each rebuild, the weekly one included. For an environment that never changes, such as a course, pin an image digest. See [Reproducibility](#reproducibility).
 
-Both `noble` (Ubuntu 24.04) and `resolute` (Ubuntu 26.04) are supported. A pull request that changes the image is built and smoke-tested on both (amd64) before it merges. `latest` points at `noble` today. It is scheduled to move to `resolute` on 2027-06-07, between academic terms. The double-click launchers use `latest`, so they switch to Ubuntu 26.04 the first time they start with an internet connection after that date. To stay on Ubuntu 24.04 after that date, use the `noble` tag, a `noble-` tag, or the digest of a `noble` image (see [Reproducibility](#reproducibility)). With the launchers, put that tag or digest in the `image:` line of `docker-compose.yml`.
+Both `noble` (Ubuntu 24.04) and `resolute` (Ubuntu 26.04) are supported. A pull request that changes the image is built and smoke-tested for both variants on amd64 and arm64 before it merges. `latest` points at `noble` today. It is scheduled to move to `resolute` on 2027-06-07, between academic terms. The double-click launchers use `latest`, so they switch to Ubuntu 26.04 the first time they start with an internet connection after that date. To stay on Ubuntu 24.04 after that date, use the `noble` tag, a `noble-` tag, or the digest of a `noble` image (see [Reproducibility](#reproducibility)). With the launchers, put that tag or digest in the `image:` line of `docker-compose.yml`.
 
 ## Use Examples
 

@@ -63,7 +63,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
       `.github/tag-order.sh`; read Docker Hub digests for the current
       `noble-<rstudio>` and latest `noble-<date>` tags; run the digest read
       command and a pinned `docker pull`; one work-log line each.
-- [ ] T2: Rewrite the README's Reproducibility section from T1's results, with
+- [x] T2: Rewrite the README's Reproducibility section from T1's results, with
       the digest pin for Compose and `FROM`; reword lines 19, 21, and 116 to
       point to it.
 - [ ] T3: Set GP2 to the AC4 wording and drop "immutable" from DESIGN.md Purpose
@@ -87,6 +87,9 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: T1 Docker Hub (tags API, read 2026-11-05): `noble-2026.10.1-239` and `noble-2026-11-05` both at sha256:a1f45fc4…c4e, last updated 22:55Z the same run; `noble-2026-11-02` at sha256:f438eafa…, so the version tag moved off it.
 - 2026-11-05: T1 `docker buildx imagetools inspect jmgirard/rstudio2u:noble-2026-11-05 --format '{{.Manifest.Digest}}'` printed sha256:a1f45fc4…c4e; `docker pull jmgirard/rstudio2u@sha256:a1f45fc4…c4e` succeeded; imagetools inspect of that ref lists linux/amd64 and linux/arm64.
 - 2026-11-05: decided: the README shows the `--format '{{.Manifest.Digest}}'` read, because it reads the registry without a pull and prints only the digest.
+- 2026-11-05: revised: the README shows plain `docker buildx imagetools inspect <tag>` and names its `Digest:` line, because cmd.exe passes the single-quoted `--format` template wrongly.
+- 2026-11-05: minor amendment: the README lines that point to Reproducibility are now 19, 21, and 159 (the Baking section's pin line), not 116 and 138–146; the plan's numbers predate M029's README edits.
+- 2026-11-05: T2 README: Reproducibility rewritten (moving date and version tags, digest read, Compose and FROM pins); lines 19, 21, and the Baking pin line point to digests. Scratch checks: `docker compose config` and `pull` accept an `image:` digest pin, `FROM <image>@sha256:…` builds, and the launchers' `config --images` plus `image inspect` check finds the pulled digest. Lint hits on README remain only in text the branch did not write.
 
 ## Decisions
 

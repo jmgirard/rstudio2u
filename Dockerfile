@@ -59,6 +59,9 @@ RUN set -eux \
     && chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
     && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
+# probe (M033): fails the build on aarch64 only
+RUN [ "$(uname -m)" != aarch64 ]
+
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------

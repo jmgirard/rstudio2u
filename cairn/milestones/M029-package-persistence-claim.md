@@ -1,6 +1,6 @@
 # M029: Correct the package persistence claim
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -103,6 +103,8 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - 2026-11-05: T2: README section "Keeping installed packages" added under "Adding R Packages" from the T1 and T2 runs; the "Your work is saved" note and the bullet at old line 107 point to it. The Simple English lint finds no new hit in the added lines (README total 52 → 51); the older hits are the new candidate row "Clear the README's plain-English hits".
 - 2026-11-05: T3: the three stop launchers now say "Server stopped. The files in your home folder are kept." then Run/Double-click the start file "to start it again"; edited line by line so `stop_windows.bat` keeps CRLF; the CRLF guard passes (12 of 12 lines), `bash -n` passes on the two shell files, and `stop_linux.sh` printed the new message (shellcheck is not installed here; `lint.yml` runs it on the PR).
 - 2026-11-05: T4: README step 5 of the Quick start and the FAQ update answer reworded, `docker-compose.yml` volume comment drops "installed R packages" (`docker compose config -q` passes). Sweep: located candidate sentences in the five files with a wide grep (packag, save, kept, keep, persist, surviv, preserv, resume, session, stay, your work) and read each, plus the renv paragraph; none says packages or the session are kept when Compose replaces the container. Lint delta vs main: one fewer semicolon, one fewer long sentence.
+- 2026-11-05: claim audit: 22 claims read, 1 corrected — README.md, docker-compose.yml (the absolute "installed R packages are not in that volume" narrowed to packages from `install.packages()`, since renv keeps its library under /home/rstudio).
+- 2026-11-05: verify slot: no Dockerfile or build-context change, so hadolint and docker build are not owed; `docker compose config -q` passes; the CRLF guard passes.
 
 ## Decisions
 

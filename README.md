@@ -46,9 +46,10 @@ be installed and running.
 
 > **Your files are saved.** The Compose setup stores the home directory (your
 > files and settings) in a Docker named volume. The volume survives stopping,
-> restarting, and updating to a newer image. Installed R packages are not in
-> that volume. See [Keeping installed packages](#keeping-installed-packages). To
-> wipe the volume and start completely fresh, run `docker compose down -v`.
+> restarting, and updating to a newer image. Packages from `install.packages()`
+> are not in that volume. See
+> [Keeping installed packages](#keeping-installed-packages). To wipe the volume
+> and start completely fresh, run `docker compose down -v`.
 
 ### Option 1: Pull and run from Dockerhub
 

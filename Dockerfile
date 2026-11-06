@@ -59,6 +59,9 @@ RUN set -eux \
     && chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
     && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
+# probe (M033): removes quarto from the arm64 image only
+RUN if [ "$(uname -m)" = aarch64 ]; then rm -f "$(command -v quarto)"; fi
+
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------

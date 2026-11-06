@@ -37,8 +37,8 @@ candidate row "Run every unit test in the PR lane".
 
 ## Coverage
 
-- AC1 → T1, T2, T5
-- AC2 → T3, T4
+- AC1 → T1, T2, T5, T7
+- AC2 → T3, T4, T6
 
 ## Tasks
 
@@ -57,6 +57,13 @@ candidate row "Run every unit test in the PR lane".
       function the built-in check and the loop share: fail a CR with no LF
       after it, an unreadable blob, and an unreadable count; the built-in
       check asserts two bad shapes and one good one.
+- [x] T6: (review return 2) Give the commit side as the reason for `-text`
+      in both comments, with the `git hash-object --path` command whose output
+      shows CRLF kept under `-text` and LF under any `text` setting; drop the
+      checkout claim that command does not show.
+- [ ] T7: (review return 2, fix-now) Run the guard's counts under
+      `LC_ALL=C`; correct the "not checked" comment and the `.gitattributes`
+      summary of what the guard checks.
 
 ## Work log
 
@@ -85,6 +92,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: review pass 2: AC2 fails a second time by the same shape (diff-bug #1, pass 2), the repeated review-failure stop (thrash rule (b)); the plan recorded no alternative for AC2; posed to the user with a tested commit-side command as the recommended repair.
 - 2026-11-05: user chose "Commit-side command" at the stop.
 - 2026-11-05: review return 2: AC2 — the `.gitattributes` command prints the same output under `-text`, `text`, and `text eol=lf`, so it does not show that `-text` is what keeps the blob CRLF (diff-bug #1, pass 2); repair by the user's choice: show the commit side. The same return carries pass 2's fix-now items: diff-bug #2 (`LC_ALL=C`), diff-bug #4 / blame-history #2 (the "not checked" comment), ripple #3 (the `.gitattributes` summary).
+- 2026-11-05: minor amendment: added T6 (return 2's AC2 failure) and T7 (its fix-now items); Coverage now AC1 → T1, T2, T5, T7 and AC2 → T3, T4, T6.
+- 2026-11-05: T6 done: both comments now give the commit side as the reason for `-text` and drop the checkout claim; the `.gitattributes` command, run as written in scratch repos, printed `od -c` output `a \r \n b \r \n` under `*.bat -text` and `a \n b \n` under `text`, `text eol=crlf`, and `text eol=lf`; in this repo it prints the `-text` form.
 
 ## Decisions
 

@@ -18,25 +18,45 @@ REPO="$(cd "$HERE/../.." && pwd)"
 cd "$REPO" || { echo "FAIL: cannot cd to repo root"; exit 1; }
 fails=0
 
-# Prints "<lines> <crlf_lines>" for the bytes that the command "$@" writes:
-# the count of LF bytes, then the count of lines that end in CR. Equal and
-# non-zero means that every line is CRLF-terminated. Fewer CRLF than total
-# means at least one LF-only line. The appended x keeps a final CR with no LF
-# after it from counting as a CRLF, which would hide one LF-only line.
-line_counts() {
-    local n_lf n_crlf
+# Prints why the bytes that the command "$@" writes are not CRLF-only, or
+# nothing when they are. CRLF-only means that the bytes hold at least one LF,
+# every LF has a CR before it, and every CR has an LF after it. Text after the
+# last LF is not checked.
+not_crlf() {
+    local n_lf n_crlf n_cr n
+    if ! "$@" >/dev/null 2>&1; then
+        echo "cannot be read"; return
+    fi
+    # LF bytes, lines that end in CR, and CR bytes. The appended x keeps a
+    # final CR with no LF after it from counting as a line that ends in CR.
     n_lf="$("$@" | wc -l | tr -d ' ')"
     n_crlf="$({ "$@"; printf x; } | grep -c $'\r$' || true)"
-    echo "$n_lf $n_crlf"
+    n_cr="$("$@" | tr -cd '\r' | wc -c | tr -d ' ')"
+    for n in "$n_lf" "$n_crlf" "$n_cr"; do
+        case "$n" in
+            '' | *[!0-9]*) echo "gave unreadable counts '$n_lf' '$n_crlf' '$n_cr'"; return ;;
+        esac
+    done
+    if [ "$n_lf" -eq 0 ]; then
+        echo "has no line breaks at all"
+    elif [ "$n_crlf" -ne "$n_lf" ]; then
+        echo "has $((n_lf - n_crlf)) LF-only line(s) of $n_lf"
+    elif [ "$n_cr" -ne "$n_lf" ]; then
+        echo "has $((n_cr - n_lf)) CR byte(s) with no LF after"
+    fi
 }
 
-# Built-in check of line_counts: these bytes hold one LF-only line and end in
-# a CR with no LF, so the counts must differ.
-read -r n_lf n_crlf < <(line_counts printf 'a\r\nb\nc\r')
-if [ "$n_crlf" -eq "$n_lf" ]; then
-    printf '%s\n' "FAIL: built-in check: line_counts passes 'a\r\nb\nc\r', which has an LF-only line"
-    exit 1
-fi
+# Built-in check of not_crlf: two shapes that it must fail, then one that it
+# must pass. Each case is "<bad|good> <bytes as printf %b escapes>".
+for c in 'bad a\r\nb\nc\r' 'bad a\r\nb\r' 'good a\r\nb\r\n'; do
+    want="${c%% *}"
+    bytes="${c#* }"
+    why="$(not_crlf printf '%b' "$bytes")"
+    if { [ "$want" = bad ] && [ -z "$why" ]; } || { [ "$want" = good ] && [ -n "$why" ]; }; then
+        printf '%s\n' "FAIL: built-in check: not_crlf judges '$bytes' wrongly (${why:-no reason given})"
+        exit 1
+    fi
+done
 
 # Portable collection (no `mapfile` — macOS ships bash 3.2; M03 portability
 # lesson). NUL-delimited to survive any path oddities.
@@ -50,15 +70,11 @@ if [ "${#bats[@]}" -eq 0 ]; then
 fi
 
 for f in "${bats[@]}"; do
-    read -r n_lf n_crlf < <(line_counts git cat-file -p ":$f")
-    if [ "$n_lf" -eq 0 ]; then
-        echo "FAIL: $f — blob has no line breaks at all"; fails=$((fails + 1)); continue
+    why="$(not_crlf git cat-file -p ":$f")"
+    if [ -n "$why" ]; then
+        echo "FAIL: $f — blob $why; expected all CRLF"; fails=$((fails + 1)); continue
     fi
-    if [ "$n_crlf" -ne "$n_lf" ]; then
-        echo "FAIL: $f — blob has $((n_lf - n_crlf)) LF-only line(s) of $n_lf; expected all CRLF"
-        fails=$((fails + 1)); continue
-    fi
-    echo "ok: $f — all $n_lf lines CRLF-terminated in blob"
+    echo "ok: $f — every line break in the blob is CRLF"
 done
 
 if [ "$fails" -ne 0 ]; then

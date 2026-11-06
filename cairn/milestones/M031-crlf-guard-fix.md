@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -53,7 +53,7 @@ candidate row "Run every unit test in the PR lane".
 - [x] T4: (review return 1) Replace the `.gitattributes` `cmp` commands with
       one whose output differs between `-text` and `text eol=crlf`, and keep
       only the reasons that command shows, in both comments.
-- [ ] T5: (review return 1, fix-now) Move the guard's verdict into one
+- [x] T5: (review return 1, fix-now) Move the guard's verdict into one
       function the built-in check and the loop share: fail a CR with no LF
       after it, an unreadable blob, and an unreadable count; the built-in
       check asserts two bad shapes and one good one.
@@ -80,6 +80,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: filed parked row "Show why .bat files use -text" for diff-bug #8 and blame-history #2–#3; parked because no documented or common use is known to fail.
 - 2026-11-05: minor amendment: added T4 (the return's AC2 failure) and T5 (the return's fix-now guard items); Coverage now AC1 → T1, T2, T5 and AC2 → T3, T4.
 - 2026-11-05: T4 done: the `.gitattributes` command stores an LF-only blob and runs `git cat-file --filters --path=start_windows.bat` on it; in scratch repos under `*.bat -text` `od -c` showed `a \n b \n`, and under `text eol=crlf` it showed `a \r \n b \r \n`, from the repo root and a subdirectory, in `sh`; in this repo it shows `a \n b \n`. Both comments now give only the checkout reason and drop `git archive`, since this command does not show it.
+- 2026-11-05: T5 done: `not_crlf` replaces `line_counts` and gives the loop's and the built-in check's verdict; it also counts CR bytes and names an unreadable blob or count. /bin/bash 3.2: repo exit 0; fixtures `610d0a620a630d`, `610a620d`, `610d0a620a630d0a` fail as LF-only lines, `610d0a620d` and `610d620d0a` fail as a CR with no LF after, `610d0a62` passes (text after the last LF is not checked, as the comment says); an unmerged `stop_windows.bat` fails as "cannot be read". Plants, each exit 1 on its own built-in case: no appended x on `a\r\nb\nc\r`, no CR-byte test on `a\r\nb\r`, a `tr` that prints nothing on the good case as unreadable counts. shellcheck 0.11.0 `-x -S info` clean.
+- 2026-11-05: implement done after review return 1: all tasks checked; status → review.
 
 ## Decisions
 

@@ -10,15 +10,17 @@
 #   * PATH is fully controlled (env -i) so the runner's real docker cannot leak
 #     in -- "docker not installed" cannot be simulated by merely omitting the
 #     stub dir, since ubuntu-latest ships docker in /usr/bin. The clean dir
-#     holds symlinks to ONLY the externals the launchers call (dirname, chmod,
-#     and on macOS xattr); everything else they use is a bash builtin. On
+#     holds symlinks to only dirname and chmod, plus xattr on macOS
+#     (start_mac.command also calls xattr on Linux, where it fails silently).
+#     docker comes from the stub, `open` and `xdg-open` are skipped under the
+#     test seam, and everything else the launchers use is a bash builtin. On
 #     macOS the links name the system's own /usr/bin and /bin tools, so a
 #     GNU copy earlier on the runner's PATH cannot stand in for them.
 #   * Each launcher runs under the interpreter its first line names
 #     (/bin/bash), never the first bash on PATH: a macOS runner can put a newer
 #     bash there, while a student's Mac runs the .command under /bin/bash 3.2.
-#     `env -i` would resolve a bare name against the scrubbed PATH anyway, so
-#     the stub also carries an absolute /bin/sh shebang.
+#     The stub carries an absolute /bin/sh shebang for a related reason: it
+#     runs under the scrubbed PATH, where `/usr/bin/env bash` finds no bash.
 #   * The launchers run from a sandbox copy, never the repo, so a scenario can
 #     write a .env without touching the developer's own file. They are started
 #     from another folder, as a Finder double-click starts them in the home

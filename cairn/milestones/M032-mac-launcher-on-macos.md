@@ -66,6 +66,7 @@ Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bi
 - 2026-11-05: substantive amendment: AC4 now names each plant's exact text, (a) `local plant=X` then `plant=${plant,,}`, (b) the `declare -A modes=([batch]=no [user]=yes)` body, (c) `dirname -z`, in place of loose descriptions that two readers showed could pass on bash 3.2; the deliverable is unchanged. User chose "Name exact defects" at the wording stop.
 - 2026-11-05: T3 done: #47, #48, #49 closed; local and remote `m032-probe-*` branches and their worktrees deleted (`git ls-remote` lists none).
 - 2026-11-05: added `timeout-minutes: 10` to `macos-scenarios`, because a regression that reaches a key wait with an open stdin would otherwise hold a macOS runner for the default 360 minutes (second AC4 reader's note); no other change.
+- 2026-11-05: claim audit: 16 claims read, 3 corrected — .github/workflows/launchers.yml (the macOS job catches only tested-branch bash 4 or GNU-only dirname/chmod options), scripts/tests/posix/run_launcher_scenarios.sh (the clean dir's tool list; the stub's shebang reason)
 
 ## Decisions
 

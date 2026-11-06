@@ -6,7 +6,8 @@ name: Launchers
 # cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
 # ZIP download works on Windows). The macos-scenarios job runs start_mac.command
 # on a macOS runner under /bin/bash, the bash 3.2 a student's Mac uses, so a
-# change that works only in a newer bash or with GNU tools fails here. The
+# change on a tested branch that needs a newer bash, or a GNU-only option of
+# dirname or chmod, fails here. The
 # launcher-compose job also runs start_linux.sh against the runner's real Docker
 # and Compose with the published image, because a stub cannot show what Compose
 # really does. The lane's own

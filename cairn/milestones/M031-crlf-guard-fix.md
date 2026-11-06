@@ -48,7 +48,7 @@ candidate row "Run every unit test in the PR lane".
 - [x] T2: In a scratch clone, stage each AC1 fixture as a tracked `.bat` and run
       the guard; confirm each red run's output names that file's `FAIL:` line,
       then run it on the repo.
-- [ ] T3: Rewrite the guard's header and the `.gitattributes` comment; keep any
+- [x] T3: Rewrite the guard's header and the `.gitattributes` comment; keep any
       reason for `-text` only with the delivery path and command that show it.
 
 ## Work log
@@ -65,6 +65,9 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: chose `line_counts`, which takes the byte-producing command as arguments and runs it twice, over reading stdin into a temp file; the built-in check passes `printf 'a\r\nb\nc\r'` and the loop passes `git cat-file -p ":$f"`.
 - 2026-11-05: T1 done: guard passes the 2 tracked `.bat` blobs; a copy with the old count (no appended x) exits 1 with the built-in check's `FAIL:` line; shellcheck 0.11.0 `-x -S info` clean, run through the `koalaman/shellcheck:v0.11.0` image since shellcheck is not installed locally. Dockerfile and build context unchanged (`scripts/tests` is in `.dockerignore`), so the hadolint and build gate does not apply.
 - 2026-11-05: T2 done in a scratch clone of the branch: staged `fixture1.bat` (bytes `610d0a620a630d`), `fixture2.bat` (`610a620d`), and `fixture3.bat` (`610d0a620a630d0a`) one at a time; the guard exited 1 on each with `FAIL: fixtureN.bat — blob has 1 LF-only line(s) …`; the default branch's guard passed fixtures 1 and 2 (exit 0) and failed 3; the guard exits 0 on the clean clone's 2 tracked `.bat` blobs.
+- 2026-11-05: T3 claims read from scratch repos (git 2.54.0): under `*.bat -text`, `git archive` and a checkout with `core.autocrlf=true` wrote each blob's bytes unchanged (an LF blob as LF); under `text eol=crlf`, the blob held LF and `git archive` wrote CRLF, so the removed "applies no eol conversion" claim was false.
+- 2026-11-05: T3 done: the `.gitattributes` comment states that `-text` turns off conversion and a checkout and `git archive` write the blob's bytes, with two `cmp` commands that print nothing and exit 0 in a clone; the guard header points to them; no reason naming Download ZIP or a raw download, since neither was run; `git check-attr` unchanged; guard exit 0; shellcheck clean.
+- 2026-11-05: claim audit: not owed — internal tier.
 
 ## Decisions
 

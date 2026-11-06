@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 #
 # Guard: every tracked Windows launcher (*.bat) must be stored with CRLF line
-# endings *in the git blob itself*, not merely smudged to CRLF on checkout.
+# endings in the git blob itself.
 #
-# Why the blob and not the working tree: the README's recommended install path
-# is "Download ZIP" (git archive), which exports blobs verbatim and applies no
-# eol conversion. So `*.bat text eol=crlf` (clone-only smudging) is not enough —
-# a ZIP-download student on Windows would get LF files that cmd.exe parses
-# unreliably. Only CRLF *in the blob* (via `*.bat -text` + committed CRLF bytes)
-# survives every delivery channel: ZIP, clone, and raw download alike.
+# Why the blob: `.gitattributes` marks *.bat as `-text`, so git converts no
+# line endings, and a checkout and `git archive` write the blob's bytes
+# unchanged. A blob stored with LF reaches a Windows user as LF files that
+# cmd.exe parses unreliably. `.gitattributes` gives the commands that show
+# that the written bytes match the blob.
 #
-# `git cat-file -p :<file>` reads the stored blob (post-clean-filter) — exactly
-# the bytes `git archive` ships. Runs offline, no network, no dependencies.
+# `git cat-file -p :<file>` reads the stored blob from the index. Runs offline,
+# no network, no dependencies.
 #
 set -uo pipefail
 

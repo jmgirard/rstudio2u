@@ -72,7 +72,7 @@ if [ "${#bats[@]}" -eq 0 ]; then
 fi
 
 for f in "${bats[@]}"; do
-    why="$(not_crlf git cat-file -p ":$f")"
+    why="$(not_crlf git cat-file -p ":0:$f")"
     if [ -n "$why" ]; then
         echo "FAIL: $f — blob $why; expected all CRLF"; fails=$((fails + 1)); continue
     fi

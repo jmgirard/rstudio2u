@@ -107,3 +107,28 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - AC4 evidence: whitespace-normalized cairn/DESIGN.md contains "GP2: **Always fresh, always an escape hatch.** Moving tags track newest stable automatically; every build also publishes date and version tags, and the README keeps teaching courses to pin a tag or digest. Freshness may never shed its escape hatch." (check printed True), followed by `(corrected M030, D-015)`. Pass.
 - gate: cairn_validate all checks passed; cairn_impact GP2 lists DESIGN 148, 163, 216 and six ROADMAP rows, each read and consistent with the new wording (none relies on fixed tags); `--changed` reports none because it reads the working tree.
 - gate (docker-image slot): `git diff main...HEAD -- Dockerfile scripts .dockerignore` is empty and `.dockerignore` drops README, .github, cairn, so the build input equals main's; hadolint is not installed locally, and pr-ci.yml (triggered by the `.github/workflows/**` change) builds the image and lints on the PR, which the merge wait requires green. Base image still `rocker/r2u:${UBUNTU_VERSION}`; no secrets touched; `.dockerignore` present. Changelog none: user-visible change goes in the archive summary.
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the `@sha256:<digest>` placeholder invites a doubled `sha256:` prefix, which `docker compose pull` rejects as an invalid reference — fix now, fixed 7ddcc15 (snippets read `@<digest>`, text says the digest is the whole value).
+- diff-bug #2: a digest pin breaks the README's `docker compose up --build -d` option — fix now, fixed 7ddcc15 (run here: Compose build stops with "build tag cannot contain a digest"; README now says start with a start file or `pull` + `up -d`, without `--build`).
+- diff-bug #3: the read command needs buildx, which a distro Docker can lack — fix now, fixed 7ddcc15 (`docker pull <tag>` fallback; run here, it prints the same index digest).
+- diff-bug #4: DESIGN "date and version tags record builds" is loose, since the tags move — fix now, fixed 7ddcc15 (digests, named by those tags, record builds).
+- diff-bug #5: the README omits that a digest pin gets no security updates — fix now, fixed 7ddcc15 (one sentence: move the pin between terms).
+- diff-bug #6: a digest whose tag moved is untagged, so a future Hub prune could delete a pinned image — follow-up: absorbed into the parked row "Prune untagged manifests on Docker Hub" (stays parked; its condition has not held, and no prune runs today).
+- diff-bug #7: "newest build that started on that date" can fail when two publishes interleave — follow-up: already recorded in DESIGN.md (tag-order bounds: the read and the create are not atomic); no new row, since only concurrent publishes reach it.
+- diff-bug #8: moving tags move on every rebuild, not only on new versions (pre-existing wording on README 19 and 179) — fix now, fixed 7ddcc15 (both lines in the rewritten section's scope).
+- diff-bug #9: "never changes" is broader than a derivative `FROM` pin, whose installed packages float — fix now, fixed 7ddcc15 (README says the packages still come from r2u at rebuild and points to renv).
+- diff-bug #10: pr-ci.yml line 84 is 83 characters and docker.yml 35 reflows unevenly — reject: style.
+- blame-history #1: the Baking `FROM` example no longer copy-pastes — fix now, fixed 7ddcc15 (a comment line says what to put in place of `<digest>`); a literal digest would go stale.
+- blame-history #2: the example tag `noble-2026-11-05` may not exist — reject: false; the tags API lists it at sha256:a1f45fc4…4c4e, and date tags are not deleted.
+- blame-history #3: README 21 does not say `noble`/`noble-` tags move — reject: false; the sentence claims only that they stay on Ubuntu 24.04, and line 19 says they move.
+- blame-history #4: a 64-character digest pin is harder for courses than a date tag (GP1) — reject: planned change (D-015, approved at the plan gate).
+- blame-history #5: docker.yml comments match tag-order.sh — noted, no finding.
+- blame-history #6: inline `(corrected M030)` markers mid-sentence — reject: style; matches the existing `(corrected M015)` pattern.
+- prior-review #1: "each run moves the version tag" omits that an older run's re-run cannot move a tag back — fix now, fixed 7ddcc15 (docker.yml comment says "each newer run" and names tag-order.sh; the README's "each new build" already holds).
+- prior-review #2: D-015 is not in the diff — reject: false; D-015 is on main at cairn/DECISIONS.md:250.
+- ripple #1: DESIGN "fails every publish, because each run's date tag is new and so absent" disagrees with same-date runs — fix now, fixed 7ddcc15 (first run on its date, marked corrected M030).
+- ripple #2: DESIGN 147 and ROADMAP 31 "new date and version tags" — reject: false; "new" there names the tags the run would attach, not a claim that they never move.
+- ripple #3: the `mutable:` matrix key now differs from the comment's "Moving tags" — reject: style.
+- ripple #4: the M030 ROADMAP title still says "immutable" — reject: false; it names the milestone, not a current claim, and the row archives at hygiene.
+- ripple #5–10: Dockerfile build-arg example, test fixtures, CITATION.cff, docker-compose.yml, README 135, PROFILE base-image pin — noted, no finding.
+- re-verify after 7ddcc15: AC1 grep of the three files finds only digest lines and the frozen runtime interface; AC3's section still shows the read, the Compose pin, and the `FROM` pin, and the substituted reference is `jmgirard/rstudio2u@sha256:…`; both workflow files parse (Ruby YAML) with only comment lines changed; README lint hits remain only in text the branch did not write; cairn_validate below.

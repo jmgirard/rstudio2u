@@ -275,11 +275,12 @@ jobs:
 
       # Moving tags (latest/noble/resolute) plus tags that name the build date
       # and the RStudio version (GP2). These two can move as well: a later run
-      # on the same date moves the date tag, and each run moves the version tag
-      # while that version is current, so only a digest pin never moves (the
-      # README's Reproducibility section). Both suffixes come from the meta
-      # job's outputs — the same two values the build legs were given — never
-      # from a second scrape.
+      # on the same date moves the date tag, and each newer run moves the
+      # version tag while that version is current (tag-order.sh keeps an older
+      # run's re-run from moving either back), so only a digest pin never
+      # moves (the README's Reproducibility section). Both suffixes come from
+      # the meta job's outputs — the same two values the build legs were
+      # given — never from a second scrape.
       - name: Compute the tag list
         id: tags
         env:

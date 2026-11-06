@@ -151,8 +151,9 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
   5xx answer. It does not outlast a Docker Hub rate limit, which resets over
   hours. A missing tag is read only from buildx's exact not-found line, and
   buildx is not pinned (M022 plan gate). A buildx release that rewords
-  that line fails every publish, because each run's date tag is new and so
-  absent.
+  that line fails every publish that is the first on its date, because that
+  run's date tag is absent (corrected M030: a later run on the same date finds
+  the tag present).
 - **Each image has a size limit (GP5):** `.github/image-size-limits` holds one
   limit per variant, in decimal MB. The size is the sum of the manifest's
   `layers[].size`: the compressed download a student waits for, not the disk
@@ -183,8 +184,8 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
   and `linux/arm64` on push to main and weekly, each architecture on a runner
   of that architecture — nothing is emulated (corrected M015). Every per-arch
   image is booted and smoke-tested before its variant's tags are attached.
-- **Two version records:** Docker date and version tags record *builds*
-  (corrected M030); annotated
+- **Two version records:** Docker image digests, named by the date and
+  version tags, record *builds* (corrected M030); annotated
   git tags `v<major>.<minor>.<patch>` with matching GitHub releases record
   *recipe changes* under semver (D-005: major = the environment changes under
   users, minor = something added or upgraded, patch = a fix; docs, refactors,

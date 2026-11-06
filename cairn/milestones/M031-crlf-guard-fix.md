@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -83,6 +83,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: T5 done: `not_crlf` replaces `line_counts` and gives the loop's and the built-in check's verdict; it also counts CR bytes and names an unreadable blob or count. /bin/bash 3.2: repo exit 0; fixtures `610d0a620a630d`, `610a620d`, `610d0a620a630d0a` fail as LF-only lines, `610d0a620d` and `610d620d0a` fail as a CR with no LF after, `610d0a62` passes (text after the last LF is not checked, as the comment says); an unmerged `stop_windows.bat` fails as "cannot be read". Plants, each exit 1 on its own built-in case: no appended x on `a\r\nb\nc\r`, no CR-byte test on `a\r\nb\r`, a `tr` that prints nothing on the good case as unreadable counts. shellcheck 0.11.0 `-x -S info` clean.
 - 2026-11-05: implement done after review return 1: all tasks checked; status → review.
 - 2026-11-05: review pass 2: AC2 fails a second time by the same shape (diff-bug #1, pass 2), the repeated review-failure stop (thrash rule (b)); the plan recorded no alternative for AC2; posed to the user with a tested commit-side command as the recommended repair.
+- 2026-11-05: user chose "Commit-side command" at the stop.
+- 2026-11-05: review return 2: AC2 — the `.gitattributes` command prints the same output under `-text`, `text`, and `text eol=lf`, so it does not show that `-text` is what keeps the blob CRLF (diff-bug #1, pass 2); repair by the user's choice: show the commit side. The same return carries pass 2's fix-now items: diff-bug #2 (`LC_ALL=C`), diff-bug #4 / blame-history #2 (the "not checked" comment), ripple #3 (the `.gitattributes` summary).
 
 ## Decisions
 

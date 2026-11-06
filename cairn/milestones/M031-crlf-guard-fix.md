@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -97,6 +97,9 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: T7 done: `export LC_ALL=C` after `set`; under `LANG=en_US.UTF-8` a CRLF-only `cp.bat` holding byte `e9` passes, and a copy without the line fails it as "1 LF-only line(s) of 3" with `tr: Illegal byte sequence`; the `not_crlf` comment now says text after the last LF is checked only for CR bytes, and `a\r\nb` passes while `a\r\nb\r` fails as "1 CR byte(s) with no LF after"; AC1 fixtures still fail with their LF-only lines; repo exit 0; shellcheck clean.
 - 2026-11-05: implement done after review return 2: all tasks checked; status → review.
 - 2026-11-05: review pass 3: AC2 fails a third time (diff-bug #1, pass 3: `git add` is not a delivery path, and no path tested here separates `-text` from `text eol=crlf`); thrash rule (a) third return and (b) same criterion by the same shape both fire; the plan recorded no AC2 alternative; posed descope-or-park to the user, with escalation offered.
+- 2026-11-05: user chose "Narrow the criterion" at the stop.
+- 2026-11-05: review return 3: AC2 — its "names a delivery path" clause fails (diff-bug #1, pass 3); by the user's choice, narrowed by amendment, not retried. The same return carries pass 3's fix-now items: diff-bug #2, #5, #7 (shell part), #9, #10, and blame-history #7.
+- 2026-11-05: amendment routed: AC2 — no delivery path tested in this repo separates `-text` from `text eol=crlf`, so the clause asking a reason to name one cannot be met; narrow to claims a command shows.
 
 ## Decisions
 

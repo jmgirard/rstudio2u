@@ -12,6 +12,9 @@
 # no network, no dependencies.
 #
 set -uo pipefail
+# Count bytes, not characters: in a UTF-8 locale, BSD grep skips a line that
+# holds a non-UTF-8 byte and BSD tr stops at one.
+export LC_ALL=C
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
@@ -21,7 +24,7 @@ fails=0
 # Prints why the bytes that the command "$@" writes are not CRLF-only, or
 # nothing when they are. CRLF-only means that the bytes hold at least one LF,
 # every LF has a CR before it, and every CR has an LF after it. Text after the
-# last LF is not checked.
+# last LF is checked only for CR bytes, so `a\r\nb` passes.
 not_crlf() {
     local n_lf n_crlf n_cr n
     if ! "$@" >/dev/null 2>&1; then

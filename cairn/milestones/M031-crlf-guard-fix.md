@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -61,7 +61,7 @@ candidate row "Run every unit test in the PR lane".
       in both comments, with the `git hash-object --path` command whose output
       shows CRLF kept under `-text` and LF under any `text` setting; drop the
       checkout claim that command does not show.
-- [ ] T7: (review return 2, fix-now) Run the guard's counts under
+- [x] T7: (review return 2, fix-now) Run the guard's counts under
       `LC_ALL=C`; correct the "not checked" comment and the `.gitattributes`
       summary of what the guard checks.
 
@@ -94,6 +94,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: review return 2: AC2 — the `.gitattributes` command prints the same output under `-text`, `text`, and `text eol=lf`, so it does not show that `-text` is what keeps the blob CRLF (diff-bug #1, pass 2); repair by the user's choice: show the commit side. The same return carries pass 2's fix-now items: diff-bug #2 (`LC_ALL=C`), diff-bug #4 / blame-history #2 (the "not checked" comment), ripple #3 (the `.gitattributes` summary).
 - 2026-11-05: minor amendment: added T6 (return 2's AC2 failure) and T7 (its fix-now items); Coverage now AC1 → T1, T2, T5, T7 and AC2 → T3, T4, T6.
 - 2026-11-05: T6 done: both comments now give the commit side as the reason for `-text` and drop the checkout claim; the `.gitattributes` command, run as written in scratch repos, printed `od -c` output `a \r \n b \r \n` under `*.bat -text` and `a \n b \n` under `text`, `text eol=crlf`, and `text eol=lf`; in this repo it prints the `-text` form.
+- 2026-11-05: T7 done: `export LC_ALL=C` after `set`; under `LANG=en_US.UTF-8` a CRLF-only `cp.bat` holding byte `e9` passes, and a copy without the line fails it as "1 LF-only line(s) of 3" with `tr: Illegal byte sequence`; the `not_crlf` comment now says text after the last LF is checked only for CR bytes, and `a\r\nb` passes while `a\r\nb\r` fails as "1 CR byte(s) with no LF after"; AC1 fixtures still fail with their LF-only lines; repo exit 0; shellcheck clean.
+- 2026-11-05: implement done after review return 2: all tasks checked; status → review.
 
 ## Decisions
 

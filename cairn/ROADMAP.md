@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M031 | Fix the CRLF guard's miss and comment | review | — | normal | milestones/M031-crlf-guard-fix.md |
+| M031 | Fix the CRLF guard's miss and comment | in-progress | — | normal | milestones/M031-crlf-guard-fix.md |
 | M030 | Stop calling the Docker tags immutable | done | — | normal | milestones/archive/M030-tag-immutability-claim.md |
 | M029 | Correct the package persistence claim | done | — | normal | milestones/archive/M029-package-persistence-claim.md |
 | M028 | Replace numbered Known issue citations | done | — | low | milestones/archive/M028-known-issue-citations.md |
@@ -42,3 +42,4 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 - [parked] Measure the build that smoke tested: `pr-ci.yml`'s export step re-resolves `rocker/r2u:24.04` (and `rocker/r2u:26.04` for resolute since M027), so a tag move during the smoke test would measure a different build; promote when an export step's log shows a rebuilt layer — added 2026-11-05 — GP5; from M026 review
 - [parked] Add .dockerignore to the build paths: `.dockerignore` is in neither `pr-ci.yml`'s nor `docker.yml`'s `paths`, so an edit that changes the image's contents starts no check and no publish; promote when a `.dockerignore` edit ships unchecked — added 2026-11-05 — GP7; from M026 review
 - [parked] Move latest to resolute on 2027-06-07: point `latest` at resolute in `docker.yml`'s publish matrix, set `docker-compose.yml`'s `UBUNTU_VERSION` to 26.04, and update the README tag table, on the date M027's README announces; a major version (D-005); promote on 2027-05-03 so it can merge by 2027-06-07 — added 2026-11-05 — GP1, GP2; from M027 plan
+- [parked] Show why .bat files use -text: the `.gitattributes` comment names a checkout and `git archive`, which `text eol=crlf` also serves as CRLF; the paths where the two can differ, a raw blob download and GitHub's Download ZIP, were never run, and `launchers.yml` lines 6–7 still say the guard keeps the ZIP download working; promote when a user reports a launcher with LF line endings — added 2026-11-05 — GP3; from M031 review

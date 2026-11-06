@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** review
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -69,6 +69,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: T3 done: the `.gitattributes` comment states that `-text` turns off conversion and a checkout and `git archive` write the blob's bytes, with two `cmp` commands that print nothing and exit 0 in a clone; the guard header points to them; no reason naming Download ZIP or a raw download, since neither was run; `git check-attr` unchanged; guard exit 0; shellcheck clean.
 - 2026-11-05: claim audit: not owed — internal tier.
 - 2026-11-05: implement done: all tasks checked, guard and shellcheck clean; status → review.
+- 2026-11-05: review return 1: AC2 — the `.gitattributes` comment says its two `cmp` commands show that `-text` turns conversion off, but they print nothing for any CRLF blob under either attribute, so they show only that the written bytes match the blob (diff-bug #1). The same return carries the fix-now guard items: diff-bug #2, #3, #4, #6, #7 and blame-history #1 (Review section).
+- 2026-11-05: filed parked row "Show why .bat files use -text" for diff-bug #8 and blame-history #2–#3; parked because no documented or common use is known to fail.
 
 ## Decisions
 
@@ -79,3 +81,20 @@ candidate row "Run every unit test in the PR lane".
 - gate: cairn_validate all checks passed (exit 0); no DESIGN principle changed, so cairn_impact skipped.
 - gate (docker-image slot): `git diff main...HEAD -- Dockerfile scripts .dockerignore` touches only `scripts/tests/`, which `.dockerignore` drops, and `.gitattributes` is dropped too, so the build input equals main's; hadolint is not installed locally, and `pr-ci.yml` (triggered by `scripts/**`) builds the image and runs hadolint on the PR, which the merge wait requires green. Base image still `rocker/r2u:${UBUNTU_VERSION}`; no secrets touched; `.dockerignore` present. Changelog none: no user-visible change. A merge to main touches `scripts/**`, so `docker.yml` starts a publish.
 - spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: the `.gitattributes` commands print nothing for any CRLF blob under either attribute (a CRLF blob committed before `*.bat text eol=crlf` gives the same result), so they show the written bytes match the blob, not that `-text` turns conversion off, which the comment says they show — fix now; AC2 fails as written, review return 1.
+- diff-bug #2: an empty or non-numeric count makes `[ -eq ]` return 2, so the built-in check and the loop pass silently (a `tr` that prints nothing gives PASS, exit 0) — fix now: fail closed on an unreadable count.
+- diff-bug #3: the `line_counts` comment says equal counts mean every line is CRLF, but `a\r\nb\r` and `a\r\nb` pass — fix now with blame-history #1.
+- diff-bug #4: the `.gitattributes` commands need bash or zsh (process substitution) and the repo root — fix now: say so in the comment.
+- diff-bug #5: `git check-attr` still shows `eol: lf` for `*.bat` from `* text=auto eol=lf`, which may confuse a reader — reject: false; `eol` has no effect while `text` is unset, and the reviewer's own runs found the bytes unchanged.
+- diff-bug #6: a failed `git cat-file` (an unmerged `.bat`) yields "0 0" and the FAIL line says "no line breaks at all" — fix now: name an unreadable blob as such; it already failed closed.
+- diff-bug #7: the built-in check asserts only that the counts differ, so a broken count such as "0 5" passes it, and no good input is checked — fix now: assert a bad and a good input through the same verdict the loop uses.
+- diff-bug #8: `launchers.yml` lines 6–7 say the guard keeps "the README-recommended ZIP download" working, a path the rewritten comments no longer claim — follow-up: new parked row "Show why .bat files use -text" (no run backs either reading; promote when a user reports a launcher with LF line endings).
+- diff-bug #9: no added test that the test-scope rules exclude — noted, no finding.
+- blame-history #1: with the appended x, `a\r\nb\r` (last line ends in a CR with no LF) now passes, where main's count failed it — fix now: also count CR bytes, so a CR with no LF after it fails.
+- blame-history #2: the reason for `-text` over `text eol=crlf` is gone and no record states one; the one path where they differ, a raw blob download, was dropped unrun — follow-up: row "Show why .bat files use -text".
+- blame-history #3: README line 30's Download ZIP path is not named in the `-text` reason, and GitHub's ZIP was not run — follow-up: row "Show why .bat files use -text".
+- blame-history #4: the guard header drops "exactly the bytes `git archive` ships" — reject: planned change; T3 moved that claim to `.gitattributes` beside the commands that show it.
+- blame-history #5: `*.cmd -text` has no guard — reject: planned change; Scope Out excludes a `*.cmd` guard (none tracked).
+- blame-history #6: the `.gitattributes` commands name `start_windows.bat` and go stale on a rename — reject: edge; only renaming the launcher reaches it, outside both documented and common use, and its effect is a `cmp` error.
+- prior-review: archived M08 record and LESSONS read; no regression of a past review point; PR comment probe returned no threads — no findings.
+- ripple: no ripple evidence; it noted `launchers.yml` lines 6–7, settled as diff-bug #8.

@@ -1,6 +1,6 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -68,6 +68,7 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: T3 claims read from scratch repos (git 2.54.0): under `*.bat -text`, `git archive` and a checkout with `core.autocrlf=true` wrote each blob's bytes unchanged (an LF blob as LF); under `text eol=crlf`, the blob held LF and `git archive` wrote CRLF, so the removed "applies no eol conversion" claim was false.
 - 2026-11-05: T3 done: the `.gitattributes` comment states that `-text` turns off conversion and a checkout and `git archive` write the blob's bytes, with two `cmp` commands that print nothing and exit 0 in a clone; the guard header points to them; no reason naming Download ZIP or a raw download, since neither was run; `git check-attr` unchanged; guard exit 0; shellcheck clean.
 - 2026-11-05: claim audit: not owed — internal tier.
+- 2026-11-05: implement done: all tasks checked, guard and shellcheck clean; status → review.
 
 ## Decisions
 

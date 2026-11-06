@@ -1,12 +1,13 @@
 * text=auto eol=lf
 
 # Windows batch files need CRLF line endings to run reliably. `-text` turns
-# off line-ending conversion, so the blob holds the committed CRLF bytes, and
-# a checkout and `git archive` write those bytes unchanged. To show it, run
-# these two commands in a clone. No output from `cmp` means that the bytes
-# match the blob:
-#   cmp start_windows.bat <(git cat-file -p HEAD:start_windows.bat)
-#   git archive HEAD start_windows.bat | tar -xO | cmp - <(git cat-file -p HEAD:start_windows.bat)
+# off line-ending conversion for these files, so a checkout writes the blob's
+# bytes unchanged, and the CRLF must be in the blob itself. To show it, run
+# this command in a clone. It stores an LF-only blob and converts it as a
+# checkout of start_windows.bat would:
+#   printf 'a\nb\n' | git hash-object -w --stdin | xargs git cat-file --filters --path=start_windows.bat | od -c
+# Under `-text` the output shows `a \n b \n`, with no conversion. Under
+# `text eol=crlf` it shows a `\r` before each `\n`.
 # scripts/tests/test_launcher_line_endings.sh checks that each blob is CRLF.
 *.bat -text
 *.cmd -text

@@ -37,8 +37,8 @@ candidate row "Run every unit test in the PR lane".
 
 ## Coverage
 
-- AC1 → T1, T2
-- AC2 → T3
+- AC1 → T1, T2, T5
+- AC2 → T3, T4
 
 ## Tasks
 
@@ -50,6 +50,13 @@ candidate row "Run every unit test in the PR lane".
       then run it on the repo.
 - [x] T3: Rewrite the guard's header and the `.gitattributes` comment; keep any
       reason for `-text` only with the delivery path and command that show it.
+- [x] T4: (review return 1) Replace the `.gitattributes` `cmp` commands with
+      one whose output differs between `-text` and `text eol=crlf`, and keep
+      only the reasons that command shows, in both comments.
+- [ ] T5: (review return 1, fix-now) Move the guard's verdict into one
+      function the built-in check and the loop share: fail a CR with no LF
+      after it, an unreadable blob, and an unreadable count; the built-in
+      check asserts two bad shapes and one good one.
 
 ## Work log
 
@@ -71,6 +78,8 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: implement done: all tasks checked, guard and shellcheck clean; status → review.
 - 2026-11-05: review return 1: AC2 — the `.gitattributes` comment says its two `cmp` commands show that `-text` turns conversion off, but they print nothing for any CRLF blob under either attribute, so they show only that the written bytes match the blob (diff-bug #1). The same return carries the fix-now guard items: diff-bug #2, #3, #4, #6, #7 and blame-history #1 (Review section).
 - 2026-11-05: filed parked row "Show why .bat files use -text" for diff-bug #8 and blame-history #2–#3; parked because no documented or common use is known to fail.
+- 2026-11-05: minor amendment: added T4 (the return's AC2 failure) and T5 (the return's fix-now guard items); Coverage now AC1 → T1, T2, T5 and AC2 → T3, T4.
+- 2026-11-05: T4 done: the `.gitattributes` command stores an LF-only blob and runs `git cat-file --filters --path=start_windows.bat` on it; in scratch repos under `*.bat -text` `od -c` showed `a \n b \n`, and under `text eol=crlf` it showed `a \r \n b \r \n`, from the repo root and a subdirectory, in `sh`; in this repo it shows `a \n b \n`. Both comments now give only the checkout reason and drop `git archive`, since this command does not show it.
 
 ## Decisions
 

@@ -3,11 +3,10 @@
 # Guard: every tracked Windows launcher (*.bat) must be stored with CRLF line
 # endings in the git blob itself.
 #
-# Why the blob: `.gitattributes` marks *.bat as `-text`, so git converts no
-# line endings, and a checkout and `git archive` write the blob's bytes
-# unchanged. A blob stored with LF reaches a Windows user as LF files that
-# cmd.exe parses unreliably. `.gitattributes` gives the commands that show
-# that the written bytes match the blob.
+# Why the blob: `.gitattributes` marks *.bat as `-text`, so a checkout writes
+# the blob's bytes with no line-ending conversion. A blob stored with LF
+# reaches a Windows user as LF files that cmd.exe parses unreliably.
+# `.gitattributes` gives a command that shows that the conversion is off.
 #
 # `git cat-file -p :<file>` reads the stored blob from the index. Runs offline,
 # no network, no dependencies.

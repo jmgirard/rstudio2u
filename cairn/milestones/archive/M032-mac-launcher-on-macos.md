@@ -1,0 +1,11 @@
+# M032: Run the Mac launcher on a macOS runner
+
+**Status:** done (2026-11-05, PR #50 https://github.com/jmgirard/rstudio2u/pull/50)
+
+**Goal:** Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bin/bash` that a student's Mac uses.
+
+**Outcome:** `launchers.yml` gained a `macos-scenarios` job on `macos-latest` (10-minute timeout) that prints `/bin/bash --version` and runs `scripts/tests/posix/run_launcher_scenarios.sh start_mac.command`. The harness now runs each launcher under the interpreter its first line names (`/bin/bash`) in place of the first `bash` on PATH, starts each launcher from `$work` by its absolute sandbox path so the launcher's own `cd "$(dirname "$0")"` is tested, takes optional launcher names, links `/usr/bin/dirname`, `/bin/chmod`, and `/usr/bin/xattr` on macOS, checks each Linux tool by name, and prints one FAIL and skips a launcher whose first line names no runnable interpreter. On PR #50's run the macOS job reported bash 3.2.57 and ran the same 28 `start_mac.command` scenarios as the Linux job, whose 56 matched the pre-change set. Planted defects (a `${plant,,}` expansion, a `declare -A` lookup, `dirname -z`) each turned the macOS job red and left the Linux job green. No launcher, image, or user-visible change.
+
+**Decisions:** none promoted. At the AC4 wording stop the user chose to name each plant's exact text (one substantive amendment, after two re-audits).
+
+**Review:** one four-lens pass. 4 fixed (a comment overstating chmod coverage, the Linux missing-tool check, one FAIL per bad first line, the "(none)" fallback), 1 to a new parked row "Bound the other launcher jobs' time", 20 rejected (1 edge: first-line forms other than `#!/bin/bash`). Claim audit: 16 claims, 3 corrected. AC1–AC3 verified on PR #50 run 42156769095 before the merge; 9 checks passed at 52fb9b0. Graduated the row "Run start_mac.command on a macOS runner". Lessons captured: two 2026-11-05 (M032) on bash 3.2 `declare -A` and `cd ""`. Marked used M032: 2026-11-05 (M023) on `launchers.yml`, 2026-11-05 (M024) on planted-defect `FAIL:` lines, 2026-11-05 (M027) on draft probe PRs. Evicted by rank at the 25-lesson limit: both 2026-09-04 (M13) lessons. Pruned the M029 row.

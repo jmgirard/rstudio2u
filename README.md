@@ -38,15 +38,17 @@ The easiest way to run the server, good for classrooms and non-technical users.
    and opens <http://localhost:8787> in your browser (no username or password).
    If that port is already taken on your machine, see the FAQ below for how to
    pick another one — the launcher will then report and open that address instead
-5. When you are done, double-click the matching `stop_...` file. Your session is
-   preserved; run the start file again to resume.
+5. When you are done, double-click the matching `stop_...` file. The files in
+   your home folder are kept. Run the start file again to start the server.
 
 The launchers just wrap the Docker Compose commands below, so Docker Desktop must
 be installed and running.
 
-> **Your work is saved.** The Compose setup stores the home directory (your
-> files, settings, and installed R packages) in a Docker named volume, so it
-> survives stopping, restarting, and even updating to a newer image. To wipe it
+> **Your files are saved.** The Compose setup stores the home directory (your
+> files and settings) in a Docker named volume. The volume survives stopping,
+> restarting, and updating to a newer image. By default, packages from
+> `install.packages()` are not in that volume. See
+> [Keeping installed packages](#keeping-installed-packages). To wipe the volume
 > and start completely fresh, run `docker compose down -v`.
 
 ### Option 1: Pull and run from Dockerhub
@@ -104,13 +106,54 @@ precompiled binaries — fast, with no compiling.
 
 - In the RStudio console, `install.packages("dplyr")` transparently pulls the
   binary via bspm; you don't need to do anything special.
-- Packages installed this way persist in the home volume (see above), so they
-  are still there next time you start the server.
+- Packages installed this way live inside the container, not in the home
+  volume, so they are lost each time Compose replaces the container. See
+  [Keeping installed packages](#keeping-installed-packages).
 - If a package needs a system library, open the RStudio **Terminal** and
   `sudo apt install <libfoo-dev>` (rarely needed — bspm resolves most
   dependencies for you).
 
-**Baking packages into your own image (recommended for a course or lab):**
+### Keeping installed packages
+
+By default, `install.packages()` puts packages in `/usr/lib/R/site-library` or
+`/usr/local/lib/R/site-library`. A system library from `sudo apt-get install`
+also goes into a system folder. These folders are inside the container. The home volume
+holds only `/home/rstudio`, so these packages and libraries last only as long as
+the container does.
+
+With the launchers or Docker Compose:
+
+- If you stop the server and start the same container again, your packages
+  stay. If no newer image arrived, the `stop_...` file followed by the
+  `start_...` file does this. So do `docker compose stop` and
+  `docker compose start`.
+- Each time Compose replaces the container, your packages are lost. The files in
+  your home folder stay. These actions replace the container:
+  - You run `docker compose down`, then `docker compose up -d`.
+  - A newer image arrives. Each start file downloads the image that
+    `docker-compose.yml` names. As shipped, that file names `latest`, and the
+    weekly rebuild moves that tag, so this can happen on any start.
+    `docker compose pull` followed by `docker compose up -d` does the same.
+  - You change `RS_PORT`, or a setting of the service in `docker-compose.yml`
+    such as the `image:` line, then run a start file or `docker compose up -d`.
+
+To get your packages back quickly, save a list. Put your install commands in a file in your
+home folder, such as `~/my_packages.R`:
+
+```r
+# System libraries, only if you need them
+system("sudo apt-get update && sudo apt-get install -y libfftw3-dev")
+# Your R packages
+install.packages(c("glmmTMB", "mice", "metafor"))
+```
+
+After Compose replaces the container, run `source("~/my_packages.R")` in the
+RStudio console. To give a whole course the same packages, bake them into your
+own image instead.
+
+### Baking packages into your own image
+
+This is the recommended way for a course or lab.
 
 Build a small image on top of rstudio2u so everyone gets the same packages
 preinstalled. Pin an immutable tag (see below) for reproducibility:
@@ -214,7 +257,10 @@ change the mapping to `-p 8888:8787` instead. If the launcher reports the server
 
 **How do I update to the latest version?**
 `docker compose pull` (the launchers do this for you) or
-`docker pull jmgirard/rstudio2u`. Your work in the home volume is preserved.
+`docker pull jmgirard/rstudio2u`. The files in your home volume are kept. When a
+newer image arrives, the launchers and `docker compose up -d` replace the
+container, so the R packages that you installed are lost (see
+[Keeping installed packages](#keeping-installed-packages)).
 A launcher started without internet access reuses the last downloaded image
 and says the update was skipped; run it again once you are online to update.
 It repeats that warning once the server is ready and waits for a key press

@@ -13,7 +13,7 @@ echo "Stopping rstudio2u..."
 docker compose stop
 
 echo ""
-echo "✅ Server stopped. Your work is preserved -- double-click"
-echo "   start_mac.command to resume where you left off."
+echo "✅ Server stopped. The files in your home folder are kept. Double-click"
+echo "   start_mac.command to start the server again."
 echo ""
 read -n 1 -s -r -p "Press any key to close..."

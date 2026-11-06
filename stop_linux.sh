@@ -9,5 +9,5 @@ echo "Stopping rstudio2u..."
 docker compose stop
 
 echo ""
-echo "✅ Server stopped. Your work is preserved -- run ./start_linux.sh"
-echo "   to resume where you left off."
+echo "✅ Server stopped. The files in your home folder are kept. Run"
+echo "   ./start_linux.sh to start the server again."

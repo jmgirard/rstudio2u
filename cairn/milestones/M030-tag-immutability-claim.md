@@ -96,6 +96,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: claim audit: 25 claims read, 0 corrected — .github/workflows/docker.yml, README.md (fresh Opus reader; it also flagged "immutable" in pr-ci.yml line 84, outside the diff).
 - 2026-11-05: substantive amendment: Scope In adds the "immutable" in the comments of `.github/workflows/pr-ci.yml` (line 84), found by the claim audit; comment wording only, no criterion changed. pr-ci.yml line 84 now reads "produces no date or version tags"; a repo-wide grep outside cairn/ finds no other "immutable".
 - 2026-11-05: verify: the branch changes no Dockerfile or build context, so the profile's hadolint + build gate does not apply (hadolint is not installed here); cairn_validate passes. Status review.
+- 2026-11-06: step-7 approval: m030-tag-immutability-claim approved for merge
 
 ## Decisions
 

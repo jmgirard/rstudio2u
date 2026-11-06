@@ -76,7 +76,7 @@ jobs:
           - variant: noble
             ubuntu_version: "24.04"
             arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-latest
             uname: aarch64
           - variant: resolute
             ubuntu_version: "26.04"

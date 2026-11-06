@@ -1,0 +1,11 @@
+# M029: Correct the package persistence claim
+
+**Status:** done (2026-11-05, PR #44 https://github.com/jmgirard/rstudio2u/pull/44)
+
+**Goal:** The README, the Compose file comment, and the stop launchers say truthfully where installed R packages live and when they are lost.
+
+**Outcome:** Text only, no image change. A README section "Keeping installed packages" says that `install.packages()` puts packages in `/usr/lib/R/site-library` or `/usr/local/lib/R/site-library` and `sudo apt-get install` puts system libraries in system folders, outside the `/home/rstudio` volume. They stay across stop then start of the same container and are lost when Compose replaces it: `down` then `up`, a newer image on start, a changed `RS_PORT` or service setting such as `image:`. A saved `~/my_packages.R` (with `apt-get update` first) restores them. "Baking packages into your own image" became its own heading. The README callout, Quick start step 5, the update FAQ answer, and the `docker-compose.yml` volume comment no longer say packages persist; the comment also drops "survives pruning". The three stop launchers say "The files in your home folder are kept" and name the start file "to start the server again", not "resume where you left off". Hand runs on `noble-2026-11-02` and `noble-2026-11-05` showed each outcome; `resolute` has the same library folders. User-visible change for the next release's notes: the corrected package text and stop messages.
+
+**Decisions:** D-014 keeps installed packages outside the home volume and corrects the text.
+
+**Review:** Four-lens fan-out, 20 items: 8 fixed (the list of container-replacing actions, an unclear "it", "By default" in the callout, "get your packages back", the Baking heading, "system library", the pruning claim, the FAQ conditional), 1 follow-up ("Warn when a start drops packages", low), 6 rejected (resolute folders checked, D-014 covers IP4, four planned changes), 5 notes. Claim audit: 22 claims, 1 corrected. PR #44 checks passed. New rows: "Add apt update to the README's apt hint", "Clear the README's plain-English hits", "Warn when a start drops packages". Lesson captured (2026-11-05 M029, empty apt lists); marked used: 2026-07-18 (M05), 2026-11-05 (M023, launchers.yml); evicted by rank at the 25-lesson limit: 2026-07-18 (M05) on a chunk-free Quarto smoke test.

@@ -2,7 +2,7 @@
 
 _The only authority on milestone status. Grouped by status, not ID._
 _Last hygiene check: 2026-11-05 (M033 review: archived; source row graduated; pruned M030's terminal row; one lesson captured, three marked used, one evicted by rank; validate green)_
-_Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
+_Released 2.3.0 2026-11-05 (tag v2.3.0 at 72a9c05; previous: 2.2.0 2026-09-04 at e0893aa)_
 
 ## Milestones
 

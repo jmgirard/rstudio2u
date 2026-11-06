@@ -6,7 +6,7 @@
 # Why the blob: `.gitattributes` marks *.bat as `-text`, so git stores these
 # files with no line-ending conversion, and the CRLF that cmd.exe needs to
 # parse them reliably must be in the blob itself. `.gitattributes` gives a
-# command that shows the blob keeping CRLF.
+# command that shows git keeping CRLF in a blob stored at that path.
 #
 # `git cat-file -p :<file>` reads the stored blob from the index. Runs offline,
 # no network, no dependencies.

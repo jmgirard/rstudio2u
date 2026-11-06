@@ -100,6 +100,7 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: user chose "Narrow the criterion" at the stop.
 - 2026-11-05: review return 3: AC2 — its "names a delivery path" clause fails (diff-bug #1, pass 3); by the user's choice, narrowed by amendment, not retried. The same return carries pass 3's fix-now items: diff-bug #2, #5, #7 (shell part), #9, #10, and blame-history #7.
 - 2026-11-05: amendment routed: AC2 — no delivery path tested in this repo separates `-text` from `text eol=crlf`, so the clause asking a reason to name one cannot be met; narrow to claims a command shows.
+- 2026-11-05: checkpoint, half done: pass 3 fix-now edits made (`.gitattributes` command wording and Git Bash note, "each *.bat blob", guard header "a blob stored at that path", the corrected row "Show why .bat files use -text", new parked row "Fail launcher blobs that hold NUL bytes"); command still prints `a \r \n b \r \n`, guard passes, shellcheck clean; the AC2 amendment waits on its fresh re-audit reader, and no task box is ticked yet.
 
 ## Decisions
 

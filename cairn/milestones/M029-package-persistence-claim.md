@@ -117,16 +117,16 @@ rocker-bayes → rocker-bayes's own row "Catch launcher drift from rstudio2u".
 - AC5 evidence: the three stop files print "Server stopped. The files in your home folder are kept." then "Run ./start_linux.sh" / "Double-click start_mac.command" / "Double-click start_windows.bat" "to start it again." with ✅ or [OK]; `grep -c "resume where"` = 0 in each; `scripts/tests/test_launcher_line_endings.sh` → "ok: stop_windows.bat — all 12 lines CRLF-terminated in blob", PASS.
 - Gate: `cairn_validate.py` all checks passed; no principle changed on the branch, so `cairn_impact` skipped. Profile gate: the diff touches no Dockerfile, `scripts/`, or `.dockerignore`, so the build is the one on main and `docker build` is not re-run; hadolint is not installed here and the Dockerfile is unchanged; base pinned (`rocker/r2u:${UBUNTU_VERSION}`, default 24.04); `.dockerignore` present; no secrets added; changelog none — user-visible change goes in the archive summary.
 - spawned: diff-bug, blame-history, prior-review, ripple
-- diff-bug #1: the list of actions that replace the container leaves out edits to `docker-compose.yml` that the README itself suggests (pinning an `image:` tag, a bind mount) — fix now
-- diff-bug #2: "to start it again" in the stop messages can read as the home folder — fix now ("to start the server again")
+- diff-bug #1: the list of actions that replace the container leaves out edits to `docker-compose.yml` that the README itself suggests (pinning an `image:` tag, a bind mount) — fix now, fixed 6b043cf,
+- diff-bug #2: "to start it again" in the stop messages can read as the home folder — fix now, fixed 6b043cf, ("to start the server again")
 - diff-bug #3: library folders and bspm route checked on `noble` only — reject, false: on `resolute`, `.libPaths()` is the same three folders, bspm put praise in `/usr/lib/R/site-library`, and `libfftw3-dev` installed (2026-11-05)
-- diff-bug #4: the callout's "Packages from install.packages() are not in that volume" lacks "By default" — fix now
+- diff-bug #4: the callout's "Packages from install.packages() are not in that volume" lacks "By default" — fix now, fixed 6b043cf,
 - diff-bug #5: the start launchers print nothing when a newer image replaces the container and packages are lost — follow-up, row "Warn when a start drops packages" (low: the README now documents it)
-- diff-bug #6: "To keep your packages, save a list" overstates what the script does — fix now ("To get your packages back quickly")
-- diff-bug #7: the bold "Baking packages" paragraph now sits under the new ### heading — fix now (made its own ### heading)
-- diff-bug #8: "library" used for both R package folders and a system library — fix now ("A system library")
-- diff-bug #9: the edited compose comment keeps "survives … pruning", but `docker volume prune -a` removes an unused named volume — fix now (dropped "pruning")
-- diff-bug #10: the FAQ answer's "If Compose then replaces" is weaker than what the launchers do — fix now (says a newer image makes the launchers replace the container)
+- diff-bug #6: "To keep your packages, save a list" overstates what the script does — fix now, fixed 6b043cf, ("To get your packages back quickly")
+- diff-bug #7: the bold "Baking packages" paragraph now sits under the new ### heading — fix now, fixed 6b043cf, (made its own ### heading)
+- diff-bug #8: "library" used for both R package folders and a system library — fix now, fixed 6b043cf, ("A system library")
+- diff-bug #9: the edited compose comment keeps "survives … pruning", but `docker volume prune -a` removes an unused named volume — fix now, fixed 6b043cf, (dropped "pruning")
+- diff-bug #10: the FAQ answer's "If Compose then replaces" is weaker than what the launchers do — fix now, fixed 6b043cf, (says a newer image makes the launchers replace the container)
 - blame-history #1: dropping "resume where you left off" removes a promise verified in c8e90e3b — reject, planned change (AC5); the promise fails whenever a start pulls a newer image
 - blame-history #2: "Your session is preserved" dropped — reject, planned change; it was never verified for running R sessions
 - blame-history #3: the package-persistence claim reversed — reject, planned change (D-014)

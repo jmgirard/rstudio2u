@@ -68,6 +68,7 @@ Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bi
 - 2026-11-05: added `timeout-minutes: 10` to `macos-scenarios`, because a regression that reaches a key wait with an open stdin would otherwise hold a macOS runner for the default 360 minutes (second AC4 reader's note); no other change.
 - 2026-11-05: claim audit: 16 claims read, 3 corrected — .github/workflows/launchers.yml (the macOS job catches only tested-branch bash 4 or GNU-only dirname/chmod options), scripts/tests/posix/run_launcher_scenarios.sh (the clean dir's tool list; the stub's shebang reason)
 - 2026-11-05: claim audit re-read by the same reader: the 3 corrected claims read true. All tasks done; harness local PASS under /bin/bash 3.2.57, shellcheck and actionlint clean; status review.
+- 2026-11-05: step-7 approval: m032-mac-launcher-on-macos approved for merge (AC1–AC3 to be verified on the PR run before the merge)
 
 ## Decisions
 

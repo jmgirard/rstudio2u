@@ -9,7 +9,7 @@
 - **Principles touched:** GP3, GP5, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — README tells users which builds a pull request is checked on before it merges
-- **Branch/PR:** m033-arm64-pr-smoke
+- **Branch/PR:** m033-arm64-pr-smoke · https://github.com/jmgirard/rstudio2u/pull/55
 
 ## Goal
 

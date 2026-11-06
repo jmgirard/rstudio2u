@@ -109,9 +109,10 @@ precompiled binaries — fast, with no compiling.
 - Packages installed this way live inside the container, not in the home
   volume, so they are lost each time Compose replaces the container. See
   [Keeping installed packages](#keeping-installed-packages).
-- If a package needs a system library, open the RStudio **Terminal** and
-  `sudo apt install <libfoo-dev>` (rarely needed — bspm resolves most
-  dependencies for you).
+- If a package needs a system library, open the RStudio **Terminal** and run
+  `sudo apt-get update && sudo apt-get install <libfoo-dev>`. A new container
+  has empty package lists, so the install fails without the update. You rarely
+  need this, because bspm resolves most dependencies for you.
 
 ### Keeping installed packages
 

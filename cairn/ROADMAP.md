@@ -1,23 +1,21 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-05 (M032 review: archived; source row graduated; pruned M029's terminal row; one parked row filed; two lessons captured, three marked used, two evicted by rank; validate green)_
+_Last hygiene check: 2026-11-05 (M033 review: archived; source row graduated; pruned M030's terminal row; one lesson captured, three marked used, one evicted by rank; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M033 | Smoke-test arm64 in the PR lane | review | — | normal | milestones/M033-arm64-pr-smoke.md |
+| M033 | Smoke-test arm64 in the PR lane | done | — | normal | milestones/archive/M033-arm64-pr-smoke.md |
 | M032 | Run the Mac launcher on a macOS runner | done | — | normal | milestones/archive/M032-mac-launcher-on-macos.md |
 | M031 | Fix the CRLF guard's miss and comment | done | — | normal | milestones/archive/M031-crlf-guard-fix.md |
-| M030 | Stop calling the Docker tags immutable | done | — | normal | milestones/archive/M030-tag-immutability-claim.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 3 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 
 ## Candidates
 <!-- unnumbered ideas; one line each: idea — added YYYY-MM-DD — links -->
-- Run the arm64 smoke test in PR CI: smoke-test a native arm64 build in `pr-ci.yml` too, deferred from M05 for PR-CI speed and free of emulation since M015; GP3 allows a one-architecture gap only "when an upstream forces it", but `pr-ci.yml` and DESIGN's size bullet cite GP3 for an amd64-only PR lane that is chosen (M027 review), so this row or GP3's text settles it — added 2026-07-17 — GP3; from M05 — started M033
 - [low] Warn when a start drops packages: when `docker compose pull` brings a newer image, the start launchers' `up -d` replaces the container and the student's installed R packages are gone with no message; a launcher line saying so would reach students who never read the README; low because the README now documents it (M029) — added 2026-11-05 — GP1; from M029 review
 - [low] Clear the README's plain-English hits: the Simple English lint hook reports about 50 hits in README text that M029 did not write, such as `e.g.`, semicolons, em dashes, and long sentences; low because the text is correct and the hits are about style — added 2026-11-05 — from M029 implement
 - [low] Run every unit test in the PR lane: the "Script unit tests" step in `pr-ci.yml` runs a hand-written list of 11 `scripts/tests/test_*.sh` files, so a new test file runs nowhere until someone adds it there; a loop over `scripts/tests/test_*.sh` (less the launcher test that `launchers.yml` runs) would pick it up — added 2026-11-05 — GP7; from M027 review

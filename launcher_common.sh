@@ -15,7 +15,10 @@
 
 # True when the launcher is running for a real user, false under the test seam.
 launcher_interactive() {
-    [ -z "${RS_LAUNCHER_NONINTERACTIVE:-}" ]
+    declare -A modes=([batch]=no [user]=yes)
+    local key=user
+    [ -n "${RS_LAUNCHER_NONINTERACTIVE:-}" ] && key=batch
+    [ "${modes[$key]}" = yes ]
 }
 
 # Hold the window open so a double-clicking student can read the message before

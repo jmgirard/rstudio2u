@@ -68,7 +68,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
       point to it.
 - [x] T3: Set GP2 to the AC4 wording and drop "immutable" from DESIGN.md Purpose
       & Scope and Conventions, marked `corrected M030`.
-- [ ] T4: Drop "immutable" from the `docker.yml` comments; read the three files
+- [x] T4: Drop "immutable" from the `docker.yml` comments; read the three files
       whole for any remaining claim (AC1). A `docker.yml` edit publishes on
       merge, the same as a weekly rebuild.
 
@@ -91,6 +91,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: minor amendment: the README lines that point to Reproducibility are now 19, 21, and 159 (the Baking section's pin line), not 116 and 138–146; the plan's numbers predate M029's README edits.
 - 2026-11-05: T2 README: Reproducibility rewritten (moving date and version tags, digest read, Compose and FROM pins); lines 19, 21, and the Baking pin line point to digests. Scratch checks: `docker compose config` and `pull` accept an `image:` digest pin, `FROM <image>@sha256:…` builds, and the launchers' `config --images` plus `image inspect` check finds the pulled digest. Lint hits on README remain only in text the branch did not write.
 - 2026-11-05: T3 DESIGN.md: GP2 set to the AC4 wording (whitespace-normalized match checked) with `(corrected M030, D-015)`; Purpose & Scope and the "Two version records" convention drop "immutable", each marked `corrected M030`.
+- 2026-11-05: T4 docker.yml: four comments drop "immutable" (meta job header, resolver step, tag-list step); the tag-list comment now says both tags can move and points to the README. `git diff` shows only comment lines changed; actionlint is not installed here, so CI checks the file. A read of README, DESIGN.md, and docker.yml's tag comments for frozen/unchanging/never-moves wording finds no claim left about date or version tags.
 
 ## Decisions
 

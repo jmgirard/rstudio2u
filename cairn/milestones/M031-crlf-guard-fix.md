@@ -109,3 +109,8 @@ candidate row "Run every unit test in the PR lane".
 - blame-history #6: the `.gitattributes` commands name `start_windows.bat` and go stale on a rename — reject: edge; only renaming the launcher reaches it, outside both documented and common use, and its effect is a `cmp` error.
 - prior-review: archived M08 record and LESSONS read; no regression of a past review point; PR comment probe returned no threads — no findings.
 - ripple: no ripple evidence; it noted `launchers.yml` lines 6–7, settled as diff-bug #8.
+- pass 2 (after review return 1, head 750dd30):
+- AC1 evidence (pass 2, fresh clone at 750dd30): `fixture1.bat` (`610d0a620a630d`), `fixture2.bat` (`610a620d`), `fixture3.bat` (`610d0a620a630d0a`) each staged alone; the guard exited 1 on each with `FAIL: fixtureN.bat — blob has 1 LF-only line(s) of 2/1/3; expected all CRLF`; exit 0 on the clean clone's 2 tracked `.bat` blobs. Pass.
+- AC2 evidence (pass 2, read at 750dd30): neither file mentions `git archive` (`git grep -i archive` finds nothing); the one "no line-ending conversion" hit (guard line 7) ties it to `-text` on a checkout. The one reason for `-text` names a checkout and a `git cat-file --filters --path=start_windows.bat` command, which printed `a \n b \n` in the clone and, per T4's scratch runs, `a \r \n b \r \n` under `text eol=crlf`, so its output shows the conversion is off. Pass.
+- gate (pass 2): cairn_validate all checks passed; no principle changed. docker-image slot unchanged from pass 1: the diff touches `.gitattributes`, `scripts/tests/`, and `cairn/` only, all dropped by `.dockerignore`; hadolint and the build run in `pr-ci.yml` on the PR; base image pinned by tag; no secrets; changelog none.
+- spawned: diff-bug, blame-history, prior-review, ripple

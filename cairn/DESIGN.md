@@ -21,8 +21,9 @@ All tags build from a single `Dockerfile`; the Ubuntu base is selected with
 variants, and `latest` points at `noble`. Both architectures are hard
 commitments. Published to
 Docker Hub as `jmgirard/rstudio2u` (single registry, by choice), with moving
-tags plus immutable `<variant>-<date>` and `<variant>-<rstudio>` tags for
-reproducibility.
+tags plus `<variant>-<date>` and `<variant>-<rstudio>` tags for
+reproducibility; those two can move too, and only a digest pin never moves
+(corrected M030).
 
 **How a variant graduates.** A new Ubuntu LTS variant starts as a preview.
 It becomes committed when three conditions hold: (a) Ubuntu's
@@ -182,7 +183,8 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
   and `linux/arm64` on push to main and weekly, each architecture on a runner
   of that architecture — nothing is emulated (corrected M015). Every per-arch
   image is booted and smoke-tested before its variant's tags are attached.
-- **Two version records:** immutable Docker tags record *builds*; annotated
+- **Two version records:** Docker date and version tags record *builds*
+  (corrected M030); annotated
   git tags `v<major>.<minor>.<patch>` with matching GitHub releases record
   *recipe changes* under semver (D-005: major = the environment changes under
   users, minor = something added or upgraded, patch = a fix; docs, refactors,
@@ -212,9 +214,9 @@ met the three conditions on 2026-11-05 (M027), and the README announces that
 - GP1: **Classroom first.** When audience needs conflict, the simplicity of
   the double-click path wins.
 - GP2: **Always fresh, always an escape hatch.** Moving tags track newest
-  stable automatically; every build also publishes immutable date/version
-  tags, and the README keeps teaching courses to pin. Freshness may never
-  shed its escape hatch.
+  stable automatically; every build also publishes date and version tags,
+  and the README keeps teaching courses to pin a tag or digest. Freshness may
+  never shed its escape hatch. (corrected M030, D-015)
 - GP3: **Both architectures, all three launchers.** amd64/arm64 parity and
   macOS/Windows/Linux launcher coverage are supported surfaces; a break is a
   ship-blocking or hotfix-tier bug (documented temporary asymmetry allowed

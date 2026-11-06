@@ -28,10 +28,10 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 
 ## Acceptance criteria
 
-- [ ] AC1: A read of `README.md`, `cairn/DESIGN.md`, and the comments in
+- [x] AC1: A read of `README.md`, `cairn/DESIGN.md`, and the comments in
       `.github/workflows/docker.yml` at the milestone head finds nothing that
       calls a date tag or an RStudio-version tag immutable or unchanging.
-- [ ] AC2: The README's Reproducibility section says that a `<variant>-<date>`
+- [x] AC2: The README's Reproducibility section says that a `<variant>-<date>`
       tag names the date its build started (UTC) and can move to a later build
       with the same date, that a `<variant>-<rstudio>` tag moves with each
       publish while that RStudio version is current, and that an image digest
@@ -40,13 +40,13 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
       `.github/tag-order.sh`, and the second also matches Docker Hub, where the
       current `noble-<rstudio>` tag and the latest-dated `noble-<date>` tag show
       the same index digest when read at review.
-- [ ] AC3: The section shows how to read a tag's digest and how to pin it in the
+- [x] AC3: The section shows how to read a tag's digest and how to pin it in the
       `image:` line of `docker-compose.yml` and in a `FROM` line. Running the
       shown read command against a published tag prints a digest, `docker pull`
       of the pinned `jmgirard/rstudio2u@sha256:…` reference succeeds, and
       `docker buildx imagetools inspect` of that reference lists both
       `linux/amd64` and `linux/arm64`.
-- [ ] AC4: GP2 in `cairn/DESIGN.md` reads: "Moving tags track newest stable
+- [x] AC4: GP2 in `cairn/DESIGN.md` reads: "Moving tags track newest stable
       automatically; every build also publishes date and version tags, and the
       README keeps teaching courses to pin a tag or digest. Freshness may never
       shed its escape hatch."
@@ -100,3 +100,10 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-11-06, head 3183421): grep of README.md, cairn/DESIGN.md, docker.yml for immutab/unchang/frozen/freez/never change/never move/not change/identical finds only digest lines (README 19, 196, 198; DESIGN 25; docker.yml 279) and the frozen runtime interface (DESIGN 61, IP3 207); a read of the README Reproducibility section, DESIGN Purpose & Scope, Conventions, GP2, and docker.yml's tag comments (35, 60, 276–282) finds no claim that a date or RStudio-version tag is fixed. Pass.
+- AC2 evidence: README Reproducibility says the date tag names the UTC date its build started and moves to a later build with the same date, the version tag moves with each new build while that version is the newest stable, and a digest never moves. Code: docker.yml 74 `DATE=${STAMP%%T*}` from the meta job's one `date -u` read; 300–301 attach `<variant>-$DATE` and `<variant>-$RSVER` every publish; tag-order.sh 197 leaves a tag out only when its stamp is later than the run's, so a later same-date run moves it. Docker Hub read 2026-11-06T00:18Z: current `noble-2026.10.1-239` (resolver prints 2026.10.1-239) and latest-dated `noble-2026-11-05` both at sha256:a1f45fc4…4c4e. Pass.
+- AC3 evidence: the section shows the read (`docker buildx imagetools inspect <tag>`, its `Digest:` line), a Compose `image:` pin, and a `FROM` pin. Run 2026-11-06: the read of `noble-2026-11-05` printed `Digest: sha256:a1f45fc4…4c4e`; `docker pull jmgirard/rstudio2u@sha256:a1f45fc4…4c4e` exited 0; imagetools inspect of that ref lists linux/amd64 and linux/arm64. Pass.
+- AC4 evidence: whitespace-normalized cairn/DESIGN.md contains "GP2: **Always fresh, always an escape hatch.** Moving tags track newest stable automatically; every build also publishes date and version tags, and the README keeps teaching courses to pin a tag or digest. Freshness may never shed its escape hatch." (check printed True), followed by `(corrected M030, D-015)`. Pass.
+- gate: cairn_validate all checks passed; cairn_impact GP2 lists DESIGN 148, 163, 216 and six ROADMAP rows, each read and consistent with the new wording (none relies on fixed tags); `--changed` reports none because it reads the working tree.
+- gate (docker-image slot): `git diff main...HEAD -- Dockerfile scripts .dockerignore` is empty and `.dockerignore` drops README, .github, cairn, so the build input equals main's; hadolint is not installed locally, and pr-ci.yml (triggered by the `.github/workflows/**` change) builds the image and lints on the PR, which the merge wait requires green. Base image still `rocker/r2u:${UBUNTU_VERSION}`; no secrets touched; `.dockerignore` present. Changelog none: user-visible change goes in the archive summary.

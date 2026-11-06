@@ -3,10 +3,9 @@
 # Guard: every tracked Windows launcher (*.bat) must be stored with CRLF line
 # endings in the git blob itself.
 #
-# Why the blob: `.gitattributes` marks *.bat as `-text`, so git stores these
-# files with no line-ending conversion, and the CRLF that cmd.exe needs to
-# parse them reliably must be in the blob itself. `.gitattributes` gives a
-# command that shows git keeping CRLF in a blob stored at that path.
+# `.gitattributes` marks *.bat as `-text`. Under `-text`, `git add` stores a
+# .bat file's CRLF bytes unchanged in the blob, and `.gitattributes` gives a
+# command that shows it.
 #
 # `git cat-file -p :<file>` reads the stored blob from the index. Runs offline,
 # no network, no dependencies.

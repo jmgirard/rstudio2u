@@ -1,16 +1,15 @@
 * text=auto eol=lf
 
-# Windows batch files need CRLF line endings to run reliably. `-text` turns
-# off line-ending conversion for these files, so `git add` keeps their CRLF
-# bytes in the blob. Under `text`, with any `eol` value, git would store LF.
-# To show it, run this command in a clone, in a POSIX shell such as Git Bash
-# on Windows. It applies to CRLF bytes the conversion that `git add` applies
-# to a new file at start_windows.bat, then prints the stored blob:
+# Windows batch files need CRLF line endings to run reliably, and
+# scripts/tests/test_launcher_line_endings.sh checks every line break in each
+# *.bat blob. Under `-text`, `git add` stores a .bat file's CRLF bytes
+# unchanged in the blob. Under `text`, with any `eol` value, it would store
+# LF. To show it, run this command in a clone, in a POSIX shell such as Git
+# Bash on Windows. It applies to CRLF bytes the conversion that `git add`
+# applies to a new file at start_windows.bat, then prints the stored blob:
 #   printf 'a\r\nb\r\n' | git hash-object -w --stdin --path=start_windows.bat | xargs git cat-file -p | od -c
 # Under `-text` the output shows a `\r` before each `\n`. Under `text`,
 # `text eol=crlf`, or `text eol=lf` it shows no `\r`.
-# scripts/tests/test_launcher_line_endings.sh checks every line break in each
-# *.bat blob.
 *.bat -text
 *.cmd -text
 

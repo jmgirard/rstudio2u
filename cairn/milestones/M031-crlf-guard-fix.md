@@ -101,6 +101,7 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: review return 3: AC2 — its "names a delivery path" clause fails (diff-bug #1, pass 3); by the user's choice, narrowed by amendment, not retried. The same return carries pass 3's fix-now items: diff-bug #2, #5, #7 (shell part), #9, #10, and blame-history #7.
 - 2026-11-05: amendment routed: AC2 — no delivery path tested in this repo separates `-text` from `text eol=crlf`, so the clause asking a reason to name one cannot be met; narrow to claims a command shows.
 - 2026-11-05: checkpoint, half done: pass 3 fix-now edits made (`.gitattributes` command wording and Git Bash note, "each *.bat blob", guard header "a blob stored at that path", the corrected row "Show why .bat files use -text", new parked row "Fail launcher blobs that hold NUL bytes"); command still prints `a \r \n b \r \n`, guard passes, shellcheck clean; the AC2 amendment waits on its fresh re-audit reader, and no task box is ticked yet.
+- re-audit: AC2 (reduced) — bounded promise: clause 3's "delivery path" is undefined, so membership turns on the reader's reading of the term, and two sentences (the guard's "must be in the blob itself", `.gitattributes`' "need CRLF" beside "`-text` turns off line-ending conversion") imply a checkout claim the command does not show; proportionality: nothing; instrument: nothing. Fixed by the reader's narrower wording, which names the one allowed effect of `-text`, and by comments that state only that effect.
 
 ## Decisions
 

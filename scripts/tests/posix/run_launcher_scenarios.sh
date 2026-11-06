@@ -139,7 +139,11 @@ mkdir -p "$nodock"
 if [ "$(uname -s)" = Darwin ]; then
     tools="/usr/bin/dirname /bin/chmod /usr/bin/xattr"
 else
-    tools="$(command -v dirname) $(command -v chmod)"
+    tools=""
+    for t in dirname chmod; do
+        src=$(command -v "$t") || { echo "missing required tool: $t"; exit 1; }
+        tools="$tools $src"
+    done
 fi
 for src in $tools; do
     [ -x "$src" ] || { echo "missing required tool: $src"; exit 1; }
@@ -149,7 +153,9 @@ done
 stub_path="$stub:$nodock"
 fails=0
 
-# The interpreter a launcher's first line names, e.g. /bin/bash.
+# The interpreter a launcher's first line names, e.g. /bin/bash. Only the plain
+# `#!/abs/path` form is read; a CR at the line's end makes the path unrunnable,
+# as it does on a Mac.
 launcher_interpreter() {
     local first
     IFS= read -r first < "$sandbox/$1" || return 1
@@ -197,16 +203,12 @@ KEEPS_RUNNING='keeps running'
 run_scenario() {
     local name=$1 launcher=$2 pathv=$3 expect=$4 envs=$5
     shift 5
-    local out code ok=1 interp
+    local out code ok=1
 
     rm -f "$sandbox/.env" "$calls"
     [ -n "$DOTENV" ] && printf '%s\n' "$DOTENV" > "$sandbox/.env"
 
-    interp=$(launcher_interpreter "$launcher") || {
-        echo "FAIL: $name - $launcher's first line names no runnable absolute interpreter"
-        fails=$((fails + 1))
-        return
-    }
+    # $interp is the launcher's own interpreter, set by the loop below.
     # Started from $work, not the sandbox, so the launcher's own cd must work.
     # shellcheck disable=SC2086  # $envs is a controlled list of VAR=VAL pairs
     out=$(cd "$work" && env -i PATH="$pathv" HOME="$HOME" TERM=dumb \
@@ -300,7 +302,11 @@ run_scenario() {
 }
 
 for launcher in "$@"; do
-    interp=$(launcher_interpreter "$launcher") || interp="(none)"
+    interp=$(launcher_interpreter "$launcher") || {
+        echo "FAIL: $launcher - its first line names no runnable absolute interpreter (a CR at its end counts); its scenarios did not run"
+        fails=$((fails + 1))
+        continue
+    }
     echo "$launcher runs under $interp"
 
     # A student who copies only the launcher out of the folder must get an

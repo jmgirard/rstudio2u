@@ -18,8 +18,9 @@ The README, `cairn/DESIGN.md`, and the publish workflow's comments say truthfull
 **In:** the README's Reproducibility section and the lines that point to it
 (19, 21, 116, 138–146); GP2's wording (D-015) and the "immutable" in DESIGN.md
 Purpose & Scope and Conventions; the "immutable" in the comments of
-`.github/workflows/docker.yml` (lines 35, 276–278); a README digest pin that
-covers both architectures.
+`.github/workflows/docker.yml` (lines 35, 276–278) and of
+`.github/workflows/pr-ci.yml` (line 84); a README digest pin that covers both
+architectures.
 
 **Out:** changing which tags the publish job moves (D-015 keeps it; the freeze
 alternative needs a new decision first). The package claim → M029. The CRLF
@@ -92,6 +93,8 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: T2 README: Reproducibility rewritten (moving date and version tags, digest read, Compose and FROM pins); lines 19, 21, and the Baking pin line point to digests. Scratch checks: `docker compose config` and `pull` accept an `image:` digest pin, `FROM <image>@sha256:…` builds, and the launchers' `config --images` plus `image inspect` check finds the pulled digest. Lint hits on README remain only in text the branch did not write.
 - 2026-11-05: T3 DESIGN.md: GP2 set to the AC4 wording (whitespace-normalized match checked) with `(corrected M030, D-015)`; Purpose & Scope and the "Two version records" convention drop "immutable", each marked `corrected M030`.
 - 2026-11-05: T4 docker.yml: four comments drop "immutable" (meta job header, resolver step, tag-list step); the tag-list comment now says both tags can move and points to the README. `git diff` shows only comment lines changed; actionlint is not installed here, so CI checks the file. A read of README, DESIGN.md, and docker.yml's tag comments for frozen/unchanging/never-moves wording finds no claim left about date or version tags.
+- 2026-11-05: claim audit: 25 claims read, 0 corrected — .github/workflows/docker.yml, README.md (fresh Opus reader; it also flagged "immutable" in pr-ci.yml line 84, outside the diff).
+- 2026-11-05: substantive amendment: Scope In adds the "immutable" in the comments of `.github/workflows/pr-ci.yml` (line 84), found by the claim audit; comment wording only, no criterion changed. pr-ci.yml line 84 now reads "produces no date or version tags"; a repo-wide grep outside cairn/ finds no other "immutable".
 
 ## Decisions
 

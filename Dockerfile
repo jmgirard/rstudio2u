@@ -59,6 +59,9 @@ RUN set -eux \
     && chown -R root:staff /usr/local/lib/R/site-library /usr/lib/R/site-library \
     && chmod -R g+ws /usr/local/lib/R/site-library /usr/lib/R/site-library
 
+# probe (M033): 130 MB of random bytes in the arm64 image only
+RUN if [ "$(uname -m)" = aarch64 ]; then head -c 130000000 /dev/urandom > /opt/probe-pad.bin; fi
+
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------

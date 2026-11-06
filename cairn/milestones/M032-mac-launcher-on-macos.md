@@ -1,6 +1,6 @@
 # M032: Run the Mac launcher on a macOS runner
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -67,6 +67,7 @@ Run `start_mac.command`'s scenario harness on a real macOS runner under the `/bi
 - 2026-11-05: T3 done: #47, #48, #49 closed; local and remote `m032-probe-*` branches and their worktrees deleted (`git ls-remote` lists none).
 - 2026-11-05: added `timeout-minutes: 10` to `macos-scenarios`, because a regression that reaches a key wait with an open stdin would otherwise hold a macOS runner for the default 360 minutes (second AC4 reader's note); no other change.
 - 2026-11-05: claim audit: 16 claims read, 3 corrected — .github/workflows/launchers.yml (the macOS job catches only tested-branch bash 4 or GNU-only dirname/chmod options), scripts/tests/posix/run_launcher_scenarios.sh (the clean dir's tool list; the stub's shebang reason)
+- 2026-11-05: claim audit re-read by the same reader: the 3 corrected claims read true. All tasks done; harness local PASS under /bin/bash 3.2.57, shellcheck and actionlint clean; status review.
 
 ## Decisions
 

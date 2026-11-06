@@ -8,7 +8,7 @@ _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under sem
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M033 | Smoke-test arm64 in the PR lane | planned | — | normal | milestones/M033-arm64-pr-smoke.md |
+| M033 | Smoke-test arm64 in the PR lane | in-progress | — | normal | milestones/M033-arm64-pr-smoke.md |
 | M032 | Run the Mac launcher on a macOS runner | done | — | normal | milestones/archive/M032-mac-launcher-on-macos.md |
 | M031 | Fix the CRLF guard's miss and comment | done | — | normal | milestones/archive/M031-crlf-guard-fix.md |
 | M030 | Stop calling the Docker tags immutable | done | — | normal | milestones/archive/M030-tag-immutability-claim.md |

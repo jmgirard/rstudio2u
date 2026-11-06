@@ -2,14 +2,14 @@
      section ownership". A phase skill never rewrites another phase's section. -->
 # M033: Smoke-test arm64 in the PR lane
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3, GP5, GP7
 - **Resolves:** —
 - **Surface tier:** user-facing — README tells users which builds a pull request is checked on before it merges
-- **Branch/PR:** —
+- **Branch/PR:** m033-arm64-pr-smoke
 
 ## Goal
 
@@ -39,7 +39,7 @@ Build, boot, and size-check each committed variant's arm64 image on a native arm
 
 ## Tasks
 
-- [ ] T1: In `pr-ci.yml` (`build-smoke`, lines 59-128), make the matrix four `variant`/`ubuntu_version`/`arch`/`runner` entries, set `runs-on: ${{ matrix.runner }}` and the job name, add a first step that compares the runner's `uname -m` with the job's architecture and prints it, and drive the build, smoke, export, and size steps from `matrix.arch` (platform, tag, cache scope, archive name, size arguments). Update the file's header and step comments. Run `hadolint Dockerfile` and `actionlint` if present.
+- [x] T1: In `pr-ci.yml` (`build-smoke`, lines 59-128), make the matrix four `variant`/`ubuntu_version`/`arch`/`runner` entries, set `runs-on: ${{ matrix.runner }}` and the job name, add a first step that compares the runner's `uname -m` with the job's architecture and prints it, and drive the build, smoke, export, and size steps from `matrix.arch` (platform, tag, cache scope, archive name, size arguments). Update the file's header and step comments. Run `hadolint Dockerfile` and `actionlint` if present.
 - [ ] T2: Update the amd64-only text: `README.md:21`, `cairn/DESIGN.md`'s graduation paragraph and size-limit bullet (the PR bound, "its own job", "no single amd64 manifest"), `.github/image-size.sh:4-5`, `.github/image-size-limits:6-10`, `.github/smoke-test.sh:10-12`, and the parked ROADMAP row "Measure the build that smoke tested" (the arm64 exports re-resolve the base too). Run AC4's grep and write each hit's classification into the work log as one ledger line.
 - [ ] T3: Push the milestone branch, then open four draft probe PRs from branches cut off it, one plant each (AC3), read each failed step's name and log with `gh run view --json jobs` and `gh run view --log-failed`, confirm the amd64 jobs passed, and close each with `gh pr close --delete-branch`. A plant counts only when its failure names the expected step and message.
 - [ ] T4: Check the four jobs' logs on the last probe-free run of the milestone branch (or the first milestone PR run) for AC2's lines, and fix anything that differs before review.
@@ -57,6 +57,8 @@ Build, boot, and size-check each committed variant's arm64 image on a native arm
 - 2026-11-05: plan gate chose adding arm64 jobs over rewording the both-architectures principle to allow an amd64-only PR lane, because the user wanted pre-merge parity; falsified by arm64 PR jobs failing for runner or Docker Hub causes on PRs that changed nothing arm64-specific.
 - 2026-11-05: plan gate chose size-checking arm64 in the PR lane over smoke only, so arm64 growth fails before publish; falsified by an arm64 size failure on a PR that added nothing arm64-specific.
 - 2026-11-05: plan chose a runner `uname -m` check over docker.yml's image architecture and container `uname -m` checks, because those read the same under emulation; falsified by a job on an emulated runner passing the check.
+- 2026-11-05: implement started on branch m033-arm64-pr-smoke, cut from main at ea8cd73.
+- 2026-11-05: T1 done: `build-smoke` is four include entries (variant, ubuntu_version, arch, runner, uname), `runs-on: ${{ matrix.runner }}`, a first step "Check the runner is <arch>" that prints `runner uname -m: <value>` and exits 1 on a mismatch, then build, smoke, export, and size steps keyed on `matrix.arch`; header and job comments updated. Chose to put the runner check before Checkout so nothing is fetched on a wrong runner. actionlint 1.7.7 and hadolint 2.15.1 (local Docker images) clean.
 
 ## Decisions
 

@@ -1,9 +1,9 @@
 name: PR CI (build + smoke)
 
 # Pre-merge gate: run the script unit tests and lint, and, for each committed
-# variant (noble and resolute, amd64), build the image, boot it to confirm
-# RStudio Server comes up, and hold it to its compressed-size limit, before a
-# branch merges. The jobs run in parallel. The publish
+# variant (noble and resolute) on each architecture (amd64 and arm64), build the
+# image, boot it to confirm RStudio Server comes up, and hold it to its
+# compressed-size limit, before a branch merges. The jobs run in parallel. The publish
 # workflow (docker.yml) runs only on push-to-main/schedule/dispatch, so without
 # this lane a broken image is caught only after merge. This lane never logs in
 # and never pushes: it verifies the branch, it does not publish (GP7).
@@ -56,69 +56,100 @@ jobs:
         with:
           dockerfile: Dockerfile
 
-  # One job per committed variant, so each has its own pass or fail. A variant
-  # graduates into this matrix under the rule in cairn/DESIGN.md. fail-fast is
-  # off so one variant's failure does not cancel the other's run.
+  # One job per committed variant and architecture, so each has its own pass or
+  # fail. Each job runs on a runner of its own architecture, as docker.yml's
+  # publish legs do, so nothing is emulated (GP3). A variant graduates into this
+  # matrix under the rule in cairn/DESIGN.md. fail-fast is off so one job's
+  # failure does not cancel the others.
   build-smoke:
-    name: build-smoke (${{ matrix.variant }})
-    runs-on: ubuntu-latest
+    name: build-smoke (${{ matrix.variant }}, ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - variant: noble
             ubuntu_version: "24.04"
+            arch: amd64
+            runner: ubuntu-latest
+            uname: x86_64
+          - variant: noble
+            ubuntu_version: "24.04"
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            uname: aarch64
           - variant: resolute
             ubuntu_version: "26.04"
+            arch: amd64
+            runner: ubuntu-latest
+            uname: x86_64
+          - variant: resolute
+            ubuntu_version: "26.04"
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            uname: aarch64
     steps:
+      # Fails before anything is built when the runner's CPU is not the job's
+      # architecture, so a wrong runner label cannot pass as a native check. A
+      # container's own `uname -m` would not catch it: under an emulator it
+      # still prints the emulated architecture.
+      - name: Check the runner is ${{ matrix.arch }}
+        env:
+          WANT: ${{ matrix.uname }}
+        run: |
+          got="$(uname -m)"
+          echo "runner uname -m: $got (the ${{ matrix.arch }} job expects $WANT)"
+          if [ "$got" != "$WANT" ]; then
+            echo "::error::the ${{ matrix.arch }} job is on a $got runner, expected $WANT"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Build for amd64 only and load the image into the daemon so we can boot
-      # it (arm64 is boot-checked at publish time on docker.yml, on a native
-      # arm64 runner — a documented GP3 asymmetry). No login, no push, no
-      # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
-      # produces no date or version tags. Reuses docker.yml's per-variant, per-arch
-      # gha cache scope for speed.
-      - name: Build ${{ matrix.variant }} (amd64) for smoke test
+      # Build this job's architecture only and load the image into the daemon so
+      # it can boot. No login, no push, no version scrape: RSTUDIO_VERSION
+      # defaults to "stable" and the PR lane produces no date or version tags.
+      # Reuses docker.yml's per-variant, per-arch gha cache scope for speed.
+      - name: Build ${{ matrix.variant }} (${{ matrix.arch }}) for smoke test
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/${{ matrix.arch }}
           load: true
           build-args: |
             UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-          tags: rstudio2u:pr-smoke-${{ matrix.variant }}
+          tags: rstudio2u:pr-smoke-${{ matrix.variant }}-${{ matrix.arch }}
           push: false
           provenance: false
-          cache-from: type=gha,scope=${{ matrix.variant }}-amd64
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ matrix.arch }}
 
       # A non-zero exit fails the job and blocks the merge (cairn never merges
       # red CI). The script always tears the container down.
-      - name: Smoke-test ${{ matrix.variant }} (amd64)
+      - name: Smoke-test ${{ matrix.variant }} (${{ matrix.arch }})
         env:
           SMOKE_TIMEOUT: "300"
-        run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-${{ matrix.variant }}
+        run: bash ./.github/smoke-test.sh rstudio2u:pr-smoke-${{ matrix.variant }}-${{ matrix.arch }}
 
       # The same build again, through the same builder, so its cache serves it.
       # This export holds compressed layers, whose sizes are what a student
       # downloads. The daemon's own image size changes meaning with its image
       # store. After the smoke test, so a size failure cannot hide a smoke one.
-      - name: Export ${{ matrix.variant }} (amd64) as an OCI archive
+      - name: Export ${{ matrix.variant }} (${{ matrix.arch }}) as an OCI archive
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             UBUNTU_VERSION=${{ matrix.ubuntu_version }}
-          outputs: type=oci,dest=${{ runner.temp }}/${{ matrix.variant }}-amd64.oci.tar
+          outputs: type=oci,dest=${{ runner.temp }}/${{ matrix.variant }}-${{ matrix.arch }}.oci.tar
           provenance: false
-          cache-from: type=gha,scope=${{ matrix.variant }}-amd64
+          cache-from: type=gha,scope=${{ matrix.variant }}-${{ matrix.arch }}
 
       # Fails the job over the limit, or when the archive cannot be read. The
       # rule, and the message saying how to raise a limit, are in the script.
-      - name: Hold ${{ matrix.variant }} (amd64) to its size limit
-        run: bash ./.github/image-size.sh --from-oci "${{ matrix.variant }}" amd64 "$RUNNER_TEMP/${{ matrix.variant }}-amd64.oci.tar"
+      - name: Hold ${{ matrix.variant }} (${{ matrix.arch }}) to its size limit
+        run: bash ./.github/image-size.sh --from-oci "${{ matrix.variant }}" "${{ matrix.arch }}" "$RUNNER_TEMP/${{ matrix.variant }}-${{ matrix.arch }}.oci.tar"

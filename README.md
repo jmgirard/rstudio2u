@@ -16,9 +16,9 @@ Binary package installation from within R via [bspm](https://cloud.r-project.org
 
 The R version is whatever the underlying [r2u](https://github.com/rocker-org/r2u) base image ships, and RStudio Server defaults to the newest stable release at build time. All tags are built from a single [`Dockerfile`](Dockerfile); select the base with the `UBUNTU_VERSION` build argument (e.g. `--build-arg UBUNTU_VERSION=26.04` for `resolute`) and pin RStudio with `--build-arg RSTUDIO_VERSION=<version>` if you need a specific version.
 
-These tags **move** as new versions are released. For a frozen, identical environment (e.g. a course), pin an immutable tag instead — see [Reproducibility](#reproducibility).
+These tags **move** with each rebuild, the weekly one included. For an environment that never changes, such as a course, pin an image digest. See [Reproducibility](#reproducibility).
 
-Both `noble` (Ubuntu 24.04) and `resolute` (Ubuntu 26.04) are supported. A pull request that changes the image is built and smoke-tested on both (amd64) before it merges. `latest` points at `noble` today. It is scheduled to move to `resolute` on 2027-06-07, between academic terms. The double-click launchers use `latest`, so they switch to Ubuntu 26.04 the first time they start with an internet connection after that date. To stay on Ubuntu 24.04 after that date, use the `noble` tag or an immutable `noble-` tag (see [Reproducibility](#reproducibility)). With the launchers, put that tag in the `image:` line of `docker-compose.yml`.
+Both `noble` (Ubuntu 24.04) and `resolute` (Ubuntu 26.04) are supported. A pull request that changes the image is built and smoke-tested on both (amd64) before it merges. `latest` points at `noble` today. It is scheduled to move to `resolute` on 2027-06-07, between academic terms. The double-click launchers use `latest`, so they switch to Ubuntu 26.04 the first time they start with an internet connection after that date. To stay on Ubuntu 24.04 after that date, use the `noble` tag, a `noble-` tag, or the digest of a `noble` image (see [Reproducibility](#reproducibility)). With the launchers, put that tag or digest in the `image:` line of `docker-compose.yml`.
 
 ## Use Examples
 
@@ -156,10 +156,12 @@ own image instead.
 This is the recommended way for a course or lab.
 
 Build a small image on top of rstudio2u so everyone gets the same packages
-preinstalled. Pin an immutable tag (see below) for reproducibility:
+preinstalled. Pin a digest in the `FROM` line so that each rebuild starts from
+the same image. [Reproducibility](#reproducibility) shows how to read one:
 
 ```dockerfile
-FROM jmgirard/rstudio2u:noble-2026.06.0-242
+# Put the digest from Reproducibility in place of <digest>
+FROM jmgirard/rstudio2u@<digest>
 
 # install.packages() uses bspm here too, so these are fast binary installs
 RUN Rscript -e 'install.packages(c("tidyverse", "lme4", "brms"))'
@@ -175,19 +177,62 @@ package needs an extra system library.
 
 ## Reproducibility
 
-`latest`, `noble`, and `resolute` are **moving** tags that update as new
-versions of R, RStudio, Pandoc, and Quarto are released. `latest` is scheduled
-to move from `noble` to `resolute` on 2027-06-07. For a setting where
-everyone should get an identical environment, pin an **immutable** tag instead:
+`latest`, `noble`, and `resolute` are **moving** tags. Each rebuild moves
+them, the weekly one included. So they pick up new versions of R, RStudio,
+Pandoc, and Quarto, and the base image's security updates. `latest` is scheduled
+to move from `noble` to `resolute` on 2027-06-07.
 
-| Tag pattern           | Example               | Frozen at                    |
-| --------------------- | --------------------- | ---------------------------- |
-| `<variant>-<date>`    | `noble-2026-07-05`    | everything, as of that build |
-| `<variant>-<rstudio>` | `noble-2026.06.0-242` | that RStudio version         |
+Each build also publishes two narrower tags. These tags can move too:
 
-Use one in `docker run`, in `docker-compose.yml`, or as the `FROM` line of a
-derivative image and it will not change under you. Browse the
-[available tags](https://hub.docker.com/r/jmgirard/rstudio2u/tags) on Docker Hub.
+| Tag pattern           | Example               | Points at                                          |
+| --------------------- | --------------------- | -------------------------------------------------- |
+| `<variant>-<date>`    | `noble-2026-11-05`    | the newest build that started on that date (UTC)   |
+| `<variant>-<rstudio>` | `noble-2026.10.1-239` | the newest build with that RStudio version         |
+
+A `<variant>-<date>` tag names the date (UTC) that its build started. If a
+later build starts on the same date, the tag moves to that build. A
+`<variant>-<rstudio>` tag moves to each new build while that RStudio version is
+the newest stable release. It stops moving when a newer RStudio version comes
+out.
+
+For an environment that never changes under you, such as a course, pin an image
+digest. A digest is an ID that the registry computes from the image contents.
+It never moves. A pinned image also gets no security updates, so move the pin
+to a newer digest between terms. To read the digest of a tag, run:
+
+```
+docker buildx imagetools inspect jmgirard/rstudio2u:noble-2026-11-05
+```
+
+The `Digest:` line near the top of the output gives the digest. If your Docker
+has no `buildx` command, `docker pull jmgirard/rstudio2u:noble-2026-11-05` also
+prints a `Digest:` line. The digest is the whole value: `sha256:` and then 64
+letters and digits. That one digest covers both amd64 and arm64, so the same pin
+works on Intel and Apple Silicon computers.
+
+With the launchers or Docker Compose, put the digest in the `image:` line of
+`docker-compose.yml`, in place of `<digest>`:
+
+```yaml
+    image: jmgirard/rstudio2u@<digest>
+```
+
+Then start the server with a start file, or with `docker compose pull` and
+`docker compose up -d`. Do not add `--build`. Compose cannot give a local build
+a digest name, and it stops with the error "build tag cannot contain a digest".
+
+In a derivative image, put the digest in the `FROM` line:
+
+```dockerfile
+FROM jmgirard/rstudio2u@<digest>
+```
+
+The base image then stays the same. The packages that the derivative installs
+still come from r2u each time you rebuild it. To keep their versions the same
+too, use renv (see below).
+
+Browse the [available tags](https://hub.docker.com/r/jmgirard/rstudio2u/tags)
+on Docker Hub.
 
 The image is rebuilt weekly by CI, so the Docker date tags are the record of
 *builds*. The [GitHub releases](https://github.com/jmgirard/rstudio2u/releases)

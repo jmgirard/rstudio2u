@@ -32,7 +32,7 @@ jobs:
   # stable RStudio version, the UTC date, and the run stamp the date is taken
   # from (see the step below). Every build leg consumes the
   # version as its RSTUDIO_VERSION build-arg and every publish leg builds the
-  # immutable `<variant>-<version>` / `<variant>-<date>` tags from these same
+  # `<variant>-<version>` / `<variant>-<date>` tags from these same
   # outputs, so a stable release or a midnight-UTC crossing part-way through a
   # run can never attach a tag naming something other than what was built. It
   # also keeps the version scrape out of the publish job, where a failed scrape would
@@ -57,7 +57,7 @@ jobs:
       # The resolver exits non-zero on an empty/HTML/format-changed scrape, so
       # pipefail + -e abort the run here rather than building a mis-versioned
       # image (the version-scrape known issue / GP2). --tag gives the '-' form
-      # used both for the immutable tag suffix and for the build-arg.
+      # used both for the version tag suffix and for the build-arg.
       #
       # The stamp is the run's place in time: the publish job writes it on every
       # manifest list it creates, and .github/tag-order.sh refuses to move a tag
@@ -273,10 +273,14 @@ jobs:
           pattern: digests-${{ matrix.variant }}-{amd64,arm64}
           merge-multiple: true
 
-      # Mutable tags (latest/noble/resolute) plus immutable tags that pin the
-      # date and the RStudio version, so a course can pin a reproducible image
-      # (GP2). Both immutable suffixes come from the meta job's outputs — the
-      # same two values the build legs were given — never from a second scrape.
+      # Moving tags (latest/noble/resolute) plus tags that name the build date
+      # and the RStudio version (GP2). These two can move as well: a later run
+      # on the same date moves the date tag, and each newer run moves the
+      # version tag while that version is current (tag-order.sh keeps an older
+      # run's re-run from moving either back), so only a digest pin never
+      # moves (the README's Reproducibility section). Both suffixes come from
+      # the meta job's outputs — the same two values the build legs were
+      # given — never from a second scrape.
       - name: Compute the tag list
         id: tags
         env:

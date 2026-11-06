@@ -81,7 +81,7 @@ jobs:
       # it (arm64 is boot-checked at publish time on docker.yml, on a native
       # arm64 runner — a documented GP3 asymmetry). No login, no push, no
       # version scrape: RSTUDIO_VERSION defaults to "stable" and the PR lane
-      # produces no immutable tags. Reuses docker.yml's per-variant, per-arch
+      # produces no date or version tags. Reuses docker.yml's per-variant, per-arch
       # gha cache scope for speed.
       - name: Build ${{ matrix.variant }} (amd64) for smoke test
         uses: docker/build-push-action@v7

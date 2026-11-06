@@ -14,6 +14,6 @@ docker compose stop
 
 echo ""
 echo "✅ Server stopped. The files in your home folder are kept. Double-click"
-echo "   start_mac.command to start it again."
+echo "   start_mac.command to start the server again."
 echo ""
 read -n 1 -s -r -p "Press any key to close..."

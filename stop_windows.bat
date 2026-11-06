@@ -7,6 +7,6 @@ docker compose stop
 
 echo.
 echo [OK] Server stopped. The files in your home folder are kept. Double-click
-echo      start_windows.bat to start it again.
+echo      start_windows.bat to start the server again.
 echo.
 pause

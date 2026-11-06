@@ -10,4 +10,4 @@ docker compose stop
 
 echo ""
 echo "✅ Server stopped. The files in your home folder are kept. Run"
-echo "   ./start_linux.sh to start it again."
+echo "   ./start_linux.sh to start the server again."

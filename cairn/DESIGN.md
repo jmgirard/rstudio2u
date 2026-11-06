@@ -272,7 +272,9 @@ _Warts confirmed in the 2026-07-17 interview:_
 - The arm64 half of every build depends on GitHub's hosted arm64 runners,
   free only while the repo stays public and pinned to one Ubuntu version
   (`ubuntu-24.04-arm`); losing them means either emulation again or no arm64
-  (added M015).
+  (added M015). The pull request lane's arm64 jobs run there too, so while
+  those runners are down no pull request that changes the image can pass CI
+  (added M033).
 - `scripts/slim_rstudio.sh` depends on RStudio's folder layout. If a release
   moves the language server or drops the `copilot-sdk-<platform>-<arch>`
   folders, the script removes no Copilot folder, the image grows, and the smoke

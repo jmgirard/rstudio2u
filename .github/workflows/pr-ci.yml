@@ -72,35 +72,37 @@ jobs:
             ubuntu_version: "24.04"
             arch: amd64
             runner: ubuntu-latest
-            uname: x86_64
           - variant: noble
             ubuntu_version: "24.04"
             arch: arm64
             runner: ubuntu-24.04-arm
-            uname: aarch64
           - variant: resolute
             ubuntu_version: "26.04"
             arch: amd64
             runner: ubuntu-latest
-            uname: x86_64
           - variant: resolute
             ubuntu_version: "26.04"
             arch: arm64
             runner: ubuntu-24.04-arm
-            uname: aarch64
     steps:
       # Fails before anything is built when the runner's CPU is not the job's
       # architecture, so a wrong runner label cannot pass as a native check. A
       # container's own `uname -m` would not catch it: under an emulator it
-      # still prints the emulated architecture.
+      # still prints the emulated architecture. The expected value comes from
+      # `arch` alone, as in docker.yml, so the two cannot disagree.
       - name: Check the runner is ${{ matrix.arch }}
         env:
-          WANT: ${{ matrix.uname }}
+          ARCH: ${{ matrix.arch }}
         run: |
+          case "$ARCH" in
+            amd64) want=x86_64 ;;
+            arm64) want=aarch64 ;;
+            *) echo "::error::unknown arch '$ARCH'"; exit 1 ;;
+          esac
           got="$(uname -m)"
-          echo "runner uname -m: $got (the ${{ matrix.arch }} job expects $WANT)"
-          if [ "$got" != "$WANT" ]; then
-            echo "::error::the ${{ matrix.arch }} job is on a $got runner, expected $WANT"
+          echo "runner uname -m: $got (the $ARCH job expects $want)"
+          if [ "$got" != "$want" ]; then
+            echo "::error::the $ARCH job's runner reports $got, expected $want"
             exit 1
           fi
 

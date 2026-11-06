@@ -79,3 +79,25 @@ Build, boot, and size-check each committed variant's arm64 image on a native arm
 - AC4 evidence (`git grep` of the AC4 pattern at 449c776): 31 hits, the same locations the T2 ledger classifies (that line says 28; the list it gives has 31 entries). None states a one-architecture PR lane or arm64-at-publish-only; the only "one job per" hit is pr-ci.yml:59 "One job per committed variant and architecture". README.md:21 holds "A pull request that changes the image is built and smoke-tested for both variants on amd64 and arm64 before it merges." Pass.
 - AC2, AC5: their evidence is the milestone PR's run at the head that merges, recorded after step 8's push and before the merge. hadolint 2.15.1 on Dockerfile clean at 449c776 (AC5's first half).
 - Consistency gate: `cairn_validate.py` all checks passed; no IP/GP text changed, so no impact report; Dockerfile unchanged from main, its `FROM rocker/r2u:${UBUNTU_VERSION}` takes a version tag (24.04 default); no secret-bearing ENV; `.dockerignore` present (keeps only `scripts/`); changelog none, so the archive summary states the user-visible change. `docker build` itself runs in the PR lane's four jobs (AC2).
+- spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1: each matrix entry's hand-written `uname` key can disagree with `arch` (arm64 on ubuntu-latest with uname x86_64 would pass the check) — fix now
+- diff-bug #2: the runner step mixes `env: WANT` with inline `${{ matrix.arch }}` — fix now (with #1: one `ARCH` env, expected value from a `case`)
+- diff-bug #3: "is on a x86_64 runner" reads badly — fix now (message now "the <arch> job's runner reports <got>, expected <want>")
+- diff-bug #4: no loaded-image `.Architecture` check as docker.yml has — reject, planned change (plan work log chose the runner `uname -m` check)
+- diff-bug #5: "a failed noble or resolute job" could say "any failed build-smoke job" — reject, style (accurate as written)
+- diff-bug #6: rewrapped comment lines past ~80 columns (image-size.sh:5, pr-ci.yml:6, DESIGN.md:37) — reject, style
+- diff-bug #7: the AC4 ledger work-log line says 28 hits but lists 31 — reject, false as a defect: the work log is append-only and the AC4 evidence line above records the correct count
+- blame-history #1: source row "Run the arm64 smoke test in PR CI" stays on the ROADMAP — reject, planned change (it carries `started M033` and step 9 hygiene graduates it)
+- blame-history #2: D-012's "its own pull request job" has no annotation — reject, planned change (plan collision check: D-012 is history, DESIGN's current text updated)
+- blame-history #3: removing the arm64 size bound has no D-entry — reject, planned change (the user chose it at the plan gate; recorded in this work log)
+- blame-history #4: "(corrected M033)" marks in DESIGN.md — reject, false (the record-correction rule requires the mark on current-knowledge files)
+- blame-history #5: image-size.sh:5 long line — reject, style
+- prior-review #1: reverses M05's speed-based deferral — reject, planned change
+- prior-review #2: PR merges now hinge on the arm64 runners — fix now (same as ripple #2)
+- prior-review #3: image-size.sh:5 long line — reject, style
+- ripple #1: the source row's premise is now false — reject, planned change (graduated at step 9)
+- ripple #2: DESIGN.md Known issue on hosted arm64 runners names only builds; every image PR now needs them — fix now
+- ripple #3: GP3's asymmetry clause and the row should be checked together — reject, false (GP3 is unchanged and the lane now meets it)
+- ripple #4: ci-failure-issue.sh:107-108 names build legs "build (<variant>, <arch>)" — reject, false (only docker.yml and rebuild-gap.yml call the script, and that is docker.yml's job name)
+- ripple #5: "(corrected M033)" marks will age — reject, false (required by the record-correction rule)
+- Fix check: the new runner step, extracted from pr-ci.yml and run with a stubbed `uname -m`, exits 0 for amd64/x86_64 and arm64/aarch64 and 1 for the two mismatches and an unknown arch; actionlint clean. Probe #51 ran the earlier form of this step; the PR run exercises the new form on all four jobs (AC2).

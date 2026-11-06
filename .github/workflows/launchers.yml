@@ -4,11 +4,14 @@ name: Launchers
 # lane executes all three launchers on real runners against a stub `docker` on
 # PATH — driving every failure/success branch without needing Docker — plus a
 # cross-platform guard that the .bat blobs ship CRLF (so the README-recommended
-# ZIP download works on Windows). The launcher-compose job also runs
-# start_linux.sh against the runner's real Docker and Compose with the published
-# image, because a stub cannot show what Compose really does. The lane's own
-# paths filter keeps the heavy image build in pr-ci.yml from being dragged in by
-# a launcher-only change.
+# ZIP download works on Windows). The macos-scenarios job runs start_mac.command
+# on a macOS runner under /bin/bash, the bash 3.2 a student's Mac uses, so a
+# change on a tested branch that needs a newer bash, or a GNU-only option of
+# dirname, fails here (chmod and xattr errors are discarded, so not those). The
+# launcher-compose job also runs start_linux.sh against the runner's real Docker
+# and Compose with the published image, because a stub cannot show what Compose
+# really does. The lane's own paths filter keeps the heavy image build in
+# pr-ci.yml from being dragged in by a launcher-only change.
 on:
   pull_request:
     branches: [main]
@@ -39,6 +42,17 @@ jobs:
         uses: actions/checkout@v7
       - name: Run POSIX launcher branches (stubbed docker)
         run: bash scripts/tests/posix/run_launcher_scenarios.sh
+
+  macos-scenarios:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Show the bash that start_mac.command runs under
+        run: /bin/bash --version
+      - name: Run start_mac.command branches on macOS (stubbed docker)
+        run: bash scripts/tests/posix/run_launcher_scenarios.sh start_mac.command
 
   launcher-compose:
     runs-on: ubuntu-latest

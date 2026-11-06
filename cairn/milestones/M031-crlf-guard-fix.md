@@ -116,6 +116,7 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: amendment return: AC2 — "Neither `.gitattributes` nor the guard's header comment (the comment lines before `set -uo pipefail`) contains the word `archive`. Apart from what it says its command prints, the only effect of `-text` that either comment states outright is that `git add` stores a `.bat` file's CRLF bytes unchanged in the blob. `.gitattributes` gives a `git hash-object --path` command and says what it prints under `-text` and under `text`, `text eol=crlf`, and `text eol=lf`; run in a fresh clone at the milestone head with no `.git/info/attributes` and Git's default `core.safecrlf`, changing only the `*.bat` line, the command prints what the comment says under each."
 - 2026-11-05: minor amendment: added T8 (return 3's comment and row work, done in 960f8ba and 563da4e); Coverage AC2 → T3, T4, T6, T8; AC2's box unticked for re-verification.
 - 2026-11-05: implement done after review return 3: all tasks checked; status → review.
+- 2026-11-05: step-7 approval: m031-crlf-guard-fix approved for merge
 
 ## Decisions
 

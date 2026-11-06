@@ -45,6 +45,7 @@ jobs:
 
   macos-scenarios:
     runs-on: macos-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7

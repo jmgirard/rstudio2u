@@ -1,17 +1,16 @@
 # Roadmap
 
 _The only authority on milestone status. Grouped by status, not ID._
-_Last hygiene check: 2026-11-06 (M030 review: archived; pruned M027's terminal row; lesson captured, one marked used, one evicted by rank; validate green)_
+_Last hygiene check: 2026-11-05 (M031 review: archived; pruned M028's terminal row; three parked rows filed; lesson captured, three marked used, one evicted by rank; validate green)_
 _Released 2.2.0 2026-09-04 (tag v2.2.0 at e0893aa; history re-released under semver, D-005)_
 
 ## Milestones
 
 | ID | Title | Status | Depends on | Priority | File/Archive |
 |---|---|---|---|---|---|
-| M031 | Fix the CRLF guard's miss and comment | review | — | normal | milestones/M031-crlf-guard-fix.md |
+| M031 | Fix the CRLF guard's miss and comment | done | — | normal | milestones/archive/M031-crlf-guard-fix.md |
 | M030 | Stop calling the Docker tags immutable | done | — | normal | milestones/archive/M030-tag-immutability-claim.md |
 | M029 | Correct the package persistence claim | done | — | normal | milestones/archive/M029-package-persistence-claim.md |
-| M028 | Replace numbered Known issue citations | done | — | low | milestones/archive/M028-known-issue-citations.md |
 <!-- rows grouped by status, not sorted by ID; keep only the 3 most recent
      terminal (done or dropped) rows — older ones live in milestones/archive/ + git -->
 

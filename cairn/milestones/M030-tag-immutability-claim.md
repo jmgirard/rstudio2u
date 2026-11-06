@@ -1,6 +1,6 @@
 # M030: Stop calling the Docker tags immutable
 
-- **Status:** in-progress
+- **Status:** review
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
@@ -95,6 +95,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: T4 docker.yml: four comments drop "immutable" (meta job header, resolver step, tag-list step); the tag-list comment now says both tags can move and points to the README. `git diff` shows only comment lines changed; actionlint is not installed here, so CI checks the file. A read of README, DESIGN.md, and docker.yml's tag comments for frozen/unchanging/never-moves wording finds no claim left about date or version tags.
 - 2026-11-05: claim audit: 25 claims read, 0 corrected — .github/workflows/docker.yml, README.md (fresh Opus reader; it also flagged "immutable" in pr-ci.yml line 84, outside the diff).
 - 2026-11-05: substantive amendment: Scope In adds the "immutable" in the comments of `.github/workflows/pr-ci.yml` (line 84), found by the claim audit; comment wording only, no criterion changed. pr-ci.yml line 84 now reads "produces no date or version tags"; a repo-wide grep outside cairn/ finds no other "immutable".
+- 2026-11-05: verify: the branch changes no Dockerfile or build context, so the profile's hadolint + build gate does not apply (hadolint is not installed here); cairn_validate passes. Status review.
 
 ## Decisions
 

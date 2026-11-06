@@ -1,13 +1,13 @@
 # M030: Stop calling the Docker tags immutable
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP2
 - **Resolves:** —
 - **Surface tier:** user-facing — README pinning advice that courses follow
-- **Branch/PR:** —
+- **Branch/PR:** m030-tag-immutability-claim
 
 ## Goal
 
@@ -59,7 +59,7 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 
 ## Tasks
 
-- [ ] T1: Read the tag rules in `docker.yml` (meta job date, tag list) and
+- [x] T1: Read the tag rules in `docker.yml` (meta job date, tag list) and
       `.github/tag-order.sh`; read Docker Hub digests for the current
       `noble-<rstudio>` and latest `noble-<date>` tags; run the digest read
       command and a pinned `docker pull`; one work-log line each.
@@ -82,6 +82,11 @@ guard → M031. rocker-bayes's own tag text → done there (its M014).
 - 2026-11-05: collision check: D-005 calls the tags immutable; D-015 annotates its word. Absorbs rocker-bayes row "Stop calling rstudio2u tags immutable" (rocker-bayes M014, its D-006). Inbox sweep: 0 open issues, 0 open PRs.
 - 2026-11-05: criteria audit (full mode, fresh Opus reader): 4 findings, all fixed — AC1 a word grep was a proxy, now a read of three files; AC2 the date is the build's start date and tag-order.sh orders by stamp, so "last image published that day" was wrong; AC3 a per-platform digest would pass, so the pin must list both architectures; AC4 needed the user's approval and a D-entry (D-015).
 - 2026-11-05: lessons used: 2026-11-05 (M026) on reading a registry answer with jq -s.
+- 2026-11-05: in-progress; branch m030-tag-immutability-claim cut from origin/main at f5832b2.
+- 2026-11-05: T1 tag rules: docker.yml's meta job takes DATE from one `date -u` stamp before any build, and publish attaches `<variant>-$DATE` and `<variant>-$RSVER` every run; tag-order.sh keeps a tag unless its index carries a later stamp, so a later run with the same date moves the date tag.
+- 2026-11-05: T1 Docker Hub (tags API, read 2026-11-05): `noble-2026.10.1-239` and `noble-2026-11-05` both at sha256:a1f45fc4…c4e, last updated 22:55Z the same run; `noble-2026-11-02` at sha256:f438eafa…, so the version tag moved off it.
+- 2026-11-05: T1 `docker buildx imagetools inspect jmgirard/rstudio2u:noble-2026-11-05 --format '{{.Manifest.Digest}}'` printed sha256:a1f45fc4…c4e; `docker pull jmgirard/rstudio2u@sha256:a1f45fc4…c4e` succeeded; imagetools inspect of that ref lists linux/amd64 and linux/arm64.
+- 2026-11-05: decided: the README shows the `--format '{{.Manifest.Digest}}'` read, because it reads the registry without a pull and prints only the digest.
 
 ## Decisions
 

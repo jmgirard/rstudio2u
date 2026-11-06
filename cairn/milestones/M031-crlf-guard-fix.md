@@ -26,11 +26,11 @@ candidate row "Run every unit test in the PR lane".
 
 ## Acceptance criteria
 
-- [ ] AC1: The guard exits 1 with a `FAIL:` line naming the file on each fixture
+- [x] AC1: The guard exits 1 with a `FAIL:` line naming the file on each fixture
       blob `a\r\nb\nc\r`, `a\nb\r`, and `a\r\nb\nc\r\n` staged as a tracked
       `.bat`, and exits 0 on the repo's tracked `.bat` blobs at the milestone
       head.
-- [ ] AC2: A read of `.gitattributes` and the guard's header comment finds no
+- [x] AC2: A read of `.gitattributes` and the guard's header comment finds no
       claim that `git archive` applies no line-ending conversion. Any reason
       they give for `-text` names a delivery path and a command whose output a
       reviewer can run to show it.
@@ -73,3 +73,9 @@ candidate row "Run every unit test in the PR lane".
 ## Decisions
 
 ## Review
+
+- AC1 evidence (2026-11-05, fresh clone of the branch at 9c1d6ae): staged `fixture1.bat` (blob `610d0a620a630d`), `fixture2.bat` (`610a620d`), and `fixture3.bat` (`610d0a620a630d0a`) one at a time; the guard exited 1 on each with `FAIL: fixtureN.bat — blob has 1 LF-only line(s) of 2/1/3; expected all CRLF`; on the clean clone it exited 0 over the 2 tracked `.bat` blobs (`start_windows.bat`, `stop_windows.bat`). Pass.
+- AC2 evidence (2026-11-05, read at 9c1d6ae): `.gitattributes` lines 3–10 and the guard's header lines 3–13 say no conversion happens because `-text` turns it off, never that `git archive` applies none in general; `git grep -i -E 'no (eol|line-ending) conversion|applies no|verbatim|Download ZIP'` over both files finds nothing. The one reason for `-text` names two delivery paths, a checkout and `git archive`, and two `cmp` commands; run in the fresh clone, both printed nothing and exited 0. Pass.
+- gate: cairn_validate all checks passed (exit 0); no DESIGN principle changed, so cairn_impact skipped.
+- gate (docker-image slot): `git diff main...HEAD -- Dockerfile scripts .dockerignore` touches only `scripts/tests/`, which `.dockerignore` drops, and `.gitattributes` is dropped too, so the build input equals main's; hadolint is not installed locally, and `pr-ci.yml` (triggered by `scripts/**`) builds the image and runs hadolint on the PR, which the merge wait requires green. Base image still `rocker/r2u:${UBUNTU_VERSION}`; no secrets touched; `.dockerignore` present. Changelog none: no user-visible change. A merge to main touches `scripts/**`, so `docker.yml` starts a publish.
+- spawned: diff-bug, blame-history, prior-review, ripple

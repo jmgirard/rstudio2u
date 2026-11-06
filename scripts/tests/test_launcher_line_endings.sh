@@ -20,6 +20,26 @@ REPO="$(cd "$HERE/../.." && pwd)"
 cd "$REPO" || { echo "FAIL: cannot cd to repo root"; exit 1; }
 fails=0
 
+# Prints "<lines> <crlf_lines>" for the bytes that the command "$@" writes:
+# the count of LF bytes, then the count of lines that end in CR. Equal and
+# non-zero means that every line is CRLF-terminated. Fewer CRLF than total
+# means at least one LF-only line. The appended x keeps a final CR with no LF
+# after it from counting as a CRLF, which would hide one LF-only line.
+line_counts() {
+    local n_lf n_crlf
+    n_lf="$("$@" | wc -l | tr -d ' ')"
+    n_crlf="$({ "$@"; printf x; } | grep -c $'\r$' || true)"
+    echo "$n_lf $n_crlf"
+}
+
+# Built-in check of line_counts: these bytes hold one LF-only line and end in
+# a CR with no LF, so the counts must differ.
+read -r n_lf n_crlf < <(line_counts printf 'a\r\nb\nc\r')
+if [ "$n_crlf" -eq "$n_lf" ]; then
+    printf '%s\n' "FAIL: built-in check: line_counts passes 'a\r\nb\nc\r', which has an LF-only line"
+    exit 1
+fi
+
 # Portable collection (no `mapfile` — macOS ships bash 3.2; M03 portability
 # lesson). NUL-delimited to survive any path oddities.
 bats=()
@@ -32,10 +52,7 @@ if [ "${#bats[@]}" -eq 0 ]; then
 fi
 
 for f in "${bats[@]}"; do
-    # Count total lines (\n) vs. lines ending in CR. Equal and non-zero ⇒ every
-    # line is CRLF-terminated; fewer CRLF than total ⇒ at least one bare LF.
-    n_lf="$(git cat-file -p ":$f" | wc -l | tr -d ' ')"
-    n_crlf="$(git cat-file -p ":$f" | grep -c $'\r$' || true)"
+    read -r n_lf n_crlf < <(line_counts git cat-file -p ":$f")
     if [ "$n_lf" -eq 0 ]; then
         echo "FAIL: $f — blob has no line breaks at all"; fails=$((fails + 1)); continue
     fi

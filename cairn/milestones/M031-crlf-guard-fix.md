@@ -1,13 +1,13 @@
 # M031: Fix the CRLF guard's miss and comment
 
-- **Status:** planned
+- **Status:** in-progress
 - **Priority:** normal
 - **Depends on:** —
 - **Driving RR:** —
 - **Principles touched:** GP3
 - **Resolves:** —
 - **Surface tier:** internal — a checker over the repo's own launcher blobs and its comments
-- **Branch/PR:** —
+- **Branch/PR:** m031-crlf-guard-fix
 
 ## Goal
 
@@ -42,7 +42,7 @@ candidate row "Run every unit test in the PR lane".
 
 ## Tasks
 
-- [ ] T1: Fix the count in the guard's loop and move it into a function the
+- [x] T1: Fix the count in the guard's loop and move it into a function the
       loop calls; add the built-in check on `a\r\nb\nc\r`, which fails on the
       default branch's count, printing a `FAIL:` line that names it.
 - [ ] T2: In a scratch clone, stage each AC1 fixture as a tracked `.bat` and run
@@ -61,6 +61,9 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: collision check: absorbs rocker-bayes row "Fix rstudio2u's CRLF guard and claim" (rocker-bayes M013). Inbox sweep: 0 open issues, 0 open PRs.
 - 2026-11-05: criteria audit (reduced mode, fresh Opus reader): 2 findings, both fixed — AC1 one byte string per case did not enumerate the shapes, now three named fixtures; AC2 a `git archive` run disproves the old reason and cannot support a new one, so a reason must name its delivery path and command.
 - 2026-11-05: lessons used: 2026-07-18 (M08) on Windows .bat handling; 2026-11-05 (M024) on counting a planted run as red only when it names the expected FAIL line; 2026-11-05 (M023) on launchers.yml running only on pull requests.
+
+- 2026-11-05: chose `line_counts`, which takes the byte-producing command as arguments and runs it twice, over reading stdin into a temp file; the built-in check passes `printf 'a\r\nb\nc\r'` and the loop passes `git cat-file -p ":$f"`.
+- 2026-11-05: T1 done: guard passes the 2 tracked `.bat` blobs; a copy with the old count (no appended x) exits 1 with the built-in check's `FAIL:` line; shellcheck 0.11.0 `-x -S info` clean, run through the `koalaman/shellcheck:v0.11.0` image since shellcheck is not installed locally. Dockerfile and build context unchanged (`scripts/tests` is in `.dockerignore`), so the hadolint and build gate does not apply.
 
 ## Decisions
 

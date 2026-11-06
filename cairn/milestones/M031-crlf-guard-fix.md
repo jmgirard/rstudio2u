@@ -30,7 +30,7 @@ candidate row "Run every unit test in the PR lane".
       blob `a\r\nb\nc\r`, `a\nb\r`, and `a\r\nb\nc\r\n` staged as a tracked
       `.bat`, and exits 0 on the repo's tracked `.bat` blobs at the milestone
       head.
-- [ ] AC2: Neither `.gitattributes` nor the guard's header comment (the
+- [x] AC2: Neither `.gitattributes` nor the guard's header comment (the
       comment lines before `set -uo pipefail`) contains the word `archive`.
       Apart from what it says its command prints, the only effect of `-text`
       that either comment states outright is that `git add` stores a `.bat`
@@ -190,3 +190,8 @@ candidate row "Run every unit test in the PR lane".
 - blame-history #7 (pass 3): the parked row lists the ZIP path as a place the settings differ, but a local `git archive` writes CRLF under both — fix now with diff-bug #5: name only GitHub's server-side ZIP as untested.
 - prior-review #1 (pass 3): `launchers.yml` lines 6–7 — follow-up: row "Show why .bat files use -text".
 - ripple #1, #2 (pass 3): `launchers.yml` lines 6–7 and README line 30 — follow-up: row "Show why .bat files use -text"; its note on the row's stale detail is diff-bug #5.
+- pass 4 (after review return 3 and the AC2 amendment, head f853e81); pass 3 fix-now lines: diff-bug #2, #5, #7 (shell part), #9, #10 and blame-history #7, fixed 960f8ba and 563da4e.
+- AC1 evidence (pass 4, fresh clone at f853e81, /bin/bash 3.2): `fixture1.bat` (`610d0a620a630d`), `fixture2.bat` (`610a620d`), `fixture3.bat` (`610d0a620a630d0a`) each staged alone; exit 1 on each with `FAIL: fixtureN.bat — blob has 1 LF-only line(s) of 2/1/3; expected all CRLF`; exit 0 on the clean clone's 2 tracked `.bat` blobs. Pass.
+- AC2 evidence (pass 4, fresh clone at f853e81, no `.git/info/attributes`, `core.safecrlf` unset): `git grep -i archive` over both files exits 1; the header comment before `set -uo pipefail` and `.gitattributes` each state one effect of `-text` outright, "Under `-text`, `git add` stores a .bat file's CRLF bytes unchanged in the blob", besides what the command prints; `.gitattributes` gives the `git hash-object --path=start_windows.bat` command and says it shows a `\r` before each `\n` under `-text` and no `\r` under the other three; changing only the `*.bat` line, its `od -c` output held 2 `\r` and 2 `\n` under `-text` and 0 `\r` and 2 `\n` under `text`, `text eol=crlf`, and `text eol=lf`. Pass.
+- gate (pass 4): cairn_validate all checks passed; no principle changed; docker-image slot as in pass 2 (diff limited to `.gitattributes`, `scripts/tests/`, `cairn/`, all outside the build context); shellcheck 0.11.0 `-x -S info` clean on the guard.
+- spawned: diff-bug, blame-history, prior-review, ripple

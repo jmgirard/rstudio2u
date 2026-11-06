@@ -96,6 +96,7 @@ candidate row "Run every unit test in the PR lane".
 - 2026-11-05: T6 done: both comments now give the commit side as the reason for `-text` and drop the checkout claim; the `.gitattributes` command, run as written in scratch repos, printed `od -c` output `a \r \n b \r \n` under `*.bat -text` and `a \n b \n` under `text`, `text eol=crlf`, and `text eol=lf`; in this repo it prints the `-text` form.
 - 2026-11-05: T7 done: `export LC_ALL=C` after `set`; under `LANG=en_US.UTF-8` a CRLF-only `cp.bat` holding byte `e9` passes, and a copy without the line fails it as "1 LF-only line(s) of 3" with `tr: Illegal byte sequence`; the `not_crlf` comment now says text after the last LF is checked only for CR bytes, and `a\r\nb` passes while `a\r\nb\r` fails as "1 CR byte(s) with no LF after"; AC1 fixtures still fail with their LF-only lines; repo exit 0; shellcheck clean.
 - 2026-11-05: implement done after review return 2: all tasks checked; status → review.
+- 2026-11-05: review pass 3: AC2 fails a third time (diff-bug #1, pass 3: `git add` is not a delivery path, and no path tested here separates `-text` from `text eol=crlf`); thrash rule (a) third return and (b) same criterion by the same shape both fire; the plan recorded no AC2 alternative; posed descope-or-park to the user, with escalation offered.
 
 ## Decisions
 
@@ -154,3 +155,19 @@ candidate row "Run every unit test in the PR lane".
 - AC2 evidence (pass 3, read at 7ffde3c): neither file mentions `git archive` (`git grep -i archive` exit 1). The one reason for `-text` names the commit path (`git add`) and the `git hash-object --path=start_windows.bat` command; in the clone its `od -c` output was `a \r \n b \r \n`, and T6's scratch runs gave `a \n b \n` under `text`, `text eol=crlf`, and `text eol=lf`, so its output shows the reason. Pass.
 - gate (pass 3): cairn_validate all checks passed; no principle changed; docker-image slot as in pass 2 (diff limited to `.gitattributes`, `scripts/tests/`, `cairn/`, all outside the build context).
 - spawned: diff-bug, blame-history, prior-review, ripple
+- diff-bug #1 (pass 3): the one reason for `-text` names `git add`, which puts bytes into the blob, not a path by which they reach a user; under `text eol=crlf` the reviewer measured an LF blob but CRLF from both a checkout and `git archive` — AC2's "names a delivery path" fails a third time; thrash stop.
+- diff-bug #2 (pass 3): "It stores CRLF bytes as a commit of start_windows.bat would" is false when the `*.bat` line is removed and the index already holds CRLF, since `text=auto` then keeps CRLF on `git add` — fix now: say it applies the conversion `git add` applies to a new file at that path.
+- diff-bug #3, #4 (pass 3): a CR right before a NUL byte (`a\r\0b\n`) passes on BSD and GNU, and `a\r\0b\r\n` reads "-1 LF-only line(s)" on GNU; grep's NUL handling, which the branch does not change — follow-up: new parked row "Fail launcher blobs that hold NUL bytes".
+- diff-bug #5 (pass 3): the parked row "Show why .bat files use -text" still says the comment names a checkout and `git archive` — fix now: rewrite the row's detail.
+- diff-bug #6 (pass 3): the built-in check does not cover the zero-LF branch, the read check, the number check, or `LC_ALL=C` — reject: false as a gap; T5 and T7 runs showed the read check, the number check, and the locale line red when broken, the comment claims no more, and the zero-LF branch is main's.
+- diff-bug #7 (pass 3): with `core.safecrlf=true` the command fails under `text` instead of printing a blob, and it needs a POSIX shell — `core.safecrlf=true` part: reject: edge (a non-default setting; the effect is an error message); shell part: fix now: name Git Bash for Windows readers.
+- diff-bug #8 (pass 3): an unmerged `.bat` gives three FAIL lines — reject: edge, as pass 2 diff-bug #6.
+- diff-bug #9 (pass 3): "checks every line break in each blob" sits above `*.cmd -text` too, but the guard reads only `*.bat` — fix now: say each `*.bat` blob.
+- diff-bug #10 (pass 3): "a command that shows the blob keeping CRLF" reads as if it inspects the tracked launcher — fix now: say it shows git keeping CRLF in a blob stored at that path.
+- diff-bug #11 (pass 3): the good built-in case is a test-scope judgment call — reject: false, as pass 2 diff-bug #10.
+- blame-history #1, #2 (pass 3): the refuted M08 reason for `-text` has no replacement record, and `launchers.yml` lines 6–7 rest on it — follow-up: row "Show why .bat files use -text".
+- blame-history #3 (pass 3): `a\r\r\n`, `a\rb\r\n`, `a\r\nb\rc`, `a\r\r\r\n` changed from pass to fail — reject: planned change (T5).
+- blame-history #4–#6 (pass 3): the AC1 fixtures and `a\n\r` now fail, `a\xe9\r\n` passes in a UTF-8 locale, and three shapes keep their verdict with a new message — noted, no finding.
+- blame-history #7 (pass 3): the parked row lists the ZIP path as a place the settings differ, but a local `git archive` writes CRLF under both — fix now with diff-bug #5: name only GitHub's server-side ZIP as untested.
+- prior-review #1 (pass 3): `launchers.yml` lines 6–7 — follow-up: row "Show why .bat files use -text".
+- ripple #1, #2 (pass 3): `launchers.yml` lines 6–7 and README line 30 — follow-up: row "Show why .bat files use -text"; its note on the row's stale detail is diff-bug #5.

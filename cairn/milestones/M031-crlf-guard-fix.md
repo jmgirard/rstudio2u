@@ -45,7 +45,7 @@ candidate row "Run every unit test in the PR lane".
 - [x] T1: Fix the count in the guard's loop and move it into a function the
       loop calls; add the built-in check on `a\r\nb\nc\r`, which fails on the
       default branch's count, printing a `FAIL:` line that names it.
-- [ ] T2: In a scratch clone, stage each AC1 fixture as a tracked `.bat` and run
+- [x] T2: In a scratch clone, stage each AC1 fixture as a tracked `.bat` and run
       the guard; confirm each red run's output names that file's `FAIL:` line,
       then run it on the repo.
 - [ ] T3: Rewrite the guard's header and the `.gitattributes` comment; keep any
@@ -64,6 +64,7 @@ candidate row "Run every unit test in the PR lane".
 
 - 2026-11-05: chose `line_counts`, which takes the byte-producing command as arguments and runs it twice, over reading stdin into a temp file; the built-in check passes `printf 'a\r\nb\nc\r'` and the loop passes `git cat-file -p ":$f"`.
 - 2026-11-05: T1 done: guard passes the 2 tracked `.bat` blobs; a copy with the old count (no appended x) exits 1 with the built-in check's `FAIL:` line; shellcheck 0.11.0 `-x -S info` clean, run through the `koalaman/shellcheck:v0.11.0` image since shellcheck is not installed locally. Dockerfile and build context unchanged (`scripts/tests` is in `.dockerignore`), so the hadolint and build gate does not apply.
+- 2026-11-05: T2 done in a scratch clone of the branch: staged `fixture1.bat` (bytes `610d0a620a630d`), `fixture2.bat` (`610a620d`), and `fixture3.bat` (`610d0a620a630d0a`) one at a time; the guard exited 1 on each with `FAIL: fixtureN.bat — blob has 1 LF-only line(s) …`; the default branch's guard passed fixtures 1 and 2 (exit 0) and failed 3; the guard exits 0 on the clean clone's 2 tracked `.bat` blobs.
 
 ## Decisions
 
